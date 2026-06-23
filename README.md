@@ -1,6 +1,6 @@
 # Tactica11
 
-![Capture d'écran](./public/screenshot.png)
+![Banière](./public/baniere.png)
 
 App web pour créer des **compos et mises en place tactiques de football** :
 choix de la formation, placement libre des joueurs, variantes **attaque / défense**,
@@ -8,6 +8,10 @@ vivier de joueurs en glisser-déposer, le tout sauvegardable en fichier `.json`.
 
 100 % côté navigateur — **aucun backend**, aucune synchro en ligne. Utilisable sur
 iPad et ordinateur, installable comme une app (PWA).
+
+## Screenshort
+
+![Capture d'écran](./public/screenshot.png)
 
 ## Lancer en développement
 
