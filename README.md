@@ -10,7 +10,7 @@ vivier de joueurs en glisser-déposer, le tout sauvegardable en fichier `.json`.
 100 % côté navigateur — **aucun backend**, aucune synchro en ligne. Utilisable sur
 iPad et ordinateur, installable comme une app (PWA).
 
-## Screenshort
+## Capture d'écran
 
 ![Capture d'écran](./public/screenshot.png)
 
