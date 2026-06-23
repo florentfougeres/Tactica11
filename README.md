@@ -1,6 +1,6 @@
 # Tactica11
 
-<img src="./public/baniere.png" style="height:40px">
+<img src="./public/baniere.png" style="height:200px">
 
 
 App web pour créer des **compos et mises en place tactiques de football** :
