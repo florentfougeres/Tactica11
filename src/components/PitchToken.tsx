@@ -128,11 +128,6 @@ export default function PitchToken({
     >
       <div className="token__disc">
         <span className="token__badge">{badge}</span>
-        {sub && (
-          <span className="token__sub" title={sub.name}>
-            {sub.name.slice(0, 1).toUpperCase()}
-          </span>
-        )}
       </div>
       <div className="token__names">
         <span className="token__name">{label}</span>
