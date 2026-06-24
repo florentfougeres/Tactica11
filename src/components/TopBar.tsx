@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FORMATIONS } from "../formations";
 
 interface Props {
@@ -23,6 +23,24 @@ export default function TopBar({
   onReset,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+
+  useEffect(() => {
+    if (!exportOpen) return;
+    const onDown = (e: PointerEvent) => {
+      if (!exportRef.current?.contains(e.target as Node)) setExportOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExportOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [exportOpen]);
 
   return (
     <header className="topbar glass">
@@ -63,12 +81,40 @@ export default function TopBar({
       </label>
 
       <div className="topbar__actions">
-        <button className="btn btn--primary" onClick={onExportPng}>
-          Image
-        </button>
-        <button className="btn" onClick={onExport}>
-          .json
-        </button>
+        <div className="export" ref={exportRef}>
+          <button
+            className="btn btn--primary"
+            onClick={() => setExportOpen((o) => !o)}
+            aria-haspopup="menu"
+            aria-expanded={exportOpen}
+          >
+            Exporter <span className="export__chevron" aria-hidden="true">▾</span>
+          </button>
+          {exportOpen && (
+            <div className="export-menu" role="menu">
+              <button
+                role="menuitem"
+                onClick={() => {
+                  setExportOpen(false);
+                  onExportPng();
+                }}
+              >
+                <span>Image</span>
+                <span className="export-menu__ext">.png</span>
+              </button>
+              <button
+                role="menuitem"
+                onClick={() => {
+                  setExportOpen(false);
+                  onExport();
+                }}
+              >
+                <span>Données</span>
+                <span className="export-menu__ext">.json</span>
+              </button>
+            </div>
+          )}
+        </div>
         <button className="btn" onClick={() => fileRef.current?.click()}>
           Importer…
         </button>
