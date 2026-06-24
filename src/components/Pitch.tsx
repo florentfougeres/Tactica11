@@ -3,6 +3,7 @@ import type { Phase, Player, Slot } from "../types";
 import PitchMarkings from "./PitchMarkings";
 import PhaseToggle from "./PhaseToggle";
 import PitchToken, { TOKEN_SIZE } from "./PitchToken";
+import HeatmapOverlay from "./HeatmapOverlay";
 
 interface Props {
   slots: Slot[];
@@ -90,6 +91,10 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         <div className="pitch__grass" />
         <PitchMarkings />
 
+        {selected && selectedStarter && size.w > 0 && (
+          <HeatmapOverlay center={selected.positions[phase]} size={size} />
+        )}
+
         <div className="pitch__top">
           <PhaseToggle phase={phase} onPhase={onPhase} />
           {phase === "base" && (
@@ -120,7 +125,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
             />
           ))}
 
-        {selected && selectedStarter && size.w > 0 && (
+        {selected && selectedStarter && size.w > 0 && phase === "base" && (
           <SlotPopover
             key={selected.id}
             slot={selected}

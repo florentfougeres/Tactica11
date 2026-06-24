@@ -21,7 +21,7 @@ interface Props {
   phase: Phase;
   size: Size;
   selected: boolean;
-  onSelect: (slotId: string) => void;
+  onSelect: (slotId: string | null) => void;
   onMove: (slotId: string, pos: { x: number; y: number }) => void;
   onPlayerDrop: (slotId: string, point: { x: number; y: number }) => void;
   onDragActiveChange: (active: boolean) => void;
@@ -108,8 +108,11 @@ export default function PitchToken({
       dragMomentum={false}
       dragElastic={0.12}
       whileDrag={{ scale: 1.18, zIndex: 50 }}
-      onPointerDown={() => isBase && !empty && onSelect(slot.id)}
-      onClick={() => isBase && !empty && onSelect(slot.id)}
+      onClick={() => {
+        // Click selects (any phase) to reveal the influence heatmap; click the
+        // selected token again to clear it. The roster popover stays base-only.
+        if (!empty) onSelect(selected ? null : slot.id);
+      }}
       onDragStart={() => {
         dragging.current = true;
         onDragActiveChange(true);

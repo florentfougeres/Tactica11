@@ -377,6 +377,21 @@
   pointer-events: none;
 }
 
+/* influence heatmap (honeycomb) — sits above the grass, below the tokens */
+.heatmap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 0 6px rgba(33, 208, 122, 0.25));
+  animation: heatmap-in 0.25s ease-out;
+}
+@keyframes heatmap-in {
+  from {
+    opacity: 0;
+  }
+}
+
 /* ---------- token ---------- */
 .token {
   position: absolute;
