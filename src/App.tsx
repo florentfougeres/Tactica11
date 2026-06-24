@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import type { Lineup, Phase, Player } from "./types";
+import type { Lineup, Phase, Player, ZoneRadii } from "./types";
 import { buildSlots } from "./formations";
 import {
   createDefaultLineup,
@@ -129,6 +129,7 @@ export default function App() {
         id: l.slots[i]?.id ?? s.id,
         starterId: l.slots[i]?.starterId ?? null,
         subId: l.slots[i]?.subId ?? null,
+        influence: l.slots[i]?.influence,
       }));
       return { ...l, formation, slots };
     });
@@ -142,6 +143,12 @@ export default function App() {
           ? { ...s, positions: { ...s.positions, [phase]: pos } }
           : s,
       ),
+    }));
+
+  const setInfluence = (slotId: string, influence: ZoneRadii) =>
+    setLineup((l) => ({
+      ...l,
+      slots: l.slots.map((s) => (s.id === slotId ? { ...s, influence } : s)),
     }));
 
   // Pixel → pitch-percent helper for a drop point. Returns null if outside.
@@ -321,6 +328,7 @@ export default function App() {
           onRemoveStarter={removeStarter}
           onRemoveSub={removeSub}
           onSwap={swapStarterSub}
+          onInfluence={setInfluence}
         />
       </main>
 
