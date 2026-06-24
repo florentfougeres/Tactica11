@@ -13,8 +13,8 @@
   align-items: center;
   gap: 16px;
   padding: 10px 16px;
-  /* sit above the layout so the formation dropdown isn't painted under it
-     (the .glass backdrop-filter makes this a stacking context) */
+  /* sit above the layout so the dropdowns (export, formation) aren't painted
+     under it — the .glass backdrop-filter makes this a stacking context */
   position: relative;
   z-index: 20;
 }
@@ -75,6 +75,62 @@
 .topbar__actions .btn {
   padding: 8px 14px;
   white-space: nowrap;
+}
+
+/* export dropdown (Image / .json) */
+.export {
+  position: relative;
+}
+.export__chevron {
+  font-size: 10px;
+  margin-left: 2px;
+  opacity: 0.85;
+}
+.export-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 90;
+  min-width: 168px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-radius: var(--radius-sm);
+  background: rgba(13, 18, 26, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 18px 44px -16px rgba(0, 0, 0, 0.9);
+  animation: menu-in 0.12s ease-out;
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.export-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 11px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 14px;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+}
+.export-menu button:hover {
+  background: rgba(33, 208, 122, 0.14);
+  color: var(--accent);
+}
+.export-menu__ext {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
 }
 
 /* custom formation dropdown (styled to match the app, not a native select) */
@@ -204,6 +260,22 @@
   display: flex;
   gap: 8px;
   padding: 0 16px 12px;
+}
+.bench__csv {
+  margin: 0 16px 10px;
+  padding: 7px 10px;
+  border: 1px dashed var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 600;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.bench__csv:hover {
+  border-color: rgba(33, 208, 122, 0.5);
+  color: var(--accent);
+  background: rgba(33, 208, 122, 0.06);
 }
 .bench__add input {
   flex: 1;
@@ -766,6 +838,183 @@
 .btn--ghost {
   background: none;
   color: var(--text-dim);
+}
+
+/* ---------- CSV import modal ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(4, 7, 11, 0.6);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: modal-fade 0.15s ease-out;
+}
+@keyframes modal-fade {
+  from {
+    opacity: 0;
+  }
+}
+.modal {
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: var(--radius);
+}
+.modal__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px 8px;
+}
+.modal__header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.modal__close {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-dim);
+  font-size: 20px;
+  line-height: 1;
+}
+.modal__close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+}
+.modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 10px 18px 20px;
+}
+.modal__hint {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.modal__hint code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 5px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+.modal__paste {
+  min-height: 84px;
+  resize: vertical;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.modal__paste:focus {
+  border-color: var(--accent);
+}
+.modal__check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.modal__check input {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
+.modal__cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.modal__field select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+}
+.modal__field select:focus {
+  border-color: var(--accent);
+}
+.modal__preview {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.modal__preview-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+.modal__preview ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.modal__preview li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.modal__num {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: rgba(33, 208, 122, 0.16);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+.modal__more {
+  color: var(--text-dim);
+}
+.modal__error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
+}
+.modal__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 /* ---------- responsive (iPad portrait / narrow) ---------- */

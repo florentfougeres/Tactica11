@@ -13,6 +13,9 @@ import {
 import Bench from "./components/Bench";
 import Pitch from "./components/Pitch";
 import TopBar from "./components/TopBar";
+import CsvImportDialog from "./components/CsvImportDialog";
+import { exportPitchPng } from "./exportImage";
+import type { ImportedPlayer } from "./csv";
 
 type Point = { x: number; y: number };
 
@@ -29,6 +32,7 @@ export default function App() {
   const [phase, setPhase] = useState<Phase>("base");
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [benchDragging, setBenchDragging] = useState(false);
+  const [csvOpen, setCsvOpen] = useState(false);
 
   const pitchRef = useRef<HTMLDivElement>(null);
   const benchRef = useRef<HTMLElement>(null);
@@ -82,6 +86,19 @@ export default function App() {
     setLineup((l) => ({
       ...l,
       players: [...l.players, { id: uid("p"), name }],
+    }));
+
+  const addPlayers = (players: ImportedPlayer[]) =>
+    setLineup((l) => ({
+      ...l,
+      players: [
+        ...l.players,
+        ...players.map((p) => ({
+          id: uid("p"),
+          name: p.name,
+          ...(p.number != null ? { number: p.number } : {}),
+        })),
+      ],
     }));
 
   const renamePlayer = (id: string, name: string) =>
@@ -249,6 +266,18 @@ export default function App() {
       setLineup(createDefaultLineup());
   };
 
+  const handleExportPng = async () => {
+    const pitchEl = pitchRef.current?.querySelector(".pitch") as HTMLElement | null;
+    if (!pitchEl) return;
+    setSelectedSlot(null); // drop the selection ring / popover from the capture
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    try {
+      await exportPitchPng(pitchEl, lineup.name);
+    } catch {
+      alert("Échec de l'export en image.");
+    }
+  };
+
   return (
     <div className="app">
       <TopBar
@@ -257,6 +286,7 @@ export default function App() {
         onName={(name) => setLineup((l) => ({ ...l, name }))}
         onFormation={changeFormation}
         onExport={() => exportLineup(lineup)}
+        onExportPng={handleExportPng}
         onImport={handleImport}
         onReset={handleReset}
       />
@@ -271,6 +301,7 @@ export default function App() {
           onDropToPitch={handleBenchDrop}
           onDragStateChange={setBenchDragging}
           canDrag={phase === "base"}
+          onImportCsv={() => setCsvOpen(true)}
         />
 
         <Pitch
@@ -292,6 +323,13 @@ export default function App() {
           onSwap={swapStarterSub}
         />
       </main>
+
+      {csvOpen && (
+        <CsvImportDialog
+          onClose={() => setCsvOpen(false)}
+          onImport={addPlayers}
+        />
+      )}
     </div>
   );
 }

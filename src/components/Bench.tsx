@@ -11,10 +11,20 @@ interface Props {
   onDropToPitch: (playerId: string, point: { x: number; y: number }) => void;
   onDragStateChange?: (active: boolean) => void;
   canDrag: boolean; // roster drag only allowed in the "base" phase
+  onImportCsv: () => void;
 }
 
 const Bench = forwardRef<HTMLElement, Props>(function Bench(
-  { players, onAdd, onRename, onRemove, onDropToPitch, onDragStateChange, canDrag },
+  {
+    players,
+    onAdd,
+    onRename,
+    onRemove,
+    onDropToPitch,
+    onDragStateChange,
+    canDrag,
+    onImportCsv,
+  },
   ref,
 ) {
   const [name, setName] = useState("");
@@ -45,6 +55,10 @@ const Bench = forwardRef<HTMLElement, Props>(function Bench(
           +
         </button>
       </form>
+
+      <button className="bench__csv" onClick={onImportCsv}>
+        Importer une liste (CSV)
+      </button>
 
       <div className="bench__list">
         {players.length === 0 && (
