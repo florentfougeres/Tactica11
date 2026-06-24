@@ -1,9 +1,11 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
-import type { Phase, Player, Slot } from "../types";
+import type { Phase, Player, Slot, ZoneRadii } from "../types";
+import { DEFAULT_ZONE } from "../types";
 import PitchMarkings from "./PitchMarkings";
 import PhaseToggle from "./PhaseToggle";
 import PitchToken, { TOKEN_SIZE } from "./PitchToken";
 import HeatmapOverlay from "./HeatmapOverlay";
+import InfluenceHandles from "./InfluenceHandles";
 
 interface Props {
   slots: Slot[];
@@ -18,6 +20,7 @@ interface Props {
   onRemoveStarter: (slotId: string) => void;
   onRemoveSub: (slotId: string) => void;
   onSwap: (slotId: string) => void;
+  onInfluence: (slotId: string, radii: ZoneRadii) => void;
 }
 
 const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
@@ -34,6 +37,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     onRemoveStarter,
     onRemoveSub,
     onSwap,
+    onInfluence,
   },
   ref,
 ) {
@@ -71,6 +75,9 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
 
   const selected = slots.find((s) => s.id === selectedSlot) ?? null;
   const selectedStarter = selected ? playerById(selected.starterId) : null;
+  const radii = selected?.influence ?? DEFAULT_ZONE;
+  const staticCx = selected ? (selected.positions[phase].x / 100) * size.w : 0;
+  const staticCy = selected ? (selected.positions[phase].y / 100) * size.h : 0;
 
   // Close the popover on any click outside it (and outside the filled tokens,
   // so tapping another token re-selects instead of just closing), or Escape.
@@ -81,7 +88,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
       if (
         t?.closest(".slot-pop") ||
         t?.closest(".token--filled") ||
-        t?.closest(".influence-switch")
+        t?.closest(".influence-switch") ||
+        t?.closest(".zone-handles")
       )
         return;
       onSelect(null);
@@ -120,11 +128,27 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
 
           {showInfluence && selected && selectedStarter && size.w > 0 && (
             <HeatmapOverlay
-              cx={liveCenter ? liveCenter.x : (selected.positions[phase].x / 100) * size.w}
-              cy={liveCenter ? liveCenter.y : (selected.positions[phase].y / 100) * size.h}
+              cx={liveCenter ? liveCenter.x : staticCx}
+              cy={liveCenter ? liveCenter.y : staticCy}
               size={size}
+              radii={radii}
             />
           )}
+
+          {showInfluence &&
+            selected &&
+            selectedStarter &&
+            size.w > 0 &&
+            !tokenDragging && (
+              <InfluenceHandles
+                cx={staticCx}
+                cy={staticCy}
+                size={size}
+                radii={radii}
+                pitchRef={innerRef}
+                onChange={(next) => onInfluence(selected.id, next)}
+              />
+            )}
 
         {dropActive && (
           <div className="pitch__drop-hint">Dépose le joueur sur un poste</div>

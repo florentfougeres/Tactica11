@@ -21,12 +21,29 @@ export interface Player {
   number?: number;
 }
 
+// Influence zone radii, as a fraction of the pitch WIDTH, in each direction
+// from the player. Lets the zone be lopsided (e.g. reach further forward).
+export interface ZoneRadii {
+  up: number;
+  down: number;
+  left: number;
+  right: number;
+}
+
+export const DEFAULT_ZONE: ZoneRadii = {
+  up: 0.3,
+  down: 0.3,
+  left: 0.24,
+  right: 0.24,
+};
+
 export interface Slot {
   id: string;
   role: string; // GK, DC, MD, BU... label hint
   starterId: string | null; // titulaire (principal)
   subId: string | null; // suppléant (optionnel)
   positions: Record<Phase, Pos>;
+  influence?: ZoneRadii; // custom influence-zone shape (shared across phases)
 }
 
 export interface Lineup {

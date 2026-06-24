@@ -533,6 +533,35 @@
   }
 }
 
+/* draggable knobs to reshape the influence zone */
+.zone-handles {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.zone-handle {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2.5px solid var(--accent);
+  box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.6);
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+  transition: transform 0.1s;
+}
+.zone-handle:hover {
+  transform: scale(1.15);
+}
+.zone-handle:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+}
+
 /* influence-view toggle (attack/defense), in the control bar above the pitch */
 .influence-switch {
   display: flex;

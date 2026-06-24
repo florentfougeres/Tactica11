@@ -32,6 +32,7 @@ function migrateLineup(parsed: Lineup): Lineup {
       ...s,
       starterId: old.starterId ?? old.playerId ?? null,
       subId: old.subId ?? null,
+      influence: old.influence,
       positions: {
         base: s.positions.base, // base always comes from the template (locked)
         attack: old.positions?.attack ?? s.positions.attack,
