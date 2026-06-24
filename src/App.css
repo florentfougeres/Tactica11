@@ -594,6 +594,8 @@
   position: absolute;
   top: 0;
   left: 0;
+  /* above the influence heatmap (z-index 1) so the disc + name stay on top */
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
