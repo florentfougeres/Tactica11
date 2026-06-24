@@ -98,36 +98,9 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   }, [selectedSlot, onSelect]);
 
   return (
-    <div
-      className={`pitch-wrap ${tokenDragging ? "pitch-wrap--dragging" : ""}`}
-      ref={ref}
-    >
-      <div
-        className={`pitch ${dropActive ? "pitch--drop" : ""} ${
-          tokenDragging ? "pitch--dragging" : ""
-        }`}
-        ref={innerRef}
-      >
-        <div className="pitch__grass" />
-        <PitchMarkings />
-
-        {showInfluence && selected && selectedStarter && size.w > 0 && (
-          <HeatmapOverlay
-            cx={liveCenter ? liveCenter.x : (selected.positions[phase].x / 100) * size.w}
-            cy={liveCenter ? liveCenter.y : (selected.positions[phase].y / 100) * size.h}
-            size={size}
-          />
-        )}
-
-        <div className="pitch__top">
-          <PhaseToggle phase={phase} onPhase={onPhase} />
-          {phase === "base" && (
-            <div className="pitch__hint">
-              Glisse les joueurs entre postes et effectif
-            </div>
-          )}
-        </div>
-
+    <div className="pitch-col">
+      <div className="pitch-bar">
+        <PhaseToggle phase={phase} onPhase={onPhase} />
         {phase !== "base" && (
           <label className="influence-switch">
             <span>Zones d'influence</span>
@@ -142,6 +115,34 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
             </span>
           </label>
         )}
+      </div>
+
+      <div
+        className={`pitch-wrap ${tokenDragging ? "pitch-wrap--dragging" : ""}`}
+        ref={ref}
+      >
+        <div
+          className={`pitch ${dropActive ? "pitch--drop" : ""} ${
+            tokenDragging ? "pitch--dragging" : ""
+          }`}
+          ref={innerRef}
+        >
+          <div className="pitch__grass" />
+          <PitchMarkings />
+
+          {showInfluence && selected && selectedStarter && size.w > 0 && (
+            <HeatmapOverlay
+              cx={liveCenter ? liveCenter.x : (selected.positions[phase].x / 100) * size.w}
+              cy={liveCenter ? liveCenter.y : (selected.positions[phase].y / 100) * size.h}
+              size={size}
+            />
+          )}
+
+          {phase === "base" && (
+            <div className="pitch__hint">
+              Glisse les joueurs entre postes et effectif
+            </div>
+          )}
 
         {dropActive && (
           <div className="pitch__drop-hint">Dépose le joueur sur un poste</div>
@@ -178,6 +179,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
             onSwap={onSwap}
           />
         )}
+        </div>
       </div>
     </div>
   );
