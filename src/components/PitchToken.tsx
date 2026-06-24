@@ -21,10 +21,11 @@ interface Props {
   phase: Phase;
   size: Size;
   selected: boolean;
-  onSelect: (slotId: string) => void;
+  onSelect: (slotId: string | null) => void;
   onMove: (slotId: string, pos: { x: number; y: number }) => void;
   onPlayerDrop: (slotId: string, point: { x: number; y: number }) => void;
   onDragActiveChange: (active: boolean) => void;
+  onDragMove: (slotId: string, center: { x: number; y: number }) => void;
 }
 
 const clampPct = (v: number) => Math.max(4, Math.min(96, v));
@@ -40,6 +41,7 @@ export default function PitchToken({
   onMove,
   onPlayerDrop,
   onDragActiveChange,
+  onDragMove,
 }: Props) {
   const isBase = phase === "base";
   const half = TOKEN_SIZE / 2;
@@ -108,11 +110,19 @@ export default function PitchToken({
       dragMomentum={false}
       dragElastic={0.12}
       whileDrag={{ scale: 1.18, zIndex: 50 }}
-      onPointerDown={() => isBase && !empty && onSelect(slot.id)}
-      onClick={() => isBase && !empty && onSelect(slot.id)}
+      onClick={() => {
+        // Click selects (any phase) to reveal the influence heatmap; click the
+        // selected token again to clear it. The roster popover stays base-only.
+        if (!empty) onSelect(selected ? null : slot.id);
+      }}
       onDragStart={() => {
         dragging.current = true;
         onDragActiveChange(true);
+        // Outside base, dragging a player reveals/keeps its influence zone.
+        if (!isBase) onSelect(slot.id);
+      }}
+      onDrag={() => {
+        if (!isBase) onDragMove(slot.id, { x: x.get() + half, y: y.get() + half });
       }}
       onDragEnd={handleDragEnd}
     >

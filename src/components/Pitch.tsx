@@ -3,6 +3,7 @@ import type { Phase, Player, Slot } from "../types";
 import PitchMarkings from "./PitchMarkings";
 import PhaseToggle from "./PhaseToggle";
 import PitchToken, { TOKEN_SIZE } from "./PitchToken";
+import HeatmapOverlay from "./HeatmapOverlay";
 
 interface Props {
   slots: Slot[];
@@ -41,6 +42,21 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   // True while a token is being dragged — lets the token escape the pitch's
   // overflow:hidden (e.g. when dragging onto the bench) and float above it.
   const [tokenDragging, setTokenDragging] = useState(false);
+  // Influence-heatmap view (attack/defense only) + live centre while dragging.
+  const [influenceOn, setInfluenceOn] = useState(false);
+  const [liveCenter, setLiveCenter] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+
+  const showInfluence = phase !== "base" && influenceOn;
+
+  const handleDragActive = (active: boolean) => {
+    setTokenDragging(active);
+    if (!active) setLiveCenter(null);
+  };
+  const handleDragMove = (slotId: string, center: { x: number; y: number }) => {
+    if (slotId === selectedSlot) setLiveCenter(center);
+  };
 
   useEffect(() => {
     const el = innerRef.current;
@@ -62,7 +78,12 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     if (!selectedSlot) return;
     function onDown(e: PointerEvent) {
       const t = e.target as HTMLElement | null;
-      if (t?.closest(".slot-pop") || t?.closest(".token--filled")) return;
+      if (
+        t?.closest(".slot-pop") ||
+        t?.closest(".token--filled") ||
+        t?.closest(".influence-switch")
+      )
+        return;
       onSelect(null);
     }
     function onKey(e: KeyboardEvent) {
@@ -77,27 +98,31 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   }, [selectedSlot, onSelect]);
 
   return (
-    <div
-      className={`pitch-wrap ${tokenDragging ? "pitch-wrap--dragging" : ""}`}
-      ref={ref}
-    >
-      <div
-        className={`pitch ${dropActive ? "pitch--drop" : ""} ${
-          tokenDragging ? "pitch--dragging" : ""
-        }`}
-        ref={innerRef}
-      >
-        <div className="pitch__grass" />
-        <PitchMarkings />
+    <div className="pitch-col">
+      <div className="pitch-bar">
+        <PhaseToggle phase={phase} onPhase={onPhase} />
+      </div>
 
-        <div className="pitch__top">
-          <PhaseToggle phase={phase} onPhase={onPhase} />
-          {phase === "base" && (
-            <div className="pitch__hint">
-              Glisse les joueurs entre postes et effectif
-            </div>
+      <div
+        className={`pitch-wrap ${tokenDragging ? "pitch-wrap--dragging" : ""}`}
+        ref={ref}
+      >
+        <div
+          className={`pitch ${dropActive ? "pitch--drop" : ""} ${
+            tokenDragging ? "pitch--dragging" : ""
+          }`}
+          ref={innerRef}
+        >
+          <div className="pitch__grass" />
+          <PitchMarkings />
+
+          {showInfluence && selected && selectedStarter && size.w > 0 && (
+            <HeatmapOverlay
+              cx={liveCenter ? liveCenter.x : (selected.positions[phase].x / 100) * size.w}
+              cy={liveCenter ? liveCenter.y : (selected.positions[phase].y / 100) * size.h}
+              size={size}
+            />
           )}
-        </div>
 
         {dropActive && (
           <div className="pitch__drop-hint">Dépose le joueur sur un poste</div>
@@ -116,11 +141,12 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
               onSelect={onSelect}
               onMove={onMove}
               onPlayerDrop={onPlayerDrop}
-              onDragActiveChange={setTokenDragging}
+              onDragActiveChange={handleDragActive}
+              onDragMove={handleDragMove}
             />
           ))}
 
-        {selected && selectedStarter && size.w > 0 && (
+        {selected && selectedStarter && size.w > 0 && phase === "base" && (
           <SlotPopover
             key={selected.id}
             slot={selected}
@@ -132,6 +158,28 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
             onRemoveSub={onRemoveSub}
             onSwap={onSwap}
           />
+        )}
+        </div>
+      </div>
+
+      <div className="pitch-foot">
+        {phase === "base" ? (
+          <span className="pitch__hint">
+            Glisse les joueurs entre postes et effectif
+          </span>
+        ) : (
+          <label className="influence-switch">
+            <span>Zones d'influence</span>
+            <span className="switch">
+              <input
+                type="checkbox"
+                checked={influenceOn}
+                onChange={(e) => setInfluenceOn(e.target.checked)}
+              />
+              <span className="switch__track" />
+              <span className="switch__thumb" />
+            </span>
+          </label>
         )}
       </div>
     </div>
