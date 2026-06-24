@@ -7,6 +7,7 @@ interface Props {
   onName: (name: string) => void;
   onFormation: (formation: string) => void;
   onExport: () => void;
+  onExportPng: () => void;
   onImport: (file: File) => void;
   onReset: () => void;
 }
@@ -17,6 +18,7 @@ export default function TopBar({
   onName,
   onFormation,
   onExport,
+  onExportPng,
   onImport,
   onReset,
 }: Props) {
@@ -61,8 +63,11 @@ export default function TopBar({
       </label>
 
       <div className="topbar__actions">
-        <button className="btn btn--primary" onClick={onExport}>
-          Exporter
+        <button className="btn btn--primary" onClick={onExportPng}>
+          Image
+        </button>
+        <button className="btn" onClick={onExport}>
+          .json
         </button>
         <button className="btn" onClick={() => fileRef.current?.click()}>
           Importer…
