@@ -37,6 +37,21 @@ export default function App() {
     saveLineup(lineup);
   }, [lineup]);
 
+  // Invariant: a slot can never hold a sub without a starter (that would render
+  // as an empty token with an invisible, trapped player). Auto-promote the sub.
+  useEffect(() => {
+    if (lineup.slots.some((s) => !s.starterId && s.subId)) {
+      setLineup((l) => ({
+        ...l,
+        slots: l.slots.map((s) =>
+          !s.starterId && s.subId
+            ? { ...s, starterId: s.subId, subId: null }
+            : s,
+        ),
+      }));
+    }
+  }, [lineup.slots]);
+
   const playerMap = useMemo(() => {
     const m = new Map<string, Player>();
     lineup.players.forEach((p) => m.set(p.id, p));
@@ -131,7 +146,6 @@ export default function App() {
     }
     const pct = pointToPitchPct(point);
     if (!pct) return;
-    console.log("[drop] " + JSON.stringify({ slotId, point, pct }));
     setLineup((l) => {
       const src = l.slots.find((s) => s.id === slotId);
       if (!src || !src.starterId) return l;

@@ -384,7 +384,7 @@
 .token__name {
   font-size: 13px;
   font-weight: 600;
-  max-width: 112px;
+  max-width: 150px;
   text-align: center;
   padding: 2px 9px;
   border-radius: 999px;
@@ -398,7 +398,7 @@
 .token__subname {
   font-size: 12px;
   font-weight: 500;
-  max-width: 112px;
+  max-width: 150px;
   text-align: center;
   padding: 1px 8px;
   border-radius: 999px;
