@@ -1,52 +1,55 @@
+import { motion } from "framer-motion";
 import { useMemo } from "react";
 
 interface Props {
-  center: { x: number; y: number }; // player position, in pitch %
-  size: { w: number; h: number }; // pitch size, in px
+  cx: number; // player centre, in px (relative to the pitch)
+  cy: number;
+  size: { w: number; h: number };
 }
 
-// Pointy-top hexagon vertices around (cx, cy) with circumradius R.
-function hexPoints(cx: number, cy: number, R: number): string {
-  let pts = "";
+// Pointy-top hexagon outline around (0,0), circumradius R.
+function hexPoints(R: number): string {
+  let p = "";
   for (let i = 0; i < 6; i++) {
     const a = (Math.PI / 180) * (60 * i - 90);
-    pts += `${(cx + R * Math.cos(a)).toFixed(1)},${(cy + R * Math.sin(a)).toFixed(1)} `;
+    p += `${(R * Math.cos(a)).toFixed(2)},${(R * Math.sin(a)).toFixed(2)} `;
   }
-  return pts.trim();
+  return p.trim();
 }
 
-// A honeycomb "zone of influence" centred on the selected player: hexes fade
-// out with distance (gaussian falloff), slightly elongated vertically.
-export default function HeatmapOverlay({ center, size }: Props) {
+// Honeycomb "zone of influence": tightly-packed hexes around the player, fading
+// out with a gaussian falloff (slightly taller than wide). The whole mesh is a
+// single <g> translated to the player, so it springs along while dragging.
+export default function HeatmapOverlay({ cx, cy, size }: Props) {
   const { w, h } = size;
 
-  const hexes = useMemo(() => {
-    if (w === 0 || h === 0) return [];
-    const R = w / 11; // hex circumradius (px)
-    const stepX = Math.sqrt(3) * R; // pointy-top column spacing
-    const stepY = 1.5 * R; // row spacing
-    const cx = (center.x / 100) * w;
-    const cy = (center.y / 100) * h;
-    const influence = w * 0.4; // falloff radius
-
-    const rows = Math.ceil(h / stepY) + 2;
-    const cols = Math.ceil(w / stepX) + 2;
-    const out: { id: string; pts: string; o: number }[] = [];
-
-    for (let r = -1; r < rows; r++) {
-      for (let c = -1; c < cols; c++) {
-        const hx = c * stepX + (r & 1 ? stepX / 2 : 0);
-        const hy = r * stepY;
-        const dx = hx - cx;
-        const dy = (hy - cy) * 0.8; // taller zone
-        const d = Math.hypot(dx, dy);
-        const o = Math.exp(-((d / influence) ** 2) * 1.5);
-        if (o < 0.06) continue;
-        out.push({ id: `${r}.${c}`, pts: hexPoints(hx, hy, R * 0.86), o });
+  const { hexes, poly } = useMemo(() => {
+    const R = w / 17; // small cells
+    const poly = hexPoints(R);
+    const stepX = Math.sqrt(3) * R; // pointy-top column spacing (cells touch)
+    const stepY = 1.5 * R;
+    const inf = w * 0.24; // falloff radius (tight)
+    const k = 2.1;
+    const vf = 0.82; // vertical factor < 1 → zone a bit taller
+    const thr = 0.08;
+    const reach = inf * 1.5;
+    const rows = Math.ceil(reach / stepY) + 1;
+    const cols = Math.ceil(reach / stepX) + 1;
+    const out: { id: string; x: number; y: number; o: number }[] = [];
+    for (let r = -rows; r <= rows; r++) {
+      for (let c = -cols; c <= cols; c++) {
+        const x = c * stepX + (r & 1 ? stepX / 2 : 0);
+        const y = r * stepY;
+        const d = Math.hypot(x, y * vf);
+        const o = Math.exp(-((d / inf) ** 2) * k);
+        if (o < thr) continue;
+        out.push({ id: `${r}.${c}`, x, y, o });
       }
     }
-    return out;
-  }, [center.x, center.y, w, h]);
+    return { hexes: out, poly };
+  }, [w]);
+
+  if (!w || !h) return null;
 
   return (
     <svg
@@ -54,20 +57,27 @@ export default function HeatmapOverlay({ center, size }: Props) {
       width={w}
       height={h}
       viewBox={`0 0 ${w} ${h}`}
+      style={{ overflow: "visible" }}
       aria-hidden="true"
     >
-      {hexes.map((hx) => (
-        <polygon
-          key={hx.id}
-          points={hx.pts}
-          // brighter, more saturated near the core; cooler/dim at the edges
-          fill={hx.o > 0.55 ? "#7bffb4" : "#28d97a"}
-          fillOpacity={(hx.o * 0.72).toFixed(3)}
-          stroke="#9dffc8"
-          strokeOpacity={(hx.o * 0.55).toFixed(3)}
-          strokeWidth={1}
-        />
-      ))}
+      <motion.g
+        initial={false}
+        animate={{ x: cx, y: cy }}
+        transition={{ type: "spring", stiffness: 520, damping: 34, mass: 0.6 }}
+      >
+        {hexes.map((hx) => (
+          <polygon
+            key={hx.id}
+            points={poly}
+            transform={`translate(${hx.x.toFixed(2)} ${hx.y.toFixed(2)})`}
+            fill={hx.o > 0.55 ? "#86ffbf" : "#2bd87c"}
+            fillOpacity={(hx.o * 0.72).toFixed(3)}
+            stroke="#06140d"
+            strokeOpacity={(hx.o * 0.4).toFixed(3)}
+            strokeWidth={0.6}
+          />
+        ))}
+      </motion.g>
     </svg>
   );
 }

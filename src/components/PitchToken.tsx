@@ -25,6 +25,7 @@ interface Props {
   onMove: (slotId: string, pos: { x: number; y: number }) => void;
   onPlayerDrop: (slotId: string, point: { x: number; y: number }) => void;
   onDragActiveChange: (active: boolean) => void;
+  onDragMove: (slotId: string, center: { x: number; y: number }) => void;
 }
 
 const clampPct = (v: number) => Math.max(4, Math.min(96, v));
@@ -40,6 +41,7 @@ export default function PitchToken({
   onMove,
   onPlayerDrop,
   onDragActiveChange,
+  onDragMove,
 }: Props) {
   const isBase = phase === "base";
   const half = TOKEN_SIZE / 2;
@@ -116,6 +118,11 @@ export default function PitchToken({
       onDragStart={() => {
         dragging.current = true;
         onDragActiveChange(true);
+        // Outside base, dragging a player reveals/keeps its influence zone.
+        if (!isBase) onSelect(slot.id);
+      }}
+      onDrag={() => {
+        if (!isBase) onDragMove(slot.id, { x: x.get() + half, y: y.get() + half });
       }}
       onDragEnd={handleDragEnd}
     >
