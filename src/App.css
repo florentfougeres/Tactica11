@@ -637,22 +637,6 @@
 .token__badge {
   pointer-events: none;
 }
-/* suppléant: small secondary disc tucked on the main one */
-.token__sub {
-  position: absolute;
-  right: -5px;
-  bottom: -5px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-size: 10px;
-  font-weight: 700;
-  color: #fff;
-  background: linear-gradient(150deg, #6b7a90, #44505f);
-  box-shadow: 0 0 0 2px rgba(8, 12, 18, 0.85);
-}
 .token__names {
   flex: 0 0 auto;
   display: flex;

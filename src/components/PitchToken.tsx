@@ -52,6 +52,9 @@ export default function PitchToken({
   const x = useMotionValue(targetX);
   const y = useMotionValue(targetY);
   const dragging = useRef(false);
+  // Set on drag start, checked by onClick to swallow the click a drag emits on
+  // release (otherwise it would toggle the selection off right after dropping).
+  const moved = useRef(false);
 
   // Animate to the target position whenever the phase / formation / stored
   // position changes — unless the user is actively dragging this token.
@@ -110,13 +113,20 @@ export default function PitchToken({
       dragMomentum={false}
       dragElastic={0.12}
       whileDrag={{ scale: 1.18, zIndex: 50 }}
+      onPointerDown={() => {
+        moved.current = false;
+      }}
       onClick={() => {
+        // A drag emits a click on release — ignore it so the selection (and its
+        // heatmap) survives the drop instead of toggling off.
+        if (moved.current) return;
         // Click selects (any phase) to reveal the influence heatmap; click the
         // selected token again to clear it. The roster popover stays base-only.
         if (!empty) onSelect(selected ? null : slot.id);
       }}
       onDragStart={() => {
         dragging.current = true;
+        moved.current = true;
         onDragActiveChange(true);
         // Outside base, dragging a player reveals/keeps its influence zone.
         if (!isBase) onSelect(slot.id);
@@ -128,11 +138,6 @@ export default function PitchToken({
     >
       <div className="token__disc">
         <span className="token__badge">{badge}</span>
-        {sub && (
-          <span className="token__sub" title={sub.name}>
-            {sub.name.slice(0, 1).toUpperCase()}
-          </span>
-        )}
       </div>
       <div className="token__names">
         <span className="token__name">{label}</span>
