@@ -13,6 +13,10 @@
   align-items: center;
   gap: 16px;
   padding: 10px 16px;
+  /* Sit above the layout so the export dropdown isn't painted under the pitch
+     (the .glass backdrop-filter makes this a stacking context). */
+  position: relative;
+  z-index: 20;
 }
 .brand {
   display: flex;
