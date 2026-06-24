@@ -104,12 +104,14 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
       </div>
 
       <div
-        className={`pitch-wrap ${tokenDragging ? "pitch-wrap--dragging" : ""}`}
+        className={`pitch-wrap ${
+          tokenDragging && phase === "base" ? "pitch-wrap--dragging" : ""
+        }`}
         ref={ref}
       >
         <div
           className={`pitch ${dropActive ? "pitch--drop" : ""} ${
-            tokenDragging ? "pitch--dragging" : ""
+            tokenDragging && phase === "base" ? "pitch--dragging" : ""
           }`}
           ref={innerRef}
         >
