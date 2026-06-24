@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FORMATIONS } from "../formations";
 
 interface Props {
@@ -21,6 +21,24 @@ export default function TopBar({
   onReset,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const fmRef = useRef<HTMLDivElement>(null);
+  const [fmOpen, setFmOpen] = useState(false);
+
+  useEffect(() => {
+    if (!fmOpen) return;
+    const onDown = (e: PointerEvent) => {
+      if (!fmRef.current?.contains(e.target as Node)) setFmOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFmOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [fmOpen]);
 
   return (
     <header className="topbar glass">
@@ -40,25 +58,43 @@ export default function TopBar({
         />
       </label>
 
-      <label className="topbar__field">
+      <div className="topbar__field">
         <span className="topbar__label">Système</span>
-        <div className="select-wrap">
-          <select
-            value={formation}
-            onChange={(e) => onFormation(e.target.value)}
-            aria-label="Système de jeu"
+        <div className="fmselect" ref={fmRef}>
+          <button
+            type="button"
+            className="fmselect__btn"
+            onClick={() => setFmOpen((o) => !o)}
+            aria-haspopup="listbox"
+            aria-expanded={fmOpen}
           >
-            {FORMATIONS.map((f) => (
-              <option key={f} value={f}>
-                {f}
-              </option>
-            ))}
-          </select>
-          <span className="select-wrap__chevron" aria-hidden="true">
-            ▾
-          </span>
+            <span>{formation}</span>
+            <span className="fmselect__chevron" aria-hidden="true">
+              ▾
+            </span>
+          </button>
+          {fmOpen && (
+            <ul className="fmselect__menu" role="listbox">
+              {FORMATIONS.map((f) => (
+                <li key={f}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={f === formation}
+                    className={f === formation ? "is-active" : ""}
+                    onClick={() => {
+                      onFormation(f);
+                      setFmOpen(false);
+                    }}
+                  >
+                    {f}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      </label>
+      </div>
 
       <div className="topbar__actions">
         <button className="btn btn--primary" onClick={onExport}>

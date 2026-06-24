@@ -101,20 +101,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     <div className="pitch-col">
       <div className="pitch-bar">
         <PhaseToggle phase={phase} onPhase={onPhase} />
-        {phase !== "base" && (
-          <label className="influence-switch">
-            <span>Zones d'influence</span>
-            <span className="switch">
-              <input
-                type="checkbox"
-                checked={influenceOn}
-                onChange={(e) => setInfluenceOn(e.target.checked)}
-              />
-              <span className="switch__track" />
-              <span className="switch__thumb" />
-            </span>
-          </label>
-        )}
       </div>
 
       <div
@@ -136,12 +122,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
               cy={liveCenter ? liveCenter.y : (selected.positions[phase].y / 100) * size.h}
               size={size}
             />
-          )}
-
-          {phase === "base" && (
-            <div className="pitch__hint">
-              Glisse les joueurs entre postes et effectif
-            </div>
           )}
 
         {dropActive && (
@@ -180,6 +160,27 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           />
         )}
         </div>
+      </div>
+
+      <div className="pitch-foot">
+        {phase === "base" ? (
+          <span className="pitch__hint">
+            Glisse les joueurs entre postes et effectif
+          </span>
+        ) : (
+          <label className="influence-switch">
+            <span>Zones d'influence</span>
+            <span className="switch">
+              <input
+                type="checkbox"
+                checked={influenceOn}
+                onChange={(e) => setInfluenceOn(e.target.checked)}
+              />
+              <span className="switch__track" />
+              <span className="switch__thumb" />
+            </span>
+          </label>
+        )}
       </div>
     </div>
   );
