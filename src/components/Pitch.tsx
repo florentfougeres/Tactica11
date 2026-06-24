@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
 import type { Phase, Player, Slot } from "../types";
 import PitchMarkings from "./PitchMarkings";
+import PhaseToggle from "./PhaseToggle";
 import PitchToken, { TOKEN_SIZE } from "./PitchToken";
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
   playerById: (id: string | null) => Player | null;
   selectedSlot: string | null;
   dropActive?: boolean;
+  onPhase: (phase: Phase) => void;
   onSelect: (slotId: string | null) => void;
   onMove: (slotId: string, pos: { x: number; y: number }) => void;
   onPlayerDrop: (slotId: string, point: { x: number; y: number }) => void;
@@ -24,6 +26,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     playerById,
     selectedSlot,
     dropActive,
+    onPhase,
     onSelect,
     onMove,
     onPlayerDrop,
@@ -87,14 +90,17 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         <div className="pitch__grass" />
         <PitchMarkings />
 
+        <div className="pitch__top">
+          <PhaseToggle phase={phase} onPhase={onPhase} />
+          {phase === "base" && (
+            <div className="pitch__hint">
+              Glisse les joueurs entre postes et effectif
+            </div>
+          )}
+        </div>
+
         {dropActive && (
           <div className="pitch__drop-hint">Dépose le joueur sur un poste</div>
-        )}
-
-        {phase === "base" && (
-          <div className="pitch__lock">
-            Compo · glisse les joueurs entre postes et effectif
-          </div>
         )}
 
         {size.w > 0 &&

@@ -12,7 +12,7 @@ import {
 } from "./storage";
 import Bench from "./components/Bench";
 import Pitch from "./components/Pitch";
-import Sidebar from "./components/Sidebar";
+import TopBar from "./components/TopBar";
 
 type Point = { x: number; y: number };
 
@@ -105,8 +105,11 @@ export default function App() {
   const changeFormation = (formation: string) =>
     setLineup((l) => {
       const fresh = buildSlots(formation);
+      // Reuse the existing slot ids so the PitchToken instances persist and
+      // spring to their new positions (instead of remounting with no animation).
       const slots = fresh.map((s, i) => ({
         ...s,
+        id: l.slots[i]?.id ?? s.id,
         starterId: l.slots[i]?.starterId ?? null,
         subId: l.slots[i]?.subId ?? null,
       }));
@@ -248,16 +251,15 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand__mark">⬡</span>
-          <span className="brand__name">
-            Tactica<span className="brand__accent">11</span>
-          </span>
-        </div>
-        <div className="topbar__title">{lineup.name}</div>
-        <div className="topbar__meta">{lineup.formation}</div>
-      </header>
+      <TopBar
+        name={lineup.name}
+        formation={lineup.formation}
+        onName={(name) => setLineup((l) => ({ ...l, name }))}
+        onFormation={changeFormation}
+        onExport={() => exportLineup(lineup)}
+        onImport={handleImport}
+        onReset={handleReset}
+      />
 
       <main className="layout">
         <Bench
@@ -278,27 +280,16 @@ export default function App() {
           playerById={playerById}
           selectedSlot={selectedSlot}
           dropActive={benchDragging}
+          onPhase={(p) => {
+            setPhase(p);
+            setSelectedSlot(null); // roster popover is base-only
+          }}
           onSelect={setSelectedSlot}
           onMove={moveSlot}
           onPlayerDrop={handlePlayerDrop}
           onRemoveStarter={removeStarter}
           onRemoveSub={removeSub}
           onSwap={swapStarterSub}
-        />
-
-        <Sidebar
-          name={lineup.name}
-          formation={lineup.formation}
-          phase={phase}
-          onName={(name) => setLineup((l) => ({ ...l, name }))}
-          onFormation={changeFormation}
-          onPhase={(p) => {
-            setPhase(p);
-            setSelectedSlot(null); // roster popover is base-only
-          }}
-          onExport={() => exportLineup(lineup)}
-          onImport={handleImport}
-          onReset={handleReset}
         />
       </main>
     </div>
