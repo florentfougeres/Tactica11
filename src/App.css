@@ -435,6 +435,67 @@
   align-items: center;
   gap: 14px;
 }
+/* contextual EA-FC role presets, shown above the foot when a player is selected */
+.pitch-presets {
+  flex: 0 0 auto;
+}
+.zone-presets {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  padding: 2px 0;
+  animation: menu-in 0.14s ease-out;
+}
+.zone-presets__focus {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--panel-border);
+}
+.zone-presets__focus-btn {
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 999px;
+  transition: color 0.15s, background 0.15s;
+}
+.zone-presets__focus-btn.is-active {
+  background: linear-gradient(150deg, var(--accent), var(--accent-2));
+  color: #06130c;
+}
+.zone-presets__roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.zone-presets__role {
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.zone-presets__role:hover {
+  border-color: rgba(33, 208, 122, 0.5);
+  background: rgba(33, 208, 122, 0.08);
+}
+.zone-presets__role.is-active {
+  border-color: var(--accent);
+  background: rgba(33, 208, 122, 0.18);
+  color: var(--accent);
+}
+
 /* foot reserves a constant height so the pitch never resizes between phases */
 .pitch-foot {
   flex: 0 0 auto;
