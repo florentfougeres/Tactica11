@@ -14,6 +14,8 @@ import Bench from "./components/Bench";
 import Pitch from "./components/Pitch";
 import TopBar from "./components/TopBar";
 import CsvImportDialog from "./components/CsvImportDialog";
+import ZonePresets from "./components/ZonePresets";
+import { presetsFor, presetRadii } from "./zonePresets";
 import { exportPitchPng } from "./exportImage";
 import type { ImportedPlayer } from "./csv";
 
@@ -33,6 +35,13 @@ export default function App() {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [benchDragging, setBenchDragging] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
+  const [influenceOn, setInfluenceOn] = useState(false);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+
+  // Forget the active preset whenever the selected player changes.
+  useEffect(() => {
+    setActivePreset(null);
+  }, [selectedSlot]);
 
   const pitchRef = useRef<HTMLDivElement>(null);
   const benchRef = useRef<HTMLElement>(null);
@@ -150,6 +159,23 @@ export default function App() {
       ...l,
       slots: l.slots.map((s) => (s.id === slotId ? { ...s, influence } : s)),
     }));
+
+  // Hand-edited via the pitch handles → no longer a named preset.
+  const setInfluenceManual = (slotId: string, influence: ZoneRadii) => {
+    setActivePreset(null);
+    setInfluence(slotId, influence);
+  };
+
+  // Apply an EA-FC role preset, mirrored onto the player's flank.
+  const applyPreset = (slotId: string, key: string) => {
+    const slot = lineup.slots.find((s) => s.id === slotId);
+    if (!slot) return;
+    const p = presetsFor(slot.role).find((r) => r.key === key);
+    if (!p) return;
+    const sideLeft = slot.positions[phase].x < 48;
+    setActivePreset(key);
+    setInfluence(slotId, presetRadii(p.base, sideLeft));
+  };
 
   // Pixel → pitch-percent helper for a drop point. Returns null if outside.
   const pointToPitchPct = (point: Point): Point | null => {
@@ -285,6 +311,45 @@ export default function App() {
     }
   };
 
+  // Influence controls live at the bottom of the Effectif panel (attack/defense
+  // only) so they don't shrink the pitch.
+  const selSlot = lineup.slots.find((s) => s.id === selectedSlot) ?? null;
+  const selStarter = selSlot ? playerById(selSlot.starterId) : null;
+  const influenceFooter =
+    phase === "base" ? undefined : (
+      <div className="influence-ctl">
+        <label className="influence-switch">
+          <span>Zones d'influence</span>
+          <span className="switch">
+            <input
+              type="checkbox"
+              checked={influenceOn}
+              onChange={(e) => setInfluenceOn(e.target.checked)}
+            />
+            <span className="switch__track" />
+            <span className="switch__thumb" />
+          </span>
+        </label>
+        {influenceOn &&
+          (selSlot && selStarter ? (
+            <div className="influence-ctl__roles">
+              <div className="influence-ctl__player">
+                {selSlot.role} · {selStarter.name}
+              </div>
+              <ZonePresets
+                presets={presetsFor(selSlot.role)}
+                activeKey={activePreset}
+                onPick={(k) => applyPreset(selSlot.id, k)}
+              />
+            </div>
+          ) : (
+            <p className="influence-ctl__hint">
+              Sélectionne un joueur pour ajuster sa zone.
+            </p>
+          ))}
+      </div>
+    );
+
   return (
     <div className="app">
       <TopBar
@@ -309,6 +374,7 @@ export default function App() {
           onDragStateChange={setBenchDragging}
           canDrag={phase === "base"}
           onImportCsv={() => setCsvOpen(true)}
+          footer={influenceFooter}
         />
 
         <Pitch
@@ -318,6 +384,7 @@ export default function App() {
           playerById={playerById}
           selectedSlot={selectedSlot}
           dropActive={benchDragging}
+          influenceOn={influenceOn}
           onPhase={(p) => {
             setPhase(p);
             setSelectedSlot(null); // roster popover is base-only
@@ -328,7 +395,7 @@ export default function App() {
           onRemoveStarter={removeStarter}
           onRemoveSub={removeSub}
           onSwap={swapStarterSub}
-          onInfluence={setInfluence}
+          onInfluence={setInfluenceManual}
         />
       </main>
 

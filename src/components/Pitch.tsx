@@ -6,15 +6,13 @@ import PhaseToggle from "./PhaseToggle";
 import PitchToken, { TOKEN_SIZE } from "./PitchToken";
 import HeatmapOverlay from "./HeatmapOverlay";
 import InfluenceHandles from "./InfluenceHandles";
-import ZonePresets from "./ZonePresets";
-import { presetsFor, presetRadii } from "../zonePresets";
-
 interface Props {
   slots: Slot[];
   phase: Phase;
   playerById: (id: string | null) => Player | null;
   selectedSlot: string | null;
   dropActive?: boolean;
+  influenceOn: boolean;
   onPhase: (phase: Phase) => void;
   onSelect: (slotId: string | null) => void;
   onMove: (slotId: string, pos: { x: number; y: number }) => void;
@@ -32,6 +30,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     playerById,
     selectedSlot,
     dropActive,
+    influenceOn,
     onPhase,
     onSelect,
     onMove,
@@ -48,13 +47,10 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   // True while a token is being dragged — lets the token escape the pitch's
   // overflow:hidden (e.g. when dragging onto the bench) and float above it.
   const [tokenDragging, setTokenDragging] = useState(false);
-  // Influence-heatmap view (attack/defense only) + live centre while dragging.
-  const [influenceOn, setInfluenceOn] = useState(false);
+  // Live centre while dragging a token (so the heatmap follows it).
   const [liveCenter, setLiveCenter] = useState<{ x: number; y: number } | null>(
     null,
   );
-  // Active zone preset (reset whenever the selection changes).
-  const [activePreset, setActivePreset] = useState<string | null>(null);
 
   const showInfluence = phase !== "base" && influenceOn;
 
@@ -82,20 +78,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   const radii = selected?.influence ?? DEFAULT_ZONE;
   const staticCx = selected ? (selected.positions[phase].x / 100) * size.w : 0;
   const staticCy = selected ? (selected.positions[phase].y / 100) * size.h : 0;
-
-  // Reset the active preset when a different player is selected.
-  useEffect(() => {
-    setActivePreset(null);
-  }, [selectedSlot]);
-
-  const sideLeft = selected ? selected.positions[phase].x < 48 : false;
-  const handlePick = (key: string) => {
-    if (!selected) return;
-    const p = presetsFor(selected.role).find((r) => r.key === key);
-    if (!p) return;
-    setActivePreset(key);
-    onInfluence(selected.id, presetRadii(p.base, sideLeft));
-  };
 
   // Close the popover on any click outside it (and outside the filled tokens,
   // so tapping another token re-selects instead of just closing), or Escape.
@@ -165,10 +147,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
                 size={size}
                 radii={radii}
                 pitchRef={innerRef}
-                onChange={(next) => {
-                  setActivePreset(null); // edited by hand → no longer a preset
-                  onInfluence(selected.id, next);
-                }}
+                onChange={(next) => onInfluence(selected.id, next)}
               />
             )}
 
@@ -208,35 +187,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           />
         )}
         </div>
-      </div>
-
-      {showInfluence && selected && selectedStarter && size.w > 0 && (
-        <ZonePresets
-          presets={presetsFor(selected.role)}
-          activeKey={activePreset}
-          onPick={handlePick}
-        />
-      )}
-
-      <div className="pitch-foot">
-        {phase === "base" ? (
-          <span className="pitch__hint">
-            Glisse les joueurs entre postes et effectif
-          </span>
-        ) : (
-          <label className="influence-switch">
-            <span>Zones d'influence</span>
-            <span className="switch">
-              <input
-                type="checkbox"
-                checked={influenceOn}
-                onChange={(e) => setInfluenceOn(e.target.checked)}
-              />
-              <span className="switch__track" />
-              <span className="switch__thumb" />
-            </span>
-          </label>
-        )}
       </div>
     </div>
   );
