@@ -10,6 +10,10 @@ export type Phase = "base" | "attack" | "defense";
 
 export const PHASES: Phase[] = ["base", "attack", "defense"];
 
+// Influence-zone display: off, the selected player's editable zone, or every
+// starter's zone blended into a team coverage map.
+export type InfluenceMode = "none" | "player" | "team";
+
 export interface Pos {
   x: number; // 0..100
   y: number; // 0..100
@@ -43,7 +47,9 @@ export interface Slot {
   starterId: string | null; // titulaire (principal)
   subId: string | null; // suppléant (optionnel)
   positions: Record<Phase, Pos>;
-  influence?: ZoneRadii; // custom influence-zone shape (shared across phases)
+  // Custom influence-zone shape per phase (base has no zone). Falls back to
+  // DEFAULT_ZONE when a phase isn't set.
+  influence?: Partial<Record<Phase, ZoneRadii>>;
 }
 
 export interface Lineup {

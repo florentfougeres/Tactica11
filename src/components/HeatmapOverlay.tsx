@@ -7,6 +7,8 @@ interface Props {
   cy: number;
   size: { w: number; h: number };
   radii: ZoneRadii; // zone extent in each direction (fraction of pitch width)
+  intensity?: number; // opacity multiplier (lower for additive team coverage)
+  animated?: boolean; // spring-follow the centre (single player) vs static (team)
 }
 
 // Pointy-top hexagon outline around (0,0), circumradius R.
@@ -24,7 +26,14 @@ function hexPoints(R: number): string {
 // with normalised distance; the ellipse edge (where the handles sit) is the
 // cutoff. The whole mesh is one <g> translated to the player, so it springs
 // along while dragging.
-export default function HeatmapOverlay({ cx, cy, size, radii }: Props) {
+export default function HeatmapOverlay({
+  cx,
+  cy,
+  size,
+  radii,
+  intensity = 1,
+  animated = true,
+}: Props) {
   const { w, h } = size;
   const { up, down, left, right } = radii;
 
@@ -59,33 +68,39 @@ export default function HeatmapOverlay({ cx, cy, size, radii }: Props) {
 
   if (!w || !h) return null;
 
+  const cells = hexes.map((hx) => (
+    <polygon
+      key={hx.id}
+      points={poly}
+      transform={`translate(${hx.x.toFixed(2)} ${hx.y.toFixed(2)})`}
+      fill={hx.o > 0.55 ? "#7bffb4" : "#2bd87c"}
+      fillOpacity={(hx.o * 0.72 * intensity).toFixed(3)}
+      stroke="#9dffc8"
+      strokeOpacity={(hx.o * 0.4 * intensity).toFixed(3)}
+      strokeWidth={0.6}
+    />
+  ));
+
   return (
     <svg
-      className="heatmap"
+      className={`heatmap ${animated ? "" : "heatmap--flat"}`}
       width={w}
       height={h}
       viewBox={`0 0 ${w} ${h}`}
       style={{ overflow: "visible" }}
       aria-hidden="true"
     >
-      <motion.g
-        initial={false}
-        animate={{ x: cx, y: cy }}
-        transition={{ type: "spring", stiffness: 520, damping: 34, mass: 0.6 }}
-      >
-        {hexes.map((hx) => (
-          <polygon
-            key={hx.id}
-            points={poly}
-            transform={`translate(${hx.x.toFixed(2)} ${hx.y.toFixed(2)})`}
-            fill={hx.o > 0.55 ? "#7bffb4" : "#2bd87c"}
-            fillOpacity={(hx.o * 0.72).toFixed(3)}
-            stroke="#9dffc8"
-            strokeOpacity={(hx.o * 0.4).toFixed(3)}
-            strokeWidth={0.6}
-          />
-        ))}
-      </motion.g>
+      {animated ? (
+        <motion.g
+          initial={false}
+          animate={{ x: cx, y: cy }}
+          transition={{ type: "spring", stiffness: 520, damping: 34, mass: 0.6 }}
+        >
+          {cells}
+        </motion.g>
+      ) : (
+        <g transform={`translate(${cx} ${cy})`}>{cells}</g>
+      )}
     </svg>
   );
 }

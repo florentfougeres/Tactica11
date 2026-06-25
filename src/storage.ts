@@ -1,5 +1,25 @@
-import { FILE_VERSION, type Lineup, type LineupFile, type Slot } from "./types";
+import {
+  FILE_VERSION,
+  type Lineup,
+  type LineupFile,
+  type Phase,
+  type Slot,
+  type ZoneRadii,
+} from "./types";
 import { buildSlots } from "./formations";
+
+// Influence used to be a single flat ZoneRadii (shared across phases). Convert
+// that to the per-phase shape, applying the old zone to both attack and defense.
+function migrateInfluence(
+  inf: unknown,
+): Partial<Record<Phase, ZoneRadii>> | undefined {
+  if (!inf || typeof inf !== "object") return undefined;
+  if ("up" in inf) {
+    const flat = inf as ZoneRadii;
+    return { attack: flat, defense: flat };
+  }
+  return inf as Partial<Record<Phase, ZoneRadii>>;
+}
 
 const STORAGE_KEY = "tactica11.lineup";
 
@@ -32,7 +52,7 @@ function migrateLineup(parsed: Lineup): Lineup {
       ...s,
       starterId: old.starterId ?? old.playerId ?? null,
       subId: old.subId ?? null,
-      influence: old.influence,
+      influence: migrateInfluence(old.influence),
       positions: {
         base: s.positions.base, // base always comes from the template (locked)
         attack: old.positions?.attack ?? s.positions.attack,
