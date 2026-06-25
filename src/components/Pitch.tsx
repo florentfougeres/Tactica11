@@ -90,9 +90,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
       if (
         t?.closest(".slot-pop") ||
         t?.closest(".token--filled") ||
-        t?.closest(".influence-switch") ||
-        t?.closest(".zone-handles") ||
-        t?.closest(".zone-presets")
+        t?.closest(".influence-ctl") ||
+        t?.closest(".zone-handles")
       )
         return;
       onSelect(null);
