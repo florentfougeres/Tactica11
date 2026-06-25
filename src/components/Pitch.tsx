@@ -6,13 +6,13 @@ import PhaseToggle from "./PhaseToggle";
 import PitchToken, { TOKEN_SIZE } from "./PitchToken";
 import HeatmapOverlay from "./HeatmapOverlay";
 import InfluenceHandles from "./InfluenceHandles";
-
 interface Props {
   slots: Slot[];
   phase: Phase;
   playerById: (id: string | null) => Player | null;
   selectedSlot: string | null;
   dropActive?: boolean;
+  influenceOn: boolean;
   onPhase: (phase: Phase) => void;
   onSelect: (slotId: string | null) => void;
   onMove: (slotId: string, pos: { x: number; y: number }) => void;
@@ -30,6 +30,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     playerById,
     selectedSlot,
     dropActive,
+    influenceOn,
     onPhase,
     onSelect,
     onMove,
@@ -46,8 +47,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   // True while a token is being dragged — lets the token escape the pitch's
   // overflow:hidden (e.g. when dragging onto the bench) and float above it.
   const [tokenDragging, setTokenDragging] = useState(false);
-  // Influence-heatmap view (attack/defense only) + live centre while dragging.
-  const [influenceOn, setInfluenceOn] = useState(false);
+  // Live centre while dragging a token (so the heatmap follows it).
   const [liveCenter, setLiveCenter] = useState<{ x: number; y: number } | null>(
     null,
   );
@@ -89,7 +89,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         t?.closest(".slot-pop") ||
         t?.closest(".token--filled") ||
         t?.closest(".influence-switch") ||
-        t?.closest(".zone-handles")
+        t?.closest(".zone-handles") ||
+        t?.closest(".zone-presets")
       )
         return;
       onSelect(null);
@@ -186,27 +187,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           />
         )}
         </div>
-      </div>
-
-      <div className="pitch-foot">
-        {phase === "base" ? (
-          <span className="pitch__hint">
-            Glisse les joueurs entre postes et effectif
-          </span>
-        ) : (
-          <label className="influence-switch">
-            <span>Zones d'influence</span>
-            <span className="switch">
-              <input
-                type="checkbox"
-                checked={influenceOn}
-                onChange={(e) => setInfluenceOn(e.target.checked)}
-              />
-              <span className="switch__track" />
-              <span className="switch__thumb" />
-            </span>
-          </label>
-        )}
       </div>
     </div>
   );

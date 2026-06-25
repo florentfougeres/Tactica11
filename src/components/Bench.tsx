@@ -1,4 +1,4 @@
-import { forwardRef, useRef, useState } from "react";
+import { forwardRef, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import type { Player } from "../types";
@@ -12,6 +12,7 @@ interface Props {
   onDragStateChange?: (active: boolean) => void;
   canDrag: boolean; // roster drag only allowed in the "base" phase
   onImportCsv: () => void;
+  footer?: ReactNode; // pinned section at the bottom (e.g. influence controls)
 }
 
 const Bench = forwardRef<HTMLElement, Props>(function Bench(
@@ -24,6 +25,7 @@ const Bench = forwardRef<HTMLElement, Props>(function Bench(
     onDragStateChange,
     canDrag,
     onImportCsv,
+    footer,
   },
   ref,
 ) {
@@ -78,6 +80,8 @@ const Bench = forwardRef<HTMLElement, Props>(function Bench(
           />
         ))}
       </div>
+
+      {footer && <div className="bench__footer">{footer}</div>}
     </aside>
   );
 });
