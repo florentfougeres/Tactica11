@@ -97,7 +97,6 @@ const PRESETS: Record<Group, RolePreset[]> = {
   ],
   striker: [
     { key: "advanced", label: "Avant-centre", base: { up: 0.4, down: 0.2, left: 0.22, right: 0.22 } },
-    { key: "poacher", label: "Renard des surfaces", base: { up: 0.26, down: 0.12, left: 0.18, right: 0.18 } },
     { key: "false9", label: "Faux 9", base: { up: 0.3, down: 0.34, left: 0.26, right: 0.26 } },
     { key: "target", label: "Avant pivot", base: { up: 0.3, down: 0.18, left: 0.26, right: 0.26 } },
   ],
