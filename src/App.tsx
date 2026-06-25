@@ -154,10 +154,15 @@ export default function App() {
       ),
     }));
 
-  const setInfluence = (slotId: string, influence: ZoneRadii) =>
+  // Influence shape is per phase; edits apply to the current (attack/defense) one.
+  const setInfluence = (slotId: string, radii: ZoneRadii) =>
     setLineup((l) => ({
       ...l,
-      slots: l.slots.map((s) => (s.id === slotId ? { ...s, influence } : s)),
+      slots: l.slots.map((s) =>
+        s.id === slotId
+          ? { ...s, influence: { ...s.influence, [phase]: radii } }
+          : s,
+      ),
     }));
 
   // Hand-edited via the pitch handles → no longer a named preset.
@@ -339,7 +344,8 @@ export default function App() {
           (selSlot && selStarter ? (
             <div className="influence-ctl__roles">
               <div className="influence-ctl__player">
-                {selSlot.role} · {selStarter.name}
+                {selSlot.role} · {selStarter.name} ·{" "}
+                {phase === "attack" ? "Attaque" : "Défense"}
               </div>
               <ZonePresets
                 presets={presetsFor(selSlot.role)}

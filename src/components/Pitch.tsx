@@ -77,7 +77,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
 
   const selected = slots.find((s) => s.id === selectedSlot) ?? null;
   const selectedStarter = selected ? playerById(selected.starterId) : null;
-  const radii = selected?.influence ?? DEFAULT_ZONE;
+  const radii = selected?.influence?.[phase] ?? DEFAULT_ZONE;
   const staticCx = selected ? (selected.positions[phase].x / 100) * size.w : 0;
   const staticCy = selected ? (selected.positions[phase].y / 100) * size.h : 0;
 
@@ -139,7 +139,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
                   cx={(s.positions[phase].x / 100) * size.w}
                   cy={(s.positions[phase].y / 100) * size.h}
                   size={size}
-                  radii={s.influence ?? DEFAULT_ZONE}
+                  radii={s.influence?.[phase] ?? DEFAULT_ZONE}
                   intensity={0.42}
                   animated={false}
                 />

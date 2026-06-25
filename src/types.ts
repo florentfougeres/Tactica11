@@ -47,7 +47,9 @@ export interface Slot {
   starterId: string | null; // titulaire (principal)
   subId: string | null; // suppléant (optionnel)
   positions: Record<Phase, Pos>;
-  influence?: ZoneRadii; // custom influence-zone shape (shared across phases)
+  // Custom influence-zone shape per phase (base has no zone). Falls back to
+  // DEFAULT_ZONE when a phase isn't set.
+  influence?: Partial<Record<Phase, ZoneRadii>>;
 }
 
 export interface Lineup {
