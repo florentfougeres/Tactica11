@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
-import type { Phase, Player, Slot, ZoneRadii } from "../types";
+import type { InfluenceMode, Phase, Player, Slot, ZoneRadii } from "../types";
 import { DEFAULT_ZONE } from "../types";
 import PitchMarkings from "./PitchMarkings";
 import PhaseToggle from "./PhaseToggle";
@@ -12,7 +12,7 @@ interface Props {
   playerById: (id: string | null) => Player | null;
   selectedSlot: string | null;
   dropActive?: boolean;
-  influenceOn: boolean;
+  influenceMode: InfluenceMode;
   onPhase: (phase: Phase) => void;
   onSelect: (slotId: string | null) => void;
   onMove: (slotId: string, pos: { x: number; y: number }) => void;
@@ -30,7 +30,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     playerById,
     selectedSlot,
     dropActive,
-    influenceOn,
+    influenceMode,
     onPhase,
     onSelect,
     onMove,
@@ -52,7 +52,9 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     null,
   );
 
-  const showInfluence = phase !== "base" && influenceOn;
+  const onPitch = phase !== "base";
+  const showPlayer = onPitch && influenceMode === "player";
+  const showTeam = onPitch && influenceMode === "team";
 
   const handleDragActive = (active: boolean) => {
     setTokenDragging(active);
@@ -127,7 +129,23 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           <div className="pitch__grass" />
           <PitchMarkings />
 
-          {showInfluence && selected && selectedStarter && size.w > 0 && (
+          {showTeam &&
+            size.w > 0 &&
+            slots
+              .filter((s) => s.starterId)
+              .map((s) => (
+                <HeatmapOverlay
+                  key={s.id}
+                  cx={(s.positions[phase].x / 100) * size.w}
+                  cy={(s.positions[phase].y / 100) * size.h}
+                  size={size}
+                  radii={s.influence ?? DEFAULT_ZONE}
+                  intensity={0.42}
+                  animated={false}
+                />
+              ))}
+
+          {showPlayer && selected && selectedStarter && size.w > 0 && (
             <HeatmapOverlay
               cx={liveCenter ? liveCenter.x : staticCx}
               cy={liveCenter ? liveCenter.y : staticCy}
@@ -136,7 +154,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
             />
           )}
 
-          {showInfluence &&
+          {showPlayer &&
             selected &&
             selectedStarter &&
             size.w > 0 &&

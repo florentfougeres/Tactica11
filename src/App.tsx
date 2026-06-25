@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import type { Lineup, Phase, Player, ZoneRadii } from "./types";
+import type { InfluenceMode, Lineup, Phase, Player, ZoneRadii } from "./types";
 import { buildSlots } from "./formations";
 import {
   createDefaultLineup,
@@ -35,7 +35,7 @@ export default function App() {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [benchDragging, setBenchDragging] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
-  const [influenceOn, setInfluenceOn] = useState(false);
+  const [influenceMode, setInfluenceMode] = useState<InfluenceMode>("none");
   const [activePreset, setActivePreset] = useState<string | null>(null);
 
   // Forget the active preset whenever the selected player changes.
@@ -315,22 +315,27 @@ export default function App() {
   // only) so they don't shrink the pitch.
   const selSlot = lineup.slots.find((s) => s.id === selectedSlot) ?? null;
   const selStarter = selSlot ? playerById(selSlot.starterId) : null;
+  const INFLUENCE_LABEL: Record<InfluenceMode, string> = {
+    none: "Aucune",
+    player: "Joueur",
+    team: "Équipe",
+  };
   const influenceFooter =
     phase === "base" ? undefined : (
       <div className="influence-ctl">
-        <label className="influence-switch">
-          <span>Zones d'influence</span>
-          <span className="switch">
-            <input
-              type="checkbox"
-              checked={influenceOn}
-              onChange={(e) => setInfluenceOn(e.target.checked)}
-            />
-            <span className="switch__track" />
-            <span className="switch__thumb" />
-          </span>
-        </label>
-        {influenceOn &&
+        <span className="influence-ctl__title">Zones d'influence</span>
+        <div className="influence-mode" role="group" aria-label="Zones d'influence">
+          {(["none", "player", "team"] as InfluenceMode[]).map((m) => (
+            <button
+              key={m}
+              className={`influence-mode__btn ${influenceMode === m ? "is-active" : ""}`}
+              onClick={() => setInfluenceMode(m)}
+            >
+              {INFLUENCE_LABEL[m]}
+            </button>
+          ))}
+        </div>
+        {influenceMode === "player" &&
           (selSlot && selStarter ? (
             <div className="influence-ctl__roles">
               <div className="influence-ctl__player">
@@ -347,6 +352,11 @@ export default function App() {
               Sélectionne un joueur pour ajuster sa zone.
             </p>
           ))}
+        {influenceMode === "team" && (
+          <p className="influence-ctl__hint">
+            Vert vif = zone bien couverte · terrain sombre = trou.
+          </p>
+        )}
       </div>
     );
 
@@ -384,7 +394,7 @@ export default function App() {
           playerById={playerById}
           selectedSlot={selectedSlot}
           dropActive={benchDragging}
-          influenceOn={influenceOn}
+          influenceMode={influenceMode}
           onPhase={(p) => {
             setPhase(p);
             setSelectedSlot(null); // roster popover is base-only

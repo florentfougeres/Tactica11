@@ -10,6 +10,10 @@ export type Phase = "base" | "attack" | "defense";
 
 export const PHASES: Phase[] = ["base", "attack", "defense"];
 
+// Influence-zone display: off, the selected player's editable zone, or every
+// starter's zone blended into a team coverage map.
+export type InfluenceMode = "none" | "player" | "team";
+
 export interface Pos {
   x: number; // 0..100
   y: number; // 0..100
