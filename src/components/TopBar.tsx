@@ -248,8 +248,21 @@ export default function TopBar({
         <button className="btn" onClick={() => fileRef.current?.click()}>
           Importer…
         </button>
-        <button className="btn btn--ghost" onClick={onNewCompo}>
-          Nouvelle
+        <button
+          className="btn btn--icon"
+          onClick={onNewCompo}
+          title="Nouvelle compo"
+          aria-label="Nouvelle compo"
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9l-6-6Z"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+            <path d="M13 3v6h6M12 12v5M9.5 14.5h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </button>
         <input
           ref={fileRef}
