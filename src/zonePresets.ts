@@ -61,22 +61,24 @@ const PRESETS: Record<Group, RolePreset[]> = {
   fullback: [
     { key: "fb", label: "Latéral", base: { up: 0.28, down: 0.22, left: 0.16, right: 0.26 } },
     { key: "wb", label: "Latéral offensif", base: { up: 0.42, down: 0.18, left: 0.16, right: 0.28 } },
+    { key: "piston", label: "Piston", base: { up: 0.44, down: 0.3, left: 0.14, right: 0.28 } },
     { key: "falseback", label: "Faux latéral", base: { up: 0.22, down: 0.2, left: 0.26, right: 0.16 } },
   ],
   cb: [
-    { key: "def", label: "Défenseur", base: { up: 0.16, down: 0.26, left: 0.26, right: 0.26 } },
+    { key: "excentre", label: "Excentré", base: { up: 0.18, down: 0.24, left: 0.2, right: 0.3 } },
     { key: "stopper", label: "Stoppeur", base: { up: 0.28, down: 0.2, left: 0.22, right: 0.22 } },
     { key: "bpd", label: "Relanceur", base: { up: 0.22, down: 0.24, left: 0.28, right: 0.28 } },
   ],
   cdm: [
     { key: "holding", label: "Sentinelle", base: { up: 0.24, down: 0.24, left: 0.24, right: 0.24 } },
     { key: "dlp", label: "Meneur reculé", base: { up: 0.3, down: 0.22, left: 0.3, right: 0.3 } },
-    { key: "halfback", label: "Demi-centre", base: { up: 0.2, down: 0.3, left: 0.28, right: 0.28 } },
+    { key: "dm", label: "Milieu défensif", base: { up: 0.22, down: 0.3, left: 0.26, right: 0.26 } },
   ],
   cm: [
     { key: "b2b", label: "Box-to-box", base: { up: 0.42, down: 0.36, left: 0.22, right: 0.22 } },
     { key: "playmaker", label: "Meneur de jeu", base: { up: 0.34, down: 0.24, left: 0.3, right: 0.3 } },
-    { key: "halfwinger", label: "Demi-ailier", base: { up: 0.36, down: 0.2, left: 0.18, right: 0.34 } },
+    { key: "cm", label: "Milieu central", base: { up: 0.32, down: 0.28, left: 0.26, right: 0.26 } },
+    { key: "dm", label: "Milieu défensif", base: { up: 0.22, down: 0.3, left: 0.26, right: 0.26 } },
   ],
   cam: [
     { key: "playmaker", label: "Meneur de jeu", base: { up: 0.34, down: 0.24, left: 0.32, right: 0.32 } },
@@ -85,7 +87,7 @@ const PRESETS: Record<Group, RolePreset[]> = {
   ],
   wide: [
     { key: "winger", label: "Ailier", base: { up: 0.34, down: 0.22, left: 0.16, right: 0.28 } },
-    { key: "widemid", label: "Milieu de couloir", base: { up: 0.3, down: 0.26, left: 0.18, right: 0.26 } },
+    { key: "piston", label: "Piston", base: { up: 0.44, down: 0.3, left: 0.14, right: 0.28 } },
     { key: "wpm", label: "Meneur excentré", base: { up: 0.3, down: 0.22, left: 0.28, right: 0.26 } },
   ],
   winger: [
