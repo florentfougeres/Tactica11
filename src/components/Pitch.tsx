@@ -7,7 +7,7 @@ import PitchToken, { TOKEN_SIZE } from "./PitchToken";
 import HeatmapOverlay from "./HeatmapOverlay";
 import InfluenceHandles from "./InfluenceHandles";
 import ZonePresets from "./ZonePresets";
-import { presetsFor, presetRadii, type ZoneFocus } from "../zonePresets";
+import { presetsFor, presetRadii } from "../zonePresets";
 
 interface Props {
   slots: Slot[];
@@ -53,8 +53,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   const [liveCenter, setLiveCenter] = useState<{ x: number; y: number } | null>(
     null,
   );
-  // Zone-preset bar state (reset whenever the selection changes).
-  const [presetFocus, setPresetFocus] = useState<ZoneFocus>("balanced");
+  // Active zone preset (reset whenever the selection changes).
   const [activePreset, setActivePreset] = useState<string | null>(null);
 
   const showInfluence = phase !== "base" && influenceOn;
@@ -84,26 +83,18 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   const staticCx = selected ? (selected.positions[phase].x / 100) * size.w : 0;
   const staticCy = selected ? (selected.positions[phase].y / 100) * size.h : 0;
 
-  // Reset the preset bar when a different player is selected.
+  // Reset the active preset when a different player is selected.
   useEffect(() => {
-    setPresetFocus("balanced");
     setActivePreset(null);
   }, [selectedSlot]);
 
   const sideLeft = selected ? selected.positions[phase].x < 48 : false;
-  const applyPreset = (key: string, focus: ZoneFocus) => {
+  const handlePick = (key: string) => {
     if (!selected) return;
     const p = presetsFor(selected.role).find((r) => r.key === key);
     if (!p) return;
-    onInfluence(selected.id, presetRadii(p.base, focus, sideLeft));
-  };
-  const handlePick = (key: string) => {
     setActivePreset(key);
-    applyPreset(key, presetFocus);
-  };
-  const handleFocus = (f: ZoneFocus) => {
-    setPresetFocus(f);
-    if (activePreset) applyPreset(activePreset, f);
+    onInfluence(selected.id, presetRadii(p.base, sideLeft));
   };
 
   // Close the popover on any click outside it (and outside the filled tokens,
@@ -219,12 +210,10 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         </div>
       </div>
 
-      {showInfluence && selected && selectedStarter && size.w > 0 && !tokenDragging && (
+      {showInfluence && selected && selectedStarter && size.w > 0 && (
         <ZonePresets
           presets={presetsFor(selected.role)}
-          focus={presetFocus}
           activeKey={activePreset}
-          onFocus={handleFocus}
           onPick={handlePick}
         />
       )}

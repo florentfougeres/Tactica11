@@ -5,14 +5,6 @@ import type { ZoneRadii } from "./types";
 // and mirrored for the left side. Focus tilts the zone forward (attack) or back
 // (defense). Values are fractions of the pitch width.
 
-export type ZoneFocus = "defense" | "balanced" | "attack";
-
-export const FOCUS_LABEL: Record<ZoneFocus, string> = {
-  defense: "Déf",
-  balanced: "Équ",
-  attack: "Att",
-};
-
 export interface RolePreset {
   key: string;
   label: string;
@@ -115,20 +107,10 @@ export function presetsFor(role: string): RolePreset[] {
 
 const clamp = (v: number) => Math.max(0.06, Math.min(0.62, v));
 
-// Apply the chosen focus (forward/back bias) and mirror onto the left flank.
-export function presetRadii(
-  base: ZoneRadii,
-  focus: ZoneFocus,
-  sideLeft: boolean,
-): ZoneRadii {
-  let { up, down, left, right } = base;
-  if (focus === "attack") {
-    up += 0.1;
-    down -= 0.07;
-  } else if (focus === "defense") {
-    up -= 0.07;
-    down += 0.1;
-  }
-  if (sideLeft) [left, right] = [right, left];
+// Mirror the (right-reference) base onto the left flank when needed.
+export function presetRadii(base: ZoneRadii, sideLeft: boolean): ZoneRadii {
+  const { up, down } = base;
+  const left = sideLeft ? base.right : base.left;
+  const right = sideLeft ? base.left : base.right;
   return { up: clamp(up), down: clamp(down), left: clamp(left), right: clamp(right) };
 }
