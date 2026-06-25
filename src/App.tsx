@@ -6,8 +6,9 @@ import {
   createDefaultLineup,
   exportLineup,
   importLineup,
-  loadLineup,
-  saveLineup,
+  loadLibrary,
+  migrateLineup,
+  saveLibrary,
   uid,
 } from "./storage";
 import Bench from "./components/Bench";
@@ -17,6 +18,8 @@ import CsvImportDialog from "./components/CsvImportDialog";
 import ZonePresets from "./components/ZonePresets";
 import { presetsFor, presetRadii } from "./zonePresets";
 import { exportPitchPng } from "./exportImage";
+import { buildShareUrl, decodeLineup, takeSharedFromUrl } from "./share";
+import { useUndoableLineup } from "./useUndoableLineup";
 import type { ImportedPlayer } from "./csv";
 
 type Point = { x: number; y: number };
@@ -30,7 +33,14 @@ function pointInRect(p: Point, el: HTMLElement | null): boolean {
 }
 
 export default function App() {
-  const [lineup, setLineup] = useState<Lineup>(() => loadLineup());
+  const initialLib = useMemo(() => loadLibrary(), []);
+  const [library, setLibrary] = useState<Lineup[]>(initialLib.lineups);
+  const { lineup, setLineup, undo, redo, reset, canUndo, canRedo } =
+    useUndoableLineup(
+      initialLib.lineups.find((l) => l.id === initialLib.currentId) ??
+        initialLib.lineups[0],
+    );
+
   const [phase, setPhase] = useState<Phase>("base");
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [benchDragging, setBenchDragging] = useState(false);
@@ -46,9 +56,30 @@ export default function App() {
   const pitchRef = useRef<HTMLDivElement>(null);
   const benchRef = useRef<HTMLElement>(null);
 
+  // If opened on a share link, import the encoded compo as a new entry.
   useEffect(() => {
-    saveLineup(lineup);
+    const enc = takeSharedFromUrl();
+    if (!enc) return;
+    const decoded = decodeLineup(enc);
+    if (!decoded) return;
+    const compo = { ...migrateLineup(decoded), id: uid("lineup") };
+    setLibrary((lib) => [...lib, compo]);
+    reset(compo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Keep the current compo's library entry in sync (debounced, so a drag burst
+  // syncs once), then persist the whole library.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setLibrary((lib) => lib.map((l) => (l.id === lineup.id ? lineup : l)));
+    }, 400);
+    return () => clearTimeout(t);
   }, [lineup]);
+
+  useEffect(() => {
+    saveLibrary({ lineups: library, currentId: lineup.id });
+  }, [library, lineup.id]);
 
   // Invariant: a slot can never hold a sub without a starter (that would render
   // as an empty token with an invisible, trapped player). Auto-promote the sub.
@@ -63,7 +94,7 @@ export default function App() {
         ),
       }));
     }
-  }, [lineup.slots]);
+  }, [lineup.slots, setLineup]);
 
   const playerMap = useMemo(() => {
     const m = new Map<string, Player>();
@@ -288,21 +319,80 @@ export default function App() {
       ),
     }));
 
-  // --- file / reset ---
+  // --- file / library ---
   const handleImport = async (file: File) => {
     try {
-      const imported = await importLineup(file);
-      setLineup(imported);
+      const imported = { ...(await importLineup(file)), id: uid("lineup") };
+      setLibrary((lib) => [...lib, imported]);
+      reset(imported);
       setSelectedSlot(null);
     } catch {
       alert("Impossible de lire ce fichier Tactica11.");
     }
   };
 
-  const handleReset = () => {
-    if (confirm("Créer une nouvelle compo ? La compo actuelle sera remplacée."))
-      setLineup(createDefaultLineup());
+  const openCompo = (id: string) => {
+    if (id === lineup.id) return;
+    setLibrary((lib) => lib.map((l) => (l.id === lineup.id ? lineup : l)));
+    const target = library.find((l) => l.id === id);
+    if (target) {
+      reset(structuredClone(target));
+      setSelectedSlot(null);
+    }
   };
+
+  const newCompo = () => {
+    const c = createDefaultLineup();
+    setLibrary((lib) => [...lib, c]);
+    reset(c);
+    setSelectedSlot(null);
+  };
+
+  const duplicateCompo = () => {
+    const c = {
+      ...structuredClone(lineup),
+      id: uid("lineup"),
+      name: `${lineup.name} (copie)`,
+    };
+    setLibrary((lib) => [...lib, c]);
+    reset(c);
+    setSelectedSlot(null);
+  };
+
+  const deleteCompo = (id: string) => {
+    const rest = library.filter((l) => l.id !== id);
+    if (rest.length === 0) {
+      const def = createDefaultLineup();
+      setLibrary([def]);
+      reset(def);
+    } else {
+      setLibrary(rest);
+      if (id === lineup.id) reset(structuredClone(rest[0]));
+    }
+    setSelectedSlot(null);
+  };
+
+  const copyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(buildShareUrl(lineup));
+    } catch {
+      alert("Impossible de copier le lien.");
+    }
+  };
+
+  // Undo / redo keyboard shortcuts (ignored while typing in a field).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== "z") return;
+      const t = e.target as HTMLElement | null;
+      if (t && /^(input|textarea|select)$/i.test(t.tagName)) return;
+      e.preventDefault();
+      if (e.shiftKey) redo();
+      else undo();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [undo, redo]);
 
   const handleExportPng = async () => {
     const pitchEl = pitchRef.current?.querySelector(".pitch") as HTMLElement | null;
@@ -371,12 +461,22 @@ export default function App() {
       <TopBar
         name={lineup.name}
         formation={lineup.formation}
+        compos={library.map((l) => ({ id: l.id, name: l.name }))}
+        currentId={lineup.id}
+        canUndo={canUndo}
+        canRedo={canRedo}
         onName={(name) => setLineup((l) => ({ ...l, name }))}
         onFormation={changeFormation}
+        onOpenCompo={openCompo}
+        onNewCompo={newCompo}
+        onDuplicate={duplicateCompo}
+        onDelete={deleteCompo}
+        onUndo={undo}
+        onRedo={redo}
         onExport={() => exportLineup(lineup)}
         onExportPng={handleExportPng}
+        onCopyLink={copyShareLink}
         onImport={handleImport}
-        onReset={handleReset}
       />
 
       <main className="layout">

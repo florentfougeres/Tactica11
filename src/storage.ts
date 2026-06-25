@@ -41,7 +41,7 @@ export function createDefaultLineup(): Lineup {
 
 // Normalise a lineup that may come from an older schema (v1 used `playerId`
 // and only had attack/defense positions, no locked "base" phase, no sub).
-function migrateLineup(parsed: Lineup): Lineup {
+export function migrateLineup(parsed: Lineup): Lineup {
   const fresh = buildSlots(parsed.formation || "4-3-3");
   const slots = fresh.map((s, i) => {
     const old = parsed.slots[i] as
@@ -63,23 +63,53 @@ function migrateLineup(parsed: Lineup): Lineup {
   return { ...parsed, slots };
 }
 
-export function loadLineup(): Lineup {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return createDefaultLineup();
-    const parsed = JSON.parse(raw) as Lineup;
-    if (!parsed.slots || !parsed.players) return createDefaultLineup();
-    return migrateLineup(parsed);
-  } catch {
-    return createDefaultLineup();
-  }
+// --- Library (several compos in localStorage) ---
+
+const LIBRARY_KEY = "tactica11.library";
+const CURRENT_KEY = "tactica11.currentId";
+
+export interface Library {
+  lineups: Lineup[];
+  currentId: string;
 }
 
-export function saveLineup(lineup: Lineup): void {
+export function loadLibrary(): Library {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(lineup));
+    const raw = localStorage.getItem(LIBRARY_KEY);
+    if (raw) {
+      const lineups = (JSON.parse(raw) as Lineup[])
+        .filter((l) => l && l.slots && l.players)
+        .map(migrateLineup);
+      if (lineups.length) {
+        const saved = localStorage.getItem(CURRENT_KEY);
+        const currentId = lineups.some((l) => l.id === saved)
+          ? (saved as string)
+          : lineups[0].id;
+        return { lineups, currentId };
+      }
+    }
+    // migrate a legacy single-lineup save into the library
+    const legacy = localStorage.getItem(STORAGE_KEY);
+    if (legacy) {
+      const parsed = JSON.parse(legacy) as Lineup;
+      if (parsed.slots && parsed.players) {
+        const lineup = migrateLineup(parsed);
+        return { lineups: [lineup], currentId: lineup.id };
+      }
+    }
   } catch {
-    // storage full or unavailable — ignore, the export still works
+    // fall through to a fresh library
+  }
+  const def = createDefaultLineup();
+  return { lineups: [def], currentId: def.id };
+}
+
+export function saveLibrary(lib: Library): void {
+  try {
+    localStorage.setItem(LIBRARY_KEY, JSON.stringify(lib.lineups));
+    localStorage.setItem(CURRENT_KEY, lib.currentId);
+  } catch {
+    // storage full or unavailable — ignore, export still works
   }
 }
 
