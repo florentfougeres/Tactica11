@@ -51,10 +51,32 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   const [liveCenter, setLiveCenter] = useState<{ x: number; y: number } | null>(
     null,
   );
+  // Slider scrub between Défense (0) and Attaque (1). Mid-values = a read-only
+  // preview where tokens interpolate between the two dispositions.
+  const [blend, setBlend] = useState(phase === "attack" ? 1 : 0);
+  const [scrubbing, setScrubbing] = useState(false);
+
+  // Keep the slider in sync when the phase is set from the toggle buttons.
+  useEffect(() => {
+    if (phase === "attack") setBlend(1);
+    else if (phase === "defense") setBlend(0);
+  }, [phase]);
+
+  const atEndpoint = blend === 0 || blend === 1;
+  const frozen = phase !== "base" && !atEndpoint;
+
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  const displayPos = (slot: Slot) =>
+    phase === "base"
+      ? slot.positions.base
+      : {
+          x: lerp(slot.positions.defense.x, slot.positions.attack.x, blend),
+          y: lerp(slot.positions.defense.y, slot.positions.attack.y, blend),
+        };
 
   const onPitch = phase !== "base";
-  const showPlayer = onPitch && influenceMode === "player";
-  const showTeam = onPitch && influenceMode === "team";
+  const showPlayer = onPitch && !frozen && influenceMode === "player";
+  const showTeam = onPitch && !frozen && influenceMode === "team";
 
   const handleDragActive = (active: boolean) => {
     setTokenDragging(active);
@@ -91,7 +113,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         t?.closest(".slot-pop") ||
         t?.closest(".token--filled") ||
         t?.closest(".influence-ctl") ||
-        t?.closest(".zone-handles")
+        t?.closest(".zone-handles") ||
+        t?.closest(".phase-slider")
       )
         return;
       onSelect(null);
@@ -119,6 +142,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         }`}
         ref={ref}
       >
+        <div className="pitch-aside" aria-hidden="true" />
+
         <div
           className={`pitch ${dropActive ? "pitch--drop" : ""} ${
             tokenDragging && phase === "base" ? "pitch--dragging" : ""
@@ -180,6 +205,9 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
               starter={playerById(slot.starterId)}
               sub={playerById(slot.subId)}
               phase={phase}
+              pos={displayPos(slot)}
+              frozen={frozen}
+              instant={scrubbing}
               size={size}
               selected={selectedSlot === slot.id}
               onSelect={onSelect}
@@ -203,6 +231,31 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
             onSwap={onSwap}
           />
         )}
+        </div>
+
+        <div className="pitch-aside pitch-aside--right">
+          {phase !== "base" && (
+            <div className="phase-slider">
+              <span>Att</span>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.02}
+                value={blend}
+                aria-label="Transition Défense → Attaque"
+                onPointerDown={() => setScrubbing(true)}
+                onPointerUp={() => setScrubbing(false)}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setBlend(v);
+                  if (v === 0) onPhase("defense");
+                  else if (v === 1) onPhase("attack");
+                }}
+              />
+              <span>Déf</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

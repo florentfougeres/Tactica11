@@ -599,6 +599,34 @@
   align-items: center;
   gap: 14px;
 }
+/* Défense ⟷ Attaque transition scrubber — vertical, outside the pitch on the
+   right (Att on top since the pitch attacks upward) */
+.phase-slider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--panel-border);
+}
+.phase-slider span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--text-dim);
+}
+.phase-slider input[type="range"] {
+  -webkit-appearance: slider-vertical;
+  appearance: slider-vertical;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 10px;
+  height: 150px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
 /* contextual EA-FC role presets, shown above the foot when a player is selected */
 .zone-presets {
   display: flex;
@@ -634,10 +662,23 @@
   position: relative;
   flex: 1 1 auto;
   width: 100%;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-height: 0;
   min-width: 0;
+}
+/* side gutters: symmetric spacers keep the pitch centred; the right one holds
+   the Défense↔Attaque slider, outside the pitch. */
+.pitch-aside {
+  flex: 0 0 auto;
+  width: 40px;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8px;
 }
 /* While dragging a token, lift the whole pitch column above the side panels so
    a token dragged toward the bench stays visible instead of slipping under it. */
