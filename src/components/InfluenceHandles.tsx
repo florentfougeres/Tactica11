@@ -1,11 +1,12 @@
 import type { RefObject } from "react";
-import type { ZoneRadii } from "../types";
+import type { Orient, ZoneRadii } from "../types";
 
 interface Props {
   cx: number; // player centre in px (relative to the pitch)
   cy: number;
   size: { w: number; h: number };
   radii: ZoneRadii;
+  orient: Orient;
   pitchRef: RefObject<HTMLDivElement | null>;
   onChange: (radii: ZoneRadii) => void;
 }
@@ -21,10 +22,15 @@ export default function InfluenceHandles({
   cy,
   size,
   radii,
+  orient,
   pitchRef,
   onChange,
 }: Props) {
-  const { w } = size;
+  // Radii are a fraction of the pitch WIDTH = short screen axis (w portrait,
+  // h landscape). In landscape the directions are rotated 90° clockwise on
+  // screen: up→+x, down→−x, right→+y, left→−y.
+  const ref = orient === "landscape" ? size.h : size.w;
+  const land = orient === "landscape";
 
   const startDrag = (dir: Dir) => (e: React.PointerEvent) => {
     e.stopPropagation();
@@ -35,10 +41,10 @@ export default function InfluenceHandles({
       const px = ev.clientX - r.left;
       const py = ev.clientY - r.top;
       const next = { ...radii };
-      if (dir === "right") next.right = clamp((px - cx) / w);
-      else if (dir === "left") next.left = clamp((cx - px) / w);
-      else if (dir === "up") next.up = clamp((cy - py) / w);
-      else next.down = clamp((py - cy) / w);
+      if (dir === "right") next.right = clamp((land ? py - cy : px - cx) / ref);
+      else if (dir === "left") next.left = clamp((land ? cy - py : cx - px) / ref);
+      else if (dir === "up") next.up = clamp((land ? px - cx : cy - py) / ref);
+      else next.down = clamp((land ? cx - px : py - cy) / ref);
       onChange(next);
     };
     const up = () => {
@@ -51,6 +57,7 @@ export default function InfluenceHandles({
 
   const knob = (dir: Dir, x: number, y: number) => (
     <div
+      key={dir}
       className="zone-handle"
       style={{ left: x, top: y }}
       onPointerDown={startDrag(dir)}
@@ -63,10 +70,19 @@ export default function InfluenceHandles({
 
   return (
     <div className="zone-handles">
-      {knob("right", cx + radii.right * w, cy)}
-      {knob("left", cx - radii.left * w, cy)}
-      {knob("up", cx, cy - radii.up * w)}
-      {knob("down", cx, cy + radii.down * w)}
+      {land
+        ? [
+            knob("right", cx, cy + radii.right * ref),
+            knob("left", cx, cy - radii.left * ref),
+            knob("up", cx + radii.up * ref, cy),
+            knob("down", cx - radii.down * ref, cy),
+          ]
+        : [
+            knob("right", cx + radii.right * ref, cy),
+            knob("left", cx - radii.left * ref, cy),
+            knob("up", cx, cy - radii.up * ref),
+            knob("down", cx, cy + radii.down * ref),
+          ]}
     </div>
   );
 }

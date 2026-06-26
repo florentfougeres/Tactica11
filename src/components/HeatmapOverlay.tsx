@@ -1,12 +1,13 @@
 import { motion } from "framer-motion";
 import { useMemo } from "react";
-import type { ZoneRadii } from "../types";
+import type { Orient, ZoneRadii } from "../types";
 
 interface Props {
   cx: number; // player centre, in px (relative to the pitch)
   cy: number;
   size: { w: number; h: number };
   radii: ZoneRadii; // zone extent in each direction (fraction of pitch width)
+  orient?: Orient;
   intensity?: number; // opacity multiplier (lower for additive team coverage)
   animated?: boolean; // spring-follow the centre (single player) vs static (team)
 }
@@ -31,22 +32,31 @@ export default function HeatmapOverlay({
   cy,
   size,
   radii,
+  orient = "portrait",
   intensity = 1,
   animated = true,
 }: Props) {
   const { w, h } = size;
-  const { up, down, left, right } = radii;
+  // Radii are a fraction of the pitch WIDTH, which is the short screen axis: w in
+  // portrait, h in landscape. Map the four logical directions onto the local
+  // screen axes (90° clockwise in landscape): up→+x, down→−x, right→+y, left→−y.
+  const ref = orient === "landscape" ? h : w;
+  const local =
+    orient === "landscape"
+      ? { left: radii.down, right: radii.up, up: radii.left, down: radii.right }
+      : radii;
+  const { up, down, left, right } = local;
 
   const { hexes, poly } = useMemo(() => {
-    const R = w / 17; // small cells
+    const R = ref / 17; // small cells
     const poly = hexPoints(R);
     const stepX = Math.sqrt(3) * R; // pointy-top column spacing (cells touch)
     const stepY = 1.5 * R;
     const k = 2.3; // falloff steepness (edge opacity ≈ 0.10)
-    const rL = left * w;
-    const rR = right * w;
-    const rU = up * w;
-    const rD = down * w;
+    const rL = left * ref;
+    const rR = right * ref;
+    const rU = up * ref;
+    const rD = down * ref;
     const maxX = Math.max(rL, rR);
     const maxY = Math.max(rU, rD);
     const cols = Math.ceil(maxX / stepX) + 1;
@@ -64,7 +74,7 @@ export default function HeatmapOverlay({
       }
     }
     return { hexes: out, poly };
-  }, [w, up, down, left, right]);
+  }, [ref, up, down, left, right]);
 
   if (!w || !h) return null;
 

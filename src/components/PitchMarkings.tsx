@@ -10,7 +10,13 @@
 //   field 105 x 68 · penalty area 40.32 x 16.5 · goal area 18.32 x 5.5
 //   penalty spot 11 from goal line · penalty arc & centre circle r 9.15
 //   corner arc r 1
-export default function PitchMarkings() {
+import type { Orient } from "../types";
+
+export default function PitchMarkings({
+  orient = "portrait",
+}: {
+  orient?: Orient;
+}) {
   const line = "rgba(255,255,255,0.30)";
 
   const W = 68;
@@ -30,14 +36,21 @@ export default function PitchMarkings() {
   const arcL = cx - arcDx;
   const arcR = cx + arcDx;
 
+  // Landscape: rotate the portrait drawing 90° clockwise into a W×L → L×W box.
+  const land = orient === "landscape";
   return (
     <svg
       className="pitch-svg"
-      viewBox={`0 0 ${W} ${L}`}
+      viewBox={land ? `0 0 ${L} ${W}` : `0 0 ${W} ${L}`}
       preserveAspectRatio="none"
       aria-hidden="true"
     >
-      <g fill="none" stroke={line} strokeWidth="0.3">
+      <g
+        fill="none"
+        stroke={line}
+        strokeWidth="0.3"
+        transform={land ? `translate(${L} 0) rotate(90)` : undefined}
+      >
         {/* touchlines + goal lines */}
         <rect x="0" y="0" width={W} height={L} />
         {/* halfway line */}
