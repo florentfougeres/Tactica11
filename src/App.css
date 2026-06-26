@@ -599,6 +599,26 @@
   align-items: center;
   gap: 14px;
 }
+/* Défense ⟷ Attaque transition scrubber */
+.phase-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(8, 12, 18, 0.45);
+  border: 1px solid var(--panel-border);
+}
+.phase-slider span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.phase-slider input[type="range"] {
+  width: 110px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
 /* contextual EA-FC role presets, shown above the foot when a player is selected */
 .zone-presets {
   display: flex;

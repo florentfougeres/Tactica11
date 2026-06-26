@@ -5,7 +5,7 @@ import {
   useMotionValue,
   type PanInfo,
 } from "framer-motion";
-import type { Phase, Player, Slot } from "../types";
+import type { Phase, Player, Pos, Slot } from "../types";
 
 export const TOKEN_SIZE = 54;
 
@@ -19,6 +19,9 @@ interface Props {
   starter: Player | null;
   sub: Player | null;
   phase: Phase;
+  pos: Pos; // display position in % (interpolated while scrubbing the slider)
+  frozen: boolean; // mid-transition preview → no drag / select
+  instant: boolean; // follow the slider 1:1 instead of springing
   size: Size;
   selected: boolean;
   onSelect: (slotId: string | null) => void;
@@ -35,6 +38,9 @@ export default function PitchToken({
   starter,
   sub,
   phase,
+  pos,
+  frozen,
+  instant,
   size,
   selected,
   onSelect,
@@ -45,7 +51,6 @@ export default function PitchToken({
 }: Props) {
   const isBase = phase === "base";
   const half = TOKEN_SIZE / 2;
-  const pos = slot.positions[phase];
   const targetX = (pos.x / 100) * size.w - half;
   const targetY = (pos.y / 100) * size.h - half;
 
@@ -60,6 +65,12 @@ export default function PitchToken({
   // position changes — unless the user is actively dragging this token.
   useEffect(() => {
     if (dragging.current || size.w === 0) return;
+    if (instant) {
+      // scrubbing the slider → track it in real time (no spring lag)
+      x.set(targetX);
+      y.set(targetY);
+      return;
+    }
     const spring = { type: "spring" as const, stiffness: 360, damping: 30, mass: 0.7 };
     const ax = animate(x, targetX, spring);
     const ay = animate(y, targetY, spring);
@@ -67,12 +78,13 @@ export default function PitchToken({
       ax.stop();
       ay.stop();
     };
-  }, [targetX, targetY, size.w, x, y]);
+  }, [targetX, targetY, size.w, x, y, instant]);
 
   const empty = !starter;
   // Base phase: drag = move the player to another slot / bench (shape is locked,
   // so the token snaps back). Attack/defense: drag = reposition this token.
-  const canDrag = !empty;
+  // Mid-transition (frozen) the tokens are a read-only preview.
+  const canDrag = !empty && !frozen;
 
   const label = starter ? starter.name || "Joueur" : slot.role;
   const badge = starter?.number != null ? String(starter.number) : slot.role;
@@ -119,7 +131,7 @@ export default function PitchToken({
       onClick={() => {
         // A drag emits a click on release — ignore it so the selection (and its
         // heatmap) survives the drop instead of toggling off.
-        if (moved.current) return;
+        if (moved.current || frozen) return;
         // Click selects (any phase) to reveal the influence heatmap; click the
         // selected token again to clear it. The roster popover stays base-only.
         if (!empty) onSelect(selected ? null : slot.id);
