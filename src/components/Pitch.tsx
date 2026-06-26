@@ -21,6 +21,8 @@ interface Props {
   selectedSlot: string | null;
   dropActive?: boolean;
   influenceMode: InfluenceMode;
+  orient: Orient;
+  onToggleOrient: () => void;
   onPhase: (phase: Phase) => void;
   onSelect: (slotId: string | null) => void;
   onMove: (slotId: string, pos: { x: number; y: number }) => void;
@@ -39,6 +41,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     selectedSlot,
     dropActive,
     influenceMode,
+    orient,
+    onToggleOrient,
     onPhase,
     onSelect,
     onMove,
@@ -65,8 +69,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   const [scrubbing, setScrubbing] = useState(false);
   // Juego de posición overlay — the 5 vertical corridors (off by default).
   const [showGrid, setShowGrid] = useState(false);
-  // Pitch orientation — portrait by default, landscape for wide screens.
-  const [orient, setOrient] = useState<Orient>("portrait");
 
   // Keep the slider in sync when the phase is set from the toggle buttons.
   useEffect(() => {
@@ -152,9 +154,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         <button
           type="button"
           className="pitch-rotate"
-          onClick={() =>
-            setOrient((o) => (o === "portrait" ? "landscape" : "portrait"))
-          }
+          onClick={onToggleOrient}
           title={
             orient === "portrait"
               ? "Pivoter en paysage"
