@@ -113,7 +113,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         t?.closest(".slot-pop") ||
         t?.closest(".token--filled") ||
         t?.closest(".influence-ctl") ||
-        t?.closest(".zone-handles")
+        t?.closest(".zone-handles") ||
+        t?.closest(".phase-slider")
       )
         return;
       onSelect(null);
@@ -133,28 +134,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     <div className="pitch-col">
       <div className="pitch-bar">
         <PhaseToggle phase={phase} onPhase={onPhase} />
-        {phase !== "base" && (
-          <div className="phase-slider">
-            <span>Déf</span>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.02}
-              value={blend}
-              aria-label="Transition Défense → Attaque"
-              onPointerDown={() => setScrubbing(true)}
-              onPointerUp={() => setScrubbing(false)}
-              onChange={(e) => {
-                const v = Number(e.target.value);
-                setBlend(v);
-                if (v === 0) onPhase("defense");
-                else if (v === 1) onPhase("attack");
-              }}
-            />
-            <span>Att</span>
-          </div>
-        )}
       </div>
 
       <div
@@ -171,6 +150,29 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         >
           <div className="pitch__grass" />
           <PitchMarkings />
+
+          {phase !== "base" && (
+            <div className="phase-slider">
+              <span>Att</span>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.02}
+                value={blend}
+                aria-label="Transition Défense → Attaque"
+                onPointerDown={() => setScrubbing(true)}
+                onPointerUp={() => setScrubbing(false)}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setBlend(v);
+                  if (v === 0) onPhase("defense");
+                  else if (v === 1) onPhase("attack");
+                }}
+              />
+              <span>Déf</span>
+            </div>
+          )}
 
           {showTeam &&
             size.w > 0 &&
