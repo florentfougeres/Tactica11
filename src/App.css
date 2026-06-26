@@ -696,6 +696,9 @@
   gap: 6px;
   min-height: 0;
   min-width: 0;
+  /* Establish a size container so the pitch can be sized against BOTH the
+     available width and height (via cqw/cqh) and never lose its ratio. */
+  container-type: size;
 }
 /* side gutters: symmetric spacers keep the pitch centred; the right one holds
    the Défense↔Attaque slider, outside the pitch. */
@@ -715,8 +718,12 @@
 }
 .pitch {
   position: relative;
-  height: 100%;
   aspect-ratio: 68 / 105;
+  /* Fit inside the wrap in BOTH orientations without distortion: cap the height
+     by the available width too (gutters: 40px asides + 6px gaps on each side =
+     92px). width follows from aspect-ratio, so the ratio is always exact. */
+  height: min(100cqh, (100cqw - 92px) * 105 / 68);
+  width: auto;
   max-height: 100%;
   max-width: 100%;
   /* Pin the automatic minimum size so toggling overflow (during a drag) can't
