@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import type { InfluenceMode, Lineup, Phase, Player, ZoneRadii } from "./types";
+import type {
+  InfluenceMode,
+  Lineup,
+  Orient,
+  Phase,
+  Player,
+  ZoneRadii,
+} from "./types";
+import { pxToPos } from "./types";
 import { buildSlots } from "./formations";
 import {
   createDefaultLineup,
@@ -46,6 +54,7 @@ export default function App() {
   const [benchDragging, setBenchDragging] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
   const [influenceMode, setInfluenceMode] = useState<InfluenceMode>("none");
+  const [orient, setOrient] = useState<Orient>("portrait");
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [presenting, setPresenting] = useState(false);
 
@@ -239,14 +248,19 @@ export default function App() {
   };
 
   // Pixel → pitch-percent helper for a drop point. Returns null if outside.
+  // Conversion is relative to the field of play (.pitch__field, which excludes
+  // the grass margin) and respects the current orientation.
   const pointToPitchPct = (point: Point): Point | null => {
     const pitchEl = pitchRef.current?.querySelector(".pitch") as HTMLElement | null;
     if (!pointInRect(point, pitchEl)) return null;
-    const r = pitchEl!.getBoundingClientRect();
-    return {
-      x: ((point.x - window.scrollX - r.left) / r.width) * 100,
-      y: ((point.y - window.scrollY - r.top) / r.height) * 100,
-    };
+    const fieldEl = pitchRef.current?.querySelector(
+      ".pitch__field",
+    ) as HTMLElement | null;
+    if (!fieldEl) return null;
+    const r = fieldEl.getBoundingClientRect();
+    const fx = point.x - window.scrollX - r.left;
+    const fy = point.y - window.scrollY - r.top;
+    return pxToPos(fx, fy, { w: r.width, h: r.height }, orient);
   };
 
   // Base phase only: a starter token was dragged. Drop on the bench → send the
@@ -290,16 +304,13 @@ export default function App() {
   // Cascade: empty starter → empty sub → otherwise replace the starter.
   const handleBenchDrop = (playerId: string, point: Point) => {
     if (phase !== "base") return;
-    const pitchEl = pitchRef.current?.querySelector(".pitch") as HTMLElement | null;
-    if (!pointInRect(point, pitchEl)) return;
-    const r = pitchEl!.getBoundingClientRect();
-    const px = ((point.x - window.scrollX - r.left) / r.width) * 100;
-    const py = ((point.y - window.scrollY - r.top) / r.height) * 100;
+    const pct = pointToPitchPct(point);
+    if (!pct) return;
 
     setLineup((l) => {
       const dist = (s: (typeof l.slots)[number]) => {
         const pos = s.positions[phase];
-        return (pos.x - px) ** 2 + (pos.y - py) ** 2;
+        return (pos.x - pct.x) ** 2 + (pos.y - pct.y) ** 2;
       };
       const target = l.slots.reduce((a, b) => (dist(a) < dist(b) ? a : b));
       return {
@@ -532,6 +543,10 @@ export default function App() {
           selectedSlot={selectedSlot}
           dropActive={benchDragging}
           influenceMode={influenceMode}
+          orient={orient}
+          onToggleOrient={() =>
+            setOrient((o) => (o === "portrait" ? "landscape" : "portrait"))
+          }
           onPhase={(p) => {
             setPhase(p);
             setSelectedSlot(null); // roster popover is base-only
