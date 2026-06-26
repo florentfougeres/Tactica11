@@ -47,6 +47,31 @@ export default function App() {
   const [csvOpen, setCsvOpen] = useState(false);
   const [influenceMode, setInfluenceMode] = useState<InfluenceMode>("none");
   const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [presenting, setPresenting] = useState(false);
+
+  // Fullscreen presentation: hide the panels, fill the screen with the pitch.
+  const enterPresent = () => {
+    setPresenting(true);
+    document.documentElement.requestFullscreen?.().catch(() => {});
+  };
+  const exitPresent = () => {
+    setPresenting(false);
+    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  };
+  useEffect(() => {
+    const onFs = () => {
+      if (!document.fullscreenElement) setPresenting(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPresenting(false);
+    };
+    document.addEventListener("fullscreenchange", onFs);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFs);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
 
   // Forget the active preset whenever the selected player changes.
   useEffect(() => {
@@ -457,10 +482,16 @@ export default function App() {
     );
 
   return (
-    <div className="app">
+    <div className={`app ${presenting ? "app--present" : ""}`}>
+      {presenting && (
+        <button className="present-exit" onClick={exitPresent}>
+          ✕ Quitter
+        </button>
+      )}
       <TopBar
         name={lineup.name}
         formation={lineup.formation}
+        onPresent={enterPresent}
         compos={library.map((l) => ({ id: l.id, name: l.name }))}
         currentId={lineup.id}
         canUndo={canUndo}

@@ -20,6 +20,7 @@ interface Props {
   onExportPng: () => void;
   onCopyLink: () => void;
   onImport: (file: File) => void;
+  onPresent: () => void;
 }
 
 function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLElement | null>) {
@@ -59,6 +60,7 @@ export default function TopBar({
   onExportPng,
   onCopyLink,
   onImport,
+  onPresent,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const fmRef = useRef<HTMLDivElement>(null);
@@ -247,6 +249,22 @@ export default function TopBar({
         </div>
         <button className="btn" onClick={() => fileRef.current?.click()}>
           Importer…
+        </button>
+        <button
+          className="btn btn--icon"
+          onClick={onPresent}
+          title="Présentation plein écran"
+          aria-label="Présentation plein écran"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
         <button
           className="btn btn--icon"
