@@ -148,8 +148,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           className={`pitch ${dropActive ? "pitch--drop" : ""} ${
             tokenDragging && phase === "base" ? "pitch--dragging" : ""
           }`}
-          ref={innerRef}
         >
+          <div className="pitch__field" ref={innerRef}>
           <div className="pitch__grass" />
           <PitchMarkings />
 
@@ -231,6 +231,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
             onSwap={onSwap}
           />
         )}
+          </div>
         </div>
 
         <div className="pitch-aside pitch-aside--right">
