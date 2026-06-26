@@ -5,7 +5,8 @@ import {
   useMotionValue,
   type PanInfo,
 } from "framer-motion";
-import type { Phase, Player, Pos, Slot } from "../types";
+import type { Orient, Phase, Player, Pos, Slot } from "../types";
+import { posToPx, pxToPos } from "../types";
 
 export const TOKEN_SIZE = 54;
 
@@ -23,6 +24,7 @@ interface Props {
   frozen: boolean; // mid-transition preview → no drag / select
   instant: boolean; // follow the slider 1:1 instead of springing
   size: Size;
+  orient: Orient;
   selected: boolean;
   onSelect: (slotId: string | null) => void;
   onMove: (slotId: string, pos: { x: number; y: number }) => void;
@@ -42,6 +44,7 @@ export default function PitchToken({
   frozen,
   instant,
   size,
+  orient,
   selected,
   onSelect,
   onMove,
@@ -51,8 +54,9 @@ export default function PitchToken({
 }: Props) {
   const isBase = phase === "base";
   const half = TOKEN_SIZE / 2;
-  const targetX = (pos.x / 100) * size.w - half;
-  const targetY = (pos.y / 100) * size.h - half;
+  const center = posToPx(pos, size, orient);
+  const targetX = center.x - half;
+  const targetY = center.y - half;
 
   const x = useMotionValue(targetX);
   const y = useMotionValue(targetY);
@@ -108,10 +112,8 @@ export default function PitchToken({
     const insidePitch =
       cx >= -half && cx <= size.w + half && cy >= -half && cy <= size.h + half;
     if (insidePitch) {
-      onMove(slot.id, {
-        x: clampPct((cx / size.w) * 100),
-        y: clampPct((cy / size.h) * 100),
-      });
+      const p = pxToPos(cx, cy, size, orient);
+      onMove(slot.id, { x: clampPct(p.x), y: clampPct(p.y) });
     }
   }
 

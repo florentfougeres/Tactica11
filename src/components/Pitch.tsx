@@ -1,7 +1,15 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
-import type { InfluenceMode, Phase, Player, Slot, ZoneRadii } from "../types";
-import { DEFAULT_ZONE } from "../types";
+import type {
+  InfluenceMode,
+  Orient,
+  Phase,
+  Player,
+  Slot,
+  ZoneRadii,
+} from "../types";
+import { DEFAULT_ZONE, posToPx } from "../types";
 import PitchMarkings from "./PitchMarkings";
+import PositionalGrid from "./PositionalGrid";
 import PhaseToggle from "./PhaseToggle";
 import PitchToken, { TOKEN_SIZE } from "./PitchToken";
 import HeatmapOverlay from "./HeatmapOverlay";
@@ -55,6 +63,10 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   // preview where tokens interpolate between the two dispositions.
   const [blend, setBlend] = useState(phase === "attack" ? 1 : 0);
   const [scrubbing, setScrubbing] = useState(false);
+  // Juego de posición overlay — the 5 vertical corridors (off by default).
+  const [showGrid, setShowGrid] = useState(false);
+  // Pitch orientation — portrait by default, landscape for wide screens.
+  const [orient, setOrient] = useState<Orient>("portrait");
 
   // Keep the slider in sync when the phase is set from the toggle buttons.
   useEffect(() => {
@@ -100,8 +112,11 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   const selected = slots.find((s) => s.id === selectedSlot) ?? null;
   const selectedStarter = selected ? playerById(selected.starterId) : null;
   const radii = selected?.influence?.[phase] ?? DEFAULT_ZONE;
-  const staticCx = selected ? (selected.positions[phase].x / 100) * size.w : 0;
-  const staticCy = selected ? (selected.positions[phase].y / 100) * size.h : 0;
+  const staticCenter = selected
+    ? posToPx(selected.positions[phase], size, orient)
+    : { x: 0, y: 0 };
+  const staticCx = staticCenter.x;
+  const staticCy = staticCenter.y;
 
   // Close the popover on any click outside it (and outside the filled tokens,
   // so tapping another token re-selects instead of just closing), or Escape.
@@ -134,6 +149,21 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     <div className="pitch-col">
       <div className="pitch-bar">
         <PhaseToggle phase={phase} onPhase={onPhase} />
+        <button
+          type="button"
+          className="pitch-rotate"
+          onClick={() =>
+            setOrient((o) => (o === "portrait" ? "landscape" : "portrait"))
+          }
+          title={
+            orient === "portrait"
+              ? "Pivoter en paysage"
+              : "Pivoter en portrait"
+          }
+          aria-label="Pivoter le terrain"
+        >
+          ⤢
+        </button>
       </div>
 
       <div
@@ -147,27 +177,32 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         <div
           className={`pitch ${dropActive ? "pitch--drop" : ""} ${
             tokenDragging && phase === "base" ? "pitch--dragging" : ""
-          }`}
+          } ${orient === "landscape" ? "pitch--landscape" : ""}`}
         >
           <div className="pitch__field" ref={innerRef}>
           <div className="pitch__grass" />
-          <PitchMarkings />
+          <PitchMarkings orient={orient} />
+          {showGrid && <PositionalGrid orient={orient} />}
 
           {showTeam &&
             size.w > 0 &&
             slots
               .filter((s) => s.starterId)
-              .map((s) => (
-                <HeatmapOverlay
-                  key={s.id}
-                  cx={(s.positions[phase].x / 100) * size.w}
-                  cy={(s.positions[phase].y / 100) * size.h}
-                  size={size}
-                  radii={s.influence?.[phase] ?? DEFAULT_ZONE}
-                  intensity={0.42}
-                  animated={false}
-                />
-              ))}
+              .map((s) => {
+                const c = posToPx(s.positions[phase], size, orient);
+                return (
+                  <HeatmapOverlay
+                    key={s.id}
+                    cx={c.x}
+                    cy={c.y}
+                    size={size}
+                    radii={s.influence?.[phase] ?? DEFAULT_ZONE}
+                    orient={orient}
+                    intensity={0.42}
+                    animated={false}
+                  />
+                );
+              })}
 
           {showPlayer && selected && selectedStarter && size.w > 0 && (
             <HeatmapOverlay
@@ -175,6 +210,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
               cy={liveCenter ? liveCenter.y : staticCy}
               size={size}
               radii={radii}
+              orient={orient}
             />
           )}
 
@@ -188,6 +224,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
                 cy={staticCy}
                 size={size}
                 radii={radii}
+                orient={orient}
                 pitchRef={innerRef}
                 onChange={(next) => onInfluence(selected.id, next)}
               />
@@ -209,6 +246,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
               frozen={frozen}
               instant={scrubbing}
               size={size}
+              orient={orient}
               selected={selectedSlot === slot.id}
               onSelect={onSelect}
               onMove={onMove}
@@ -226,6 +264,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
             sub={playerById(selected.subId)}
             size={size}
             phase={phase}
+            orient={orient}
             onRemoveStarter={onRemoveStarter}
             onRemoveSub={onRemoveSub}
             onSwap={onSwap}
@@ -259,6 +298,21 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           )}
         </div>
       </div>
+
+      <div className="pitch-foot">
+        <label>
+          <span>Afficher les zones</span>
+          <span className="switch">
+            <input
+              type="checkbox"
+              checked={showGrid}
+              onChange={(e) => setShowGrid(e.target.checked)}
+            />
+            <span className="switch__track" />
+            <span className="switch__thumb" />
+          </span>
+        </label>
+      </div>
     </div>
   );
 });
@@ -271,6 +325,7 @@ function SlotPopover({
   sub,
   size,
   phase,
+  orient,
   onRemoveStarter,
   onRemoveSub,
   onSwap,
@@ -280,13 +335,14 @@ function SlotPopover({
   sub: Player | null;
   size: { w: number; h: number };
   phase: Phase;
+  orient: Orient;
   onRemoveStarter: (slotId: string) => void;
   onRemoveSub: (slotId: string) => void;
   onSwap: (slotId: string) => void;
 }) {
-  const pos = slot.positions[phase];
-  const cx = (pos.x / 100) * size.w;
-  const cy = (pos.y / 100) * size.h;
+  const c = posToPx(slot.positions[phase], size, orient);
+  const cx = c.x;
+  const cy = c.y;
   // Place the popover below the token, flipping above near the bottom edge.
   const below = cy < size.h - 150;
   const top = below ? cy + TOKEN_SIZE / 2 + 18 : cy - TOKEN_SIZE / 2 - 18;
