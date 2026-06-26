@@ -6,6 +6,34 @@
   gap: 14px;
 }
 
+/* ---------- presentation mode (fullscreen, pitch only) ---------- */
+.app--present .topbar,
+.app--present .bench {
+  display: none;
+}
+.app--present .layout {
+  grid-template-columns: 1fr;
+}
+.present-exit {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  z-index: 300;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  background: rgba(13, 18, 26, 0.8);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.present-exit:hover {
+  background: rgba(13, 18, 26, 0.95);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
 /* ---------- top bar (settings banner) ---------- */
 .topbar {
   flex: 0 0 auto;
