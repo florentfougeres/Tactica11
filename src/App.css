@@ -818,14 +818,15 @@
   height: 100%;
   pointer-events: none;
 }
-/* juego de posición overlay — sits above the markings, below the tokens */
+/* juego de posición overlay — a background guide: above the grass/markings (by
+   DOM order) but BELOW the influence heatmap (z-index 1), tokens and handles, so
+   toggling the zones never disturbs the honeycombs drawn on top. */
 .pitch-grid {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 2;
 }
 /* footer under the pitch — holds the positional-grid toggle */
 .pitch-foot {
