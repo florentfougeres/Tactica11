@@ -570,6 +570,38 @@
   color: #06130c;
   background: linear-gradient(150deg, var(--accent), var(--accent-2));
 }
+/* optional shirt-number field — narrow, fixed width in both the add form and
+   the inline item editor (override the flex:1 those inputs otherwise inherit) */
+.bench__add .bench__num,
+.bench__item input.bench__num {
+  flex: 0 0 46px;
+  width: 46px;
+  min-width: 0;
+  text-align: center;
+}
+/* clickable number chip on a roster row (base view only) */
+.bench__numchip {
+  flex: 0 0 auto;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  background: rgba(33, 208, 122, 0.14);
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.bench__numchip:hover {
+  border-color: rgba(33, 208, 122, 0.5);
+  background: rgba(33, 208, 122, 0.22);
+}
+.bench__numchip--empty {
+  background: transparent;
+  color: var(--text-dim);
+}
 .bench__name {
   flex: 1;
   text-align: left;
@@ -1002,6 +1034,25 @@
 .token__badge {
   pointer-events: none;
 }
+/* Secondary disc: the optional shirt number, only shown for a starter. */
+.token__number {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #06130c;
+  background: linear-gradient(150deg, var(--accent), var(--accent-2));
+  box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.8),
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+}
 .token__names {
   flex: 0 0 auto;
   display: flex;
@@ -1149,11 +1200,27 @@
   background: rgba(255, 93, 108, 0.16);
   border-color: rgba(255, 93, 108, 0.5);
 }
-.slot-pop__hint {
-  font-size: 11px;
+.slot-pop__num {
+  flex: 0 0 auto;
+  width: 38px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--panel-border);
+  border-radius: 7px;
+  padding: 4px 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.slot-pop__num:focus {
+  border-color: var(--accent);
+  background: rgba(33, 208, 122, 0.1);
+}
+.slot-pop__num::placeholder {
   color: var(--text-dim);
-  line-height: 1.4;
-  padding: 0 2px;
+  font-weight: 600;
 }
 /* ---------- buttons ---------- */
 .btn {

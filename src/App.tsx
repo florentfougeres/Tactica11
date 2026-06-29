@@ -156,10 +156,27 @@ export default function App() {
   );
 
   // --- roster ---
-  const addPlayer = (name: string) =>
+  const addPlayer = (name: string, number?: number) =>
     setLineup((l) => ({
       ...l,
-      players: [...l.players, { id: uid("p"), name }],
+      players: [
+        ...l.players,
+        { id: uid("p"), name, ...(number != null ? { number } : {}) },
+      ],
+    }));
+
+  // Set or clear a player's (optional) shirt number. Pass null to remove it.
+  const setPlayerNumber = (id: string, number: number | null) =>
+    setLineup((l) => ({
+      ...l,
+      players: l.players.map((p) => {
+        if (p.id !== id) return p;
+        if (number == null) {
+          const { number: _omit, ...rest } = p;
+          return rest;
+        }
+        return { ...p, number };
+      }),
     }));
 
   const addPlayers = (players: ImportedPlayer[]) =>
@@ -527,6 +544,7 @@ export default function App() {
           players={benchPlayers}
           onAdd={addPlayer}
           onRename={renamePlayer}
+          onSetNumber={setPlayerNumber}
           onRemove={removePlayer}
           onDropToPitch={handleBenchDrop}
           onDragStateChange={setBenchDragging}
@@ -557,6 +575,7 @@ export default function App() {
           onRemoveStarter={removeStarter}
           onRemoveSub={removeSub}
           onSwap={swapStarterSub}
+          onSetNumber={setPlayerNumber}
           onInfluence={setInfluenceManual}
         />
       </main>

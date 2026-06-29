@@ -1,4 +1,5 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type {
   InfluenceMode,
   Orient,
@@ -30,6 +31,7 @@ interface Props {
   onRemoveStarter: (slotId: string) => void;
   onRemoveSub: (slotId: string) => void;
   onSwap: (slotId: string) => void;
+  onSetNumber: (playerId: string, number: number | null) => void;
   onInfluence: (slotId: string, radii: ZoneRadii) => void;
 }
 
@@ -50,6 +52,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     onRemoveStarter,
     onRemoveSub,
     onSwap,
+    onSetNumber,
     onInfluence,
   },
   ref,
@@ -265,9 +268,11 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
             size={size}
             phase={phase}
             orient={orient}
+            fieldRef={innerRef}
             onRemoveStarter={onRemoveStarter}
             onRemoveSub={onRemoveSub}
             onSwap={onSwap}
+            onSetNumber={onSetNumber}
           />
         )}
           </div>
@@ -326,9 +331,11 @@ function SlotPopover({
   size,
   phase,
   orient,
+  fieldRef,
   onRemoveStarter,
   onRemoveSub,
   onSwap,
+  onSetNumber,
 }: {
   slot: Slot;
   starter: Player;
@@ -336,66 +343,98 @@ function SlotPopover({
   size: { w: number; h: number };
   phase: Phase;
   orient: Orient;
+  fieldRef: React.RefObject<HTMLDivElement | null>;
   onRemoveStarter: (slotId: string) => void;
   onRemoveSub: (slotId: string) => void;
   onSwap: (slotId: string) => void;
+  onSetNumber: (playerId: string, number: number | null) => void;
 }) {
-  const c = posToPx(slot.positions[phase], size, orient);
-  const cx = c.x;
-  const cy = c.y;
-  // Place the popover below the token, flipping above near the bottom edge.
-  const below = cy < size.h - 150;
-  const top = below ? cy + TOKEN_SIZE / 2 + 18 : cy - TOKEN_SIZE / 2 - 18;
+  const [numVal, setNumVal] = useState(
+    starter.number != null ? String(starter.number) : "",
+  );
 
-  // Outer wrapper owns positioning (so framer-motion's transform on the inner
-  // node doesn't clobber our centring translate).
-  return (
+  function commitNum() {
+    const n = parseInt(numVal.trim(), 10);
+    onSetNumber(starter.id, Number.isNaN(n) ? null : n);
+  }
+
+  const c = posToPx(slot.positions[phase], size, orient);
+  // Anchor against the field's on-screen rect so the popover can live in a body
+  // portal — escaping the pitch's overflow:hidden (which used to clip it).
+  const rect = fieldRef.current?.getBoundingClientRect();
+  if (!rect) return null;
+  const cx = rect.left + c.x;
+  const cyTop = rect.top + c.y;
+  // Place the popover below the token, flipping above near the bottom edge.
+  const below = c.y < size.h - 150;
+  const top = below
+    ? cyTop + TOKEN_SIZE / 2 + 18
+    : cyTop - TOKEN_SIZE / 2 - 18;
+  // Keep it on screen horizontally (half its max width = 115px).
+  const left = Math.min(Math.max(cx, 123), window.innerWidth - 123);
+
+  return createPortal(
     <div
       className="slot-pop-anchor"
       style={{
-        left: cx,
+        position: "fixed",
+        left,
         top,
         transform: `translate(-50%, ${below ? "0" : "-100%"})`,
       }}
     >
       <div className="slot-pop glass" onPointerDown={(e) => e.stopPropagation()}>
-      <div className="slot-pop__row">
-        <span className="slot-pop__tag slot-pop__tag--starter">Titulaire</span>
-        <span className="slot-pop__name">{starter.name}</span>
-        <button
-          className="slot-pop__btn"
-          onClick={() => onRemoveStarter(slot.id)}
-          title="Renvoyer au vivier"
-        >
-          ↩
-        </button>
-      </div>
-
-      {sub ? (
         <div className="slot-pop__row">
-          <span className="slot-pop__tag">Remplaçant</span>
-          <span className="slot-pop__name">{sub.name}</span>
+          <span className="slot-pop__tag slot-pop__tag--starter">
+            Titulaire
+          </span>
+          <span className="slot-pop__name">{starter.name}</span>
+          <input
+            className="slot-pop__num"
+            value={numVal}
+            onChange={(e) =>
+              setNumVal(e.target.value.replace(/\D/g, "").slice(0, 2))
+            }
+            onBlur={commitNum}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitNum();
+            }}
+            inputMode="numeric"
+            placeholder="N°"
+            title="Numéro (optionnel)"
+            aria-label="Numéro du titulaire"
+          />
           <button
             className="slot-pop__btn"
-            onClick={() => onSwap(slot.id)}
-            title="Promouvoir titulaire"
-          >
-            ⇅
-          </button>
-          <button
-            className="slot-pop__btn"
-            onClick={() => onRemoveSub(slot.id)}
+            onClick={() => onRemoveStarter(slot.id)}
             title="Renvoyer au vivier"
           >
             ↩
           </button>
         </div>
-      ) : (
-        <div className="slot-pop__hint">
-          Glisse un 2ᵉ joueur ici pour un remplaçant.
-        </div>
-      )}
+
+        {sub && (
+          <div className="slot-pop__row">
+            <span className="slot-pop__tag">Remplaçant</span>
+            <span className="slot-pop__name">{sub.name}</span>
+            <button
+              className="slot-pop__btn"
+              onClick={() => onSwap(slot.id)}
+              title="Promouvoir titulaire"
+            >
+              ⇅
+            </button>
+            <button
+              className="slot-pop__btn"
+              onClick={() => onRemoveSub(slot.id)}
+              title="Renvoyer au vivier"
+            >
+              ↩
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

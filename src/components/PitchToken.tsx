@@ -91,7 +91,9 @@ export default function PitchToken({
   const canDrag = !empty && !frozen;
 
   const label = starter ? starter.name || "Joueur" : slot.role;
-  const badge = starter?.number != null ? String(starter.number) : slot.role;
+  // Main disc is always the position (role); the shirt number, when set, rides
+  // as a small secondary disc — and only for the starter (titulaire).
+  const number = starter?.number;
 
   function handleDragEnd(_e: unknown, info: PanInfo) {
     dragging.current = false;
@@ -151,7 +153,8 @@ export default function PitchToken({
       onDragEnd={handleDragEnd}
     >
       <div className="token__disc">
-        <span className="token__badge">{badge}</span>
+        <span className="token__badge">{slot.role}</span>
+        {number != null && <span className="token__number">{number}</span>}
       </div>
       <div className="token__names">
         <span className="token__name">{label}</span>

@@ -5,8 +5,9 @@ import type { Player } from "../types";
 
 interface Props {
   players: Player[]; // bench players (not on pitch)
-  onAdd: (name: string) => void;
+  onAdd: (name: string, number?: number) => void;
   onRename: (playerId: string, name: string) => void;
+  onSetNumber: (playerId: string, number: number | null) => void;
   onRemove: (playerId: string) => void;
   onDropToPitch: (playerId: string, point: { x: number; y: number }) => void;
   onDragStateChange?: (active: boolean) => void;
@@ -20,6 +21,7 @@ const Bench = forwardRef<HTMLElement, Props>(function Bench(
     players,
     onAdd,
     onRename,
+    onSetNumber,
     onRemove,
     onDropToPitch,
     onDragStateChange,
@@ -30,13 +32,16 @@ const Bench = forwardRef<HTMLElement, Props>(function Bench(
   ref,
 ) {
   const [name, setName] = useState("");
+  const [num, setNum] = useState("");
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const v = name.trim();
     if (!v) return;
-    onAdd(v);
+    const n = parseInt(num.trim(), 10);
+    onAdd(v, Number.isNaN(n) ? undefined : n);
     setName("");
+    setNum("");
   }
 
   return (
@@ -47,6 +52,18 @@ const Bench = forwardRef<HTMLElement, Props>(function Bench(
       </header>
 
       <form className="bench__add" onSubmit={submit}>
+        {canDrag && (
+          <input
+            className="bench__num"
+            value={num}
+            onChange={(e) =>
+              setNum(e.target.value.replace(/\D/g, "").slice(0, 2))
+            }
+            inputMode="numeric"
+            placeholder="N°"
+            aria-label="Numéro (optionnel)"
+          />
+        )}
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -73,6 +90,7 @@ const Bench = forwardRef<HTMLElement, Props>(function Bench(
             key={p.id}
             player={p}
             onRename={onRename}
+            onSetNumber={onSetNumber}
             onRemove={onRemove}
             onDropToPitch={onDropToPitch}
             onDragStateChange={onDragStateChange}
@@ -91,6 +109,7 @@ export default Bench;
 function BenchItem({
   player,
   onRename,
+  onSetNumber,
   onRemove,
   onDropToPitch,
   onDragStateChange,
@@ -98,6 +117,7 @@ function BenchItem({
 }: {
   player: Player;
   onRename: (id: string, name: string) => void;
+  onSetNumber: (id: string, number: number | null) => void;
   onRemove: (id: string) => void;
   onDropToPitch: (id: string, point: { x: number; y: number }) => void;
   onDragStateChange?: (active: boolean) => void;
@@ -105,6 +125,10 @@ function BenchItem({
 }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(player.name);
+  const [numEditing, setNumEditing] = useState(false);
+  const [numVal, setNumVal] = useState(
+    player.number != null ? String(player.number) : "",
+  );
   const [ghost, setGhost] = useState<{ x: number; y: number } | null>(null);
   const drag = useRef({ startX: 0, startY: 0, active: false });
 
@@ -113,6 +137,12 @@ function BenchItem({
     const v = val.trim();
     if (v && v !== player.name) onRename(player.id, v);
     else setVal(player.name);
+  }
+
+  function commitNum() {
+    setNumEditing(false);
+    const n = parseInt(numVal.trim(), 10);
+    onSetNumber(player.id, Number.isNaN(n) ? null : n);
   }
 
   // Manual pointer-drag: framer's `drag` translates the element in place, which
@@ -163,6 +193,38 @@ function BenchItem({
       <span className="bench__avatar" aria-hidden="true">
         {player.name.slice(0, 1).toUpperCase()}
       </span>
+      {numEditing ? (
+        <input
+          className="bench__num"
+          autoFocus
+          value={numVal}
+          onChange={(e) =>
+            setNumVal(e.target.value.replace(/\D/g, "").slice(0, 2))
+          }
+          onBlur={commitNum}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commitNum();
+            if (e.key === "Escape") {
+              setNumVal(player.number != null ? String(player.number) : "");
+              setNumEditing(false);
+            }
+          }}
+          inputMode="numeric"
+          aria-label="Numéro"
+        />
+      ) : (
+        canDrag && (
+          <button
+            className={`bench__numchip ${
+              player.number == null ? "bench__numchip--empty" : ""
+            }`}
+            onClick={() => setNumEditing(true)}
+            title="Numéro (optionnel)"
+          >
+            {player.number ?? "#"}
+          </button>
+        )
+      )}
       {editing ? (
         <input
           autoFocus
