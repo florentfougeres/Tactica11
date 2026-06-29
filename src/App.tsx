@@ -242,8 +242,10 @@ export default function App() {
 
   // --- opponents (attack/defense only) ---
   const toggleOpponentMode = () => {
-    // First time on with no discs yet → spawn the default block of 11.
-    if (!opponentMode && (lineup.opponents?.length ?? 0) === 0)
+    // Enforce the "11 or nothing" invariant: spawn a fresh block whenever the
+    // count isn't exactly 11 (fresh start, or a partial set left by an older
+    // version that allowed individual removal).
+    if (!opponentMode && (lineup.opponents?.length ?? 0) !== 11)
       setLineup((l) => ({ ...l, opponents: createOpponents() }));
     setOpponentMode((on) => !on);
   };
