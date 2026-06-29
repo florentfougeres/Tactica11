@@ -58,6 +58,8 @@ export default function App() {
   const [orient, setOrient] = useState<Orient>("portrait");
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [presenting, setPresenting] = useState(false);
+  // Fullscreen: the controls drawer on the left, collapsed by default.
+  const [presentToolsOpen, setPresentToolsOpen] = useState(false);
   // Opponent-placement mode (attack/defense only): shows + lets you drag the
   // opposing discs. Ephemeral view state; the discs themselves are persisted.
   const [opponentMode, setOpponentMode] = useState(false);
@@ -83,6 +85,7 @@ export default function App() {
   // Fullscreen presentation: hide the panels, fill the screen with the pitch.
   const enterPresent = () => {
     setPresenting(true);
+    setPresentToolsOpen(false); // start collapsed in fullscreen
     document.documentElement.requestFullscreen?.().catch(() => {});
   };
   const exitPresent = () => {
@@ -633,6 +636,23 @@ export default function App() {
         <button className="present-exit" onClick={exitPresent}>
           ✕ Quitter
         </button>
+      )}
+      {presenting && (
+        <div
+          className={`present-tools ${presentToolsOpen ? "is-open" : ""}`}
+        >
+          <button
+            className="present-tools__toggle"
+            onClick={() => setPresentToolsOpen((o) => !o)}
+            aria-expanded={presentToolsOpen}
+            title={presentToolsOpen ? "Fermer les outils" : "Ouvrir les outils"}
+          >
+            {presentToolsOpen ? "✕" : "⚙"}
+          </button>
+          {presentToolsOpen && (
+            <div className="present-tools__panel glass">{pitchControls}</div>
+          )}
+        </div>
       )}
       <TopBar
         name={lineup.name}
