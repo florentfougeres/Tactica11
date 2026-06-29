@@ -1,10 +1,4 @@
-import {
-  forwardRef,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   InfluenceMode,
@@ -15,7 +9,7 @@ import type {
   Slot,
   ZoneRadii,
 } from "../types";
-import { DEFAULT_ZONE, OPPONENT_COLORS, posToPx } from "../types";
+import { DEFAULT_ZONE, posToPx } from "../types";
 import PitchMarkings from "./PitchMarkings";
 import PositionalGrid from "./PositionalGrid";
 import PhaseToggle from "./PhaseToggle";
@@ -41,15 +35,14 @@ interface Props {
   onSwap: (slotId: string) => void;
   onSetNumber: (playerId: string, number: number | null) => void;
   onInfluence: (slotId: string, radii: ZoneRadii) => void;
+  blend: number; // Défense(0) ↔ Attaque(1) scrub, owned by App
+  scrubbing: boolean; // user is dragging the scrub → follow it 1:1
+  showGrid: boolean; // positional-grid overlay
   opponents: Opponent[];
   opponentMode: boolean;
   opponentColor: string;
-  onToggleOpponentMode: () => void;
   onMoveOpponent: (id: string, pos: { x: number; y: number }) => void;
   onLabelOpponent: (id: string, label: string) => void;
-  onSetOpponentColor: (color: string) => void;
-  influenceControls: ReactNode;
-  influencePresets: ReactNode;
 }
 
 const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
@@ -71,15 +64,14 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     onSwap,
     onSetNumber,
     onInfluence,
+    blend,
+    scrubbing,
+    showGrid,
     opponents,
     opponentMode,
     opponentColor,
-    onToggleOpponentMode,
     onMoveOpponent,
     onLabelOpponent,
-    onSetOpponentColor,
-    influenceControls,
-    influencePresets,
   },
   ref,
 ) {
@@ -92,27 +84,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   const [liveCenter, setLiveCenter] = useState<{ x: number; y: number } | null>(
     null,
   );
-  // Slider scrub between Défense (0) and Attaque (1). Mid-values = a read-only
-  // preview where tokens interpolate between the two dispositions.
-  const [blend, setBlend] = useState(phase === "attack" ? 1 : 0);
-  const [scrubbing, setScrubbing] = useState(false);
-  // Juego de posición overlay — the 5 vertical corridors (off by default).
-  const [showGrid, setShowGrid] = useState(false);
-  // Opponent-colour popover open state (the only collapsed toolbar control).
-  const [colorsOpen, setColorsOpen] = useState(false);
-
-  const handleBlend = (v: number) => {
-    setBlend(v);
-    if (v === 0) onPhase("defense");
-    else if (v === 1) onPhase("attack");
-  };
-
-  // Keep the slider in sync when the phase is set from the toggle buttons.
-  useEffect(() => {
-    if (phase === "attack") setBlend(1);
-    else if (phase === "defense") setBlend(0);
-  }, [phase]);
-
+  // blend / scrubbing / showGrid are owned by App (the controls live in the
+  // Effectif panel) and arrive as props.
   const atEndpoint = blend === 0 || blend === 1;
   const frozen = phase !== "base" && !atEndpoint;
 
@@ -173,9 +146,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
       if (
         t?.closest(".slot-pop") ||
         t?.closest(".token--filled") ||
-        t?.closest(".influence-ctl") ||
-        t?.closest(".zone-handles") ||
-        t?.closest(".pitch-toolbar")
+        t?.closest(".bench__footer") ||
+        t?.closest(".zone-handles")
       )
         return;
       onSelect(null);
@@ -190,17 +162,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
       document.removeEventListener("keydown", onKey);
     };
   }, [selectedSlot, onSelect]);
-
-  // Close the colour popover when clicking outside the toolbar.
-  useEffect(() => {
-    if (!colorsOpen) return;
-    const onDown = (e: PointerEvent) => {
-      const t = e.target as HTMLElement | null;
-      if (!t?.closest(".pitch-toolbar")) setColorsOpen(false);
-    };
-    document.addEventListener("pointerdown", onDown);
-    return () => document.removeEventListener("pointerdown", onDown);
-  }, [colorsOpen]);
 
   return (
     <div className={`pitch-col pitch-col--${orient}`}>
@@ -346,91 +307,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           </div>
         </div>
 
-      </div>
-
-      <div className={`pitch-toolbar pitch-toolbar--${orient}`}>
-        {phase !== "base" && influencePresets && (
-          <div className="ptool-presets">
-            <span className="ptool-presets__title">Forme de la zone</span>
-            {influencePresets}
-          </div>
-        )}
-
-        {phase !== "base" && (
-          <div className="ptool-slider">
-            <span>Déf</span>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.02}
-              value={blend}
-              aria-label="Transition Défense → Attaque"
-              onPointerDown={() => setScrubbing(true)}
-              onPointerUp={() => setScrubbing(false)}
-              onChange={(e) => handleBlend(Number(e.target.value))}
-            />
-            <span>Att</span>
-          </div>
-        )}
-
-        {/* Zones d'influence — always visible, no submenu */}
-        {phase !== "base" && influenceControls}
-
-        <button
-          type="button"
-          className={`ptool-btn ${showGrid ? "is-active" : ""}`}
-          onClick={() => setShowGrid((g) => !g)}
-          aria-pressed={showGrid}
-          title="Afficher la grille de position"
-        >
-          Grille
-        </button>
-
-        {phase !== "base" && (
-          <div className="ptool-item ptool-item--opp">
-            <button
-              type="button"
-              className={`ptool-btn ${opponentMode ? "is-active" : ""}`}
-              onClick={onToggleOpponentMode}
-              aria-pressed={opponentMode}
-              title="Positionner les 11 adversaires"
-            >
-              Adversaires
-            </button>
-            {opponentMode && (
-              <>
-                <button
-                  type="button"
-                  className="ptool-color"
-                  style={{ background: opponentColor }}
-                  onClick={() => setColorsOpen((o) => !o)}
-                  aria-label="Couleur des adversaires"
-                  title="Couleur des adversaires"
-                />
-                {colorsOpen && (
-                  <div className="ptool-pop ptool-pop--colors">
-                    {OPPONENT_COLORS.map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        className={`opp-swatch ${
-                          c === opponentColor ? "is-active" : ""
-                        }`}
-                        style={{ background: c }}
-                        onClick={() => {
-                          onSetOpponentColor(c);
-                          setColorsOpen(false);
-                        }}
-                        aria-label={`Couleur ${c}`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

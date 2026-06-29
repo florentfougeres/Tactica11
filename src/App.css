@@ -654,10 +654,6 @@
   min-height: 0;
   min-width: 0;
 }
-/* landscape: reserve room on the right for the floating vertical toolbar */
-.pitch-col--landscape .pitch-wrap {
-  padding-right: 78px;
-}
 .pitch-bar {
   position: relative;
   flex: 0 0 auto;
@@ -687,197 +683,52 @@
   border-color: rgba(33, 208, 122, 0.5);
   background: rgba(33, 208, 122, 0.08);
 }
-/* Défense ⟷ Attaque transition scrubber — horizontal, in a pill just below the
-   pitch (Déf on the left → Att on the right). */
-/* ---------- pitch toolbar (compact controls) ---------- */
-.pitch-toolbar {
-  position: relative;
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-/* portrait: a single row, everything side by side, minimal height */
-.pitch-toolbar--portrait {
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-self: stretch;
-  gap: 5px;
-}
-/* compact sizing so slider + zones + grille + adversaires fit on one line */
-.pitch-toolbar--portrait .ptool-slider {
-  padding: 4px 8px;
-  gap: 4px;
-}
-.pitch-toolbar--portrait .ptool-slider span {
-  font-size: 10px;
-}
-.pitch-toolbar--portrait .ptool-slider input[type="range"] {
-  width: 52px;
-}
-.pitch-toolbar--portrait .ptool-btn {
-  padding: 0 10px;
-}
-.pitch-toolbar--portrait .influence-mode__btn {
-  padding: 5px 7px;
-  font-size: 12px;
-}
-/* landscape: a vertical bar floating on the right, pitch keeps the rest */
-.pitch-toolbar--landscape {
-  position: absolute;
-  right: 0;
-  top: 56px;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-/* influence modes shown inline (always visible, no submenu): a small caption
-   above the Aucune/Joueur/Équipe segmented control */
-.pitch-toolbar .influence-ctl {
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-.influence-ctl__label {
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--text-dim);
-  white-space: nowrap;
-}
-.pitch-toolbar--landscape .influence-mode {
-  grid-template-columns: 1fr;
-}
-/* floating presets card — absolute so it never shifts the toolbar/pitch */
-.ptool-presets {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
+/* ---------- pitch controls panel (bottom of the Effectif column) ---------- */
+.pitch-ctl {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  background: rgba(13, 18, 26, 0.97);
-  border: 1px solid var(--panel-border);
-  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.9);
-  z-index: 60;
+  gap: 14px;
 }
-.ptool-presets__title {
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--text-dim);
-}
-.pitch-toolbar--landscape .ptool-presets {
-  bottom: auto;
-  top: 0;
-  left: auto;
-  right: calc(100% + 10px);
-  transform: none;
-}
-.ptool-slider {
+.pitch-ctl__slider {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--panel-border);
 }
-.ptool-slider span {
+.pitch-ctl__slider span {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.3px;
   color: var(--text-dim);
 }
-.ptool-slider input[type="range"] {
-  width: 150px;
-  height: 10px;
+.pitch-ctl__slider input[type="range"] {
+  flex: 1;
+  min-width: 0;
   accent-color: var(--accent);
   cursor: pointer;
 }
-.pitch-toolbar--landscape .ptool-slider {
-  flex-direction: column-reverse; /* Att on top, Déf at bottom */
-  padding: 12px 6px;
-}
-.pitch-toolbar--landscape .ptool-slider input[type="range"] {
-  writing-mode: vertical-lr;
-  direction: rtl;
-  width: 10px;
-  height: 90px;
-}
-.ptool-item {
-  position: relative;
+/* iOS-style toggle row: label on the left, switch on the right */
+.pitch-ctl__row {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-.ptool-btn {
-  height: 32px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid var(--panel-border);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text);
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  color: var(--text);
 }
-.ptool-btn:hover {
-  border-color: rgba(33, 208, 122, 0.5);
-  background: rgba(33, 208, 122, 0.08);
+.influence-ctl__label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
 }
-.ptool-btn.is-active {
-  border-color: var(--accent);
-  background: rgba(33, 208, 122, 0.18);
-  color: var(--accent);
-}
-.ptool-item--opp .ptool-btn.is-active {
-  border-color: #8fb3e0;
-  background: rgba(143, 179, 224, 0.2);
-  color: #cfe0f4;
-}
-.ptool-color {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  padding: 0;
-}
-/* the only collapsed control: the opponent colour swatches popover */
-.ptool-pop {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  background: rgba(13, 18, 26, 0.97);
-  border: 1px solid var(--panel-border);
-  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.9);
-  z-index: 60;
-}
-.ptool-pop--colors {
+.opp-colors-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-}
-/* landscape: open the colour popover toward the pitch, stacked */
-.pitch-toolbar--landscape .ptool-pop {
-  bottom: auto;
-  top: 0;
-  left: auto;
-  right: calc(100% + 10px);
-  transform: none;
-}
-.pitch-toolbar--landscape .ptool-pop--colors {
-  flex-direction: column;
 }
 /* contextual EA-FC role presets, shown above the foot when a player is selected */
 .zone-presets {
