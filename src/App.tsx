@@ -44,6 +44,13 @@ type Point = { x: number; y: number };
 
 const ONBOARD_KEY = "tactica11.onboarded";
 
+// French phase labels, used to suffix exported PNG filenames.
+const PHASE_LABEL: Record<Phase, string> = {
+  base: "base",
+  attack: "attaque",
+  defense: "defense",
+};
+
 function pointInRect(p: Point, el: HTMLElement | null): boolean {
   if (!el) return false;
   const r = el.getBoundingClientRect();
@@ -290,6 +297,56 @@ export default function App() {
       ),
     }));
 
+  // Mirror the current phase left↔right (x → 100 − x): players, their influence
+  // shape, opponents and drawings. Base is the locked template, so skip it.
+  const mirrorPhase = () => {
+    if (phase === "base") return;
+    const ph = phase as "attack" | "defense";
+    const mx = (p: Point): Point => ({ x: 100 - p.x, y: p.y });
+    const mirrorRadii = (r: ZoneRadii): ZoneRadii => ({
+      ...r,
+      left: r.right,
+      right: r.left,
+    });
+    setLineup((l) => ({
+      ...l,
+      slots: l.slots.map((s) => ({
+        ...s,
+        positions: { ...s.positions, [ph]: mx(s.positions[ph]) },
+        influence: s.influence?.[ph]
+          ? { ...s.influence, [ph]: mirrorRadii(s.influence[ph]!) }
+          : s.influence,
+      })),
+      opponents: (l.opponents ?? []).map((o) => ({
+        ...o,
+        positions: { ...o.positions, [ph]: mx(o.positions[ph]) },
+      })),
+      drawings: {
+        ...l.drawings,
+        [ph]: (l.drawings?.[ph] ?? []).map((d) => ({
+          ...d,
+          points: d.points.map(mx),
+        })),
+      },
+    }));
+  };
+
+  // Reset the current phase's player positions back to the formation-derived
+  // shape (handy after dragging the block around). Players/opponents/drawings of
+  // other phases are untouched. Base is locked, so skip it.
+  const resetPhase = () => {
+    if (phase === "base") return;
+    const ph = phase as "attack" | "defense";
+    const fresh = buildSlots(lineup.formation);
+    setLineup((l) => ({
+      ...l,
+      slots: l.slots.map((s, i) => {
+        const def = fresh[i]?.positions[ph];
+        return def ? { ...s, positions: { ...s.positions, [ph]: def } } : s;
+      }),
+    }));
+  };
+
   // --- opponents (attack/defense only) ---
   const toggleOpponentMode = () => {
     // Enforce the "11 or nothing" invariant: spawn a fresh block whenever the
@@ -515,6 +572,11 @@ export default function App() {
   };
 
   const deleteCompo = (id: string) => {
+    const target = library.find((l) => l.id === id);
+    const label = target?.name?.trim() || "cette compo";
+    // Deletion clears the undo history (reset), so there's no taking it back.
+    if (!window.confirm(`Supprimer « ${label} » ? Cette action est définitive.`))
+      return;
     const rest = library.filter((l) => l.id !== id);
     if (rest.length === 0) {
       const def = createDefaultLineup();
@@ -555,7 +617,7 @@ export default function App() {
     setSelectedSlot(null); // drop the selection ring / popover from the capture
     await new Promise((r) => requestAnimationFrame(() => r(null)));
     try {
-      await exportPitchPng(pitchEl, lineup.name);
+      await exportPitchPng(pitchEl, lineup.name, PHASE_LABEL[phase]);
     } catch {
       alert("Échec de l'export en image.");
     }
@@ -589,6 +651,27 @@ export default function App() {
             onChange={(e) => handleBlend(Number(e.target.value))}
           />
           <span>Att</span>
+        </div>
+      )}
+
+      {phase !== "base" && (
+        <div className="pitch-ctl__actions">
+          <button
+            type="button"
+            className="pitch-ctl__btn"
+            onClick={mirrorPhase}
+            title="Inverser gauche / droite pour cette phase"
+          >
+            ⇄ Miroir G/D
+          </button>
+          <button
+            type="button"
+            className="pitch-ctl__btn"
+            onClick={resetPhase}
+            title="Replacer les joueurs selon la formation"
+          >
+            ↺ Réinitialiser
+          </button>
         </div>
       )}
 
