@@ -1432,4 +1432,20 @@
   .topbar__label {
     display: none;
   }
+
+  /* Reclaim the wasted side margins: drop the left centring spacer so the pitch
+     sits flush next to the bench, and slim the right gutter down to just what
+     the phase slider needs. The size formula's gutter constant follows. */
+  .pitch-wrap {
+    justify-content: flex-start;
+  }
+  .pitch-aside:not(.pitch-aside--right) {
+    display: none;
+  }
+  .pitch-aside--right {
+    width: 28px;
+  }
+  .pitch {
+    height: min(100cqh, calc((100cqw - 34px) / var(--ar)));
+  }
 }
