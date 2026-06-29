@@ -31,7 +31,7 @@ export default defineConfig(({ command }) => ({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
-        globIgnores: ['**/baniere.png', '**/screenshot.png'],
+        globIgnores: ['**/baniere.png', '**/logo.png', '**/screenshot.png'],
         navigateFallback: 'index.html',
       },
     }),

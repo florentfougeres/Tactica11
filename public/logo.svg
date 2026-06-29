@@ -1,0 +1,35 @@
+<svg width="600" height="190" viewBox="0 0 600 190" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0e141d"/>
+      <stop offset="1" stop-color="#0a0e14"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="18%" cy="0%" r="80%">
+      <stop offset="0" stop-color="#21d07a" stop-opacity="0.18"/>
+      <stop offset="60%" stop-color="#21d07a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="markGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="5" y="5" width="590" height="180" rx="32"
+        fill="url(#bg)" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
+  <rect x="5" y="5" width="590" height="180" rx="32" fill="url(#glow)"/>
+
+  <!-- hexagon mark (matches the ⬡ in the app top bar) -->
+  <polygon points="92,52 130,74 130,116 92,138 54,116 54,74"
+           fill="none" stroke="#21d07a" stroke-width="7"
+           stroke-linejoin="round" filter="url(#markGlow)"/>
+
+  <!-- wordmark -->
+  <text x="168" y="96" dominant-baseline="central"
+        font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+        font-size="68" font-weight="700" letter-spacing="0.2">
+    <tspan fill="#eaf0f7">Tactica</tspan><tspan fill="#21d07a">11</tspan>
+  </text>
+</svg>

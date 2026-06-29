@@ -1,6 +1,6 @@
 # Tactica11
 
-<img src="./public/baniere.png" style="height:200px">
+<img src="./public/logo.png" alt="Tactica11" style="height:120px">
 
 App web pour créer des **compos et mises en place tactiques de football** :
 formation, placement libre des joueurs, variantes par **phase de jeu**
