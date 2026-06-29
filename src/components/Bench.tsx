@@ -209,17 +209,23 @@ function BenchItem({
           inputMode="numeric"
           aria-label="Numéro"
         />
+      ) : canDrag ? (
+        // Base phase: editable chip ("#" placeholder when no number yet).
+        <button
+          className={`bench__numchip ${
+            player.number == null ? "bench__numchip--empty" : ""
+          }`}
+          onClick={() => setNumEditing(true)}
+          title="Numéro (optionnel)"
+        >
+          {player.number ?? "#"}
+        </button>
       ) : (
-        canDrag && (
-          <button
-            className={`bench__numchip ${
-              player.number == null ? "bench__numchip--empty" : ""
-            }`}
-            onClick={() => setNumEditing(true)}
-            title="Numéro (optionnel)"
-          >
-            {player.number ?? "#"}
-          </button>
+        // Locked phases: keep the number visible (read-only), no placeholder.
+        player.number != null && (
+          <span className="bench__numchip bench__numchip--static">
+            {player.number}
+          </span>
         )
       )}
       {editing ? (

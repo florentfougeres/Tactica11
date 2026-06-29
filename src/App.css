@@ -602,6 +602,14 @@
   background: transparent;
   color: var(--text-dim);
 }
+/* read-only chip shown in locked phases — same look, no interaction */
+.bench__numchip--static {
+  cursor: default;
+}
+.bench__numchip--static:hover {
+  border-color: var(--panel-border);
+  background: rgba(33, 208, 122, 0.14);
+}
 .bench__name {
   flex: 1;
   text-align: left;
