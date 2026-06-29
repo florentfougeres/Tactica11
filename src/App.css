@@ -1595,6 +1595,88 @@
   justify-content: flex-end;
 }
 
+/* ---------- onboarding walkthrough ---------- */
+.onboard {
+  max-width: 420px;
+  position: relative;
+  text-align: center;
+  padding: 28px 24px 22px;
+}
+.onboard__hero {
+  width: 76px;
+  height: 76px;
+  margin: 6px auto 0;
+  display: grid;
+  place-items: center;
+  font-size: 38px;
+  line-height: 1;
+  border-radius: 22px;
+  background: rgba(33, 208, 122, 0.12);
+  border: 1px solid rgba(33, 208, 122, 0.28);
+  box-shadow: 0 8px 30px rgba(33, 208, 122, 0.18);
+}
+.onboard__body {
+  min-height: 132px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  margin: 18px 4px 4px;
+}
+.onboard__title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  color: var(--text);
+}
+.onboard__text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+.onboard__dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin: 10px 0 18px;
+}
+.onboard__dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+.onboard__dot:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+.onboard__dot.is-active {
+  background: var(--accent);
+  transform: scale(1.25);
+}
+.onboard__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.onboard__nav .btn {
+  min-width: 96px;
+  justify-content: center;
+}
+.onboard__count {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.onboard__skip {
+  color: var(--text-dim);
+}
+
 /* ---------- responsive (iPad portrait / narrow) ---------- */
 @media (max-width: 900px) {
   .layout {

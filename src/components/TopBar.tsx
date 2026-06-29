@@ -21,6 +21,7 @@ interface Props {
   onCopyLink: () => void;
   onImport: (file: File) => void;
   onPresent: () => void;
+  onHelp: () => void;
 }
 
 function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLElement | null>) {
@@ -61,6 +62,7 @@ export default function TopBar({
   onCopyLink,
   onImport,
   onPresent,
+  onHelp,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const fmRef = useRef<HTMLDivElement>(null);
@@ -249,6 +251,14 @@ export default function TopBar({
         </div>
         <button className="btn" onClick={() => fileRef.current?.click()}>
           Importer…
+        </button>
+        <button
+          className="btn btn--icon"
+          onClick={onHelp}
+          title="Présentation des fonctionnalités"
+          aria-label="Aide"
+        >
+          ?
         </button>
         <button
           className="btn btn--icon"

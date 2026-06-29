@@ -32,6 +32,7 @@ import Bench from "./components/Bench";
 import Pitch from "./components/Pitch";
 import TopBar from "./components/TopBar";
 import CsvImportDialog from "./components/CsvImportDialog";
+import Onboarding from "./components/Onboarding";
 import ZonePresets from "./components/ZonePresets";
 import { presetsFor, presetRadii } from "./zonePresets";
 import { exportPitchPng } from "./exportImage";
@@ -40,6 +41,8 @@ import { useUndoableLineup } from "./useUndoableLineup";
 import type { ImportedPlayer } from "./csv";
 
 type Point = { x: number; y: number };
+
+const ONBOARD_KEY = "tactica11.onboarded";
 
 function pointInRect(p: Point, el: HTMLElement | null): boolean {
   if (!el) return false;
@@ -62,6 +65,19 @@ export default function App() {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [benchDragging, setBenchDragging] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
+  // First-launch walkthrough of the existing features (reopenable from the top
+  // bar). The flag lives in localStorage so it shows exactly once per device.
+  const [onboardOpen, setOnboardOpen] = useState(
+    () => localStorage.getItem(ONBOARD_KEY) == null,
+  );
+  const closeOnboarding = () => {
+    setOnboardOpen(false);
+    try {
+      localStorage.setItem(ONBOARD_KEY, "1");
+    } catch {
+      // storage unavailable — the tour just shows again next time, harmless
+    }
+  };
   const [influenceMode, setInfluenceMode] = useState<InfluenceMode>("none");
   const [orient, setOrient] = useState<Orient>("portrait");
   const [activePreset, setActivePreset] = useState<string | null>(null);
@@ -701,6 +717,7 @@ export default function App() {
         name={lineup.name}
         formation={lineup.formation}
         onPresent={enterPresent}
+        onHelp={() => setOnboardOpen(true)}
         compos={library.map((l) => ({ id: l.id, name: l.name }))}
         currentId={lineup.id}
         canUndo={canUndo}
@@ -785,6 +802,8 @@ export default function App() {
           onImport={addPlayers}
         />
       )}
+
+      {onboardOpen && <Onboarding onClose={closeOnboarding} />}
     </div>
   );
 }
