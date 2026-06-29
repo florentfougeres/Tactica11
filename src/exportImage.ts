@@ -2,7 +2,7 @@ import { toPng } from "html-to-image";
 
 // Nodes that are UI chrome (phase toggle, hints, the management popover) and
 // shouldn't appear in the exported picture.
-const EXCLUDED = ["pitch__top", "pitch__drop-hint", "slot-pop-anchor"];
+const EXCLUDED = ["pitch__top", "pitch__drop-hint", "slot-pop-anchor", "draw-bar"];
 
 function safeName(name: string): string {
   return name.trim().replace(/[^\w-]+/g, "_") || "compo";

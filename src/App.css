@@ -957,6 +957,91 @@
   transform: scale(1.1);
 }
 
+/* ---------- drawing layer ---------- */
+/* Persistent strokes sit above the grass/markings but below the tokens. When
+   drawing mode is on the layer rises above everything and captures pointers so
+   tracing never drags a player. */
+.draw-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: visible;
+}
+.draw-layer--active {
+  z-index: 5;
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+/* palette below the pitch (outside the field), single row */
+.draw-bar {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  max-width: 100%;
+}
+.draw-bar__tool {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.draw-bar__tool:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+.draw-bar__tool.is-active {
+  background: rgba(33, 208, 122, 0.18);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.draw-bar__tool:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.draw-bar__tool--danger:hover:not(:disabled) {
+  background: rgba(232, 90, 90, 0.18);
+  color: #ff8b8b;
+}
+.draw-bar__sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 4px 3px;
+  background: var(--panel-border);
+}
+.draw-bar__swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s, border-color 0.12s;
+}
+.draw-bar__swatch:hover {
+  transform: scale(1.12);
+}
+.draw-bar__swatch.is-active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
 /* influence-view toggle (attack/defense), in the control bar above the pitch */
 .influence-switch {
   display: flex;

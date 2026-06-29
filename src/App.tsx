@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import type {
+  DrawTool,
+  Drawing,
   InfluenceMode,
   Lineup,
   Orient,
@@ -8,7 +10,13 @@ import type {
   Player,
   ZoneRadii,
 } from "./types";
-import { DEFAULT_OPPONENT_COLOR, OPPONENT_COLORS, pxToPos } from "./types";
+import {
+  DEFAULT_DRAW_COLOR,
+  DEFAULT_OPPONENT_COLOR,
+  DRAW_COLORS,
+  OPPONENT_COLORS,
+  pxToPos,
+} from "./types";
 import { buildSlots } from "./formations";
 import {
   createDefaultLineup,
@@ -69,6 +77,11 @@ export default function App() {
   const [blend, setBlend] = useState(0);
   const [scrubbing, setScrubbing] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
+  // Drawing layer: free-hand annotations stored per phase on the lineup. Tool /
+  // colour are ephemeral view state; the strokes themselves are persisted.
+  const [drawMode, setDrawMode] = useState(false);
+  const [drawTool, setDrawTool] = useState<DrawTool>("arrow");
+  const [drawColor, setDrawColor] = useState<string>(DEFAULT_DRAW_COLOR);
 
   // Keep the scrub in sync when the phase is set from the toggle buttons.
   useEffect(() => {
@@ -291,6 +304,23 @@ export default function App() {
 
   const setOpponentColor = (color: string) =>
     setLineup((l) => ({ ...l, opponentColor: color }));
+
+  // --- drawings (per phase) ---
+  const addDrawing = (d: Drawing) =>
+    setLineup((l) => ({
+      ...l,
+      drawings: { ...l.drawings, [phase]: [...(l.drawings?.[phase] ?? []), d] },
+    }));
+
+  const undoDrawing = () =>
+    setLineup((l) => {
+      const cur = l.drawings?.[phase] ?? [];
+      if (!cur.length) return l;
+      return { ...l, drawings: { ...l.drawings, [phase]: cur.slice(0, -1) } };
+    });
+
+  const clearDrawings = () =>
+    setLineup((l) => ({ ...l, drawings: { ...l.drawings, [phase]: [] } }));
 
   // Influence shape is per phase; edits apply to the current (attack/defense) one.
   const setInfluence = (slotId: string, radii: ZoneRadii) =>
@@ -589,6 +619,19 @@ export default function App() {
         </span>
       </label>
 
+      <label className="pitch-ctl__row">
+        <span>Dessin</span>
+        <span className="switch">
+          <input
+            type="checkbox"
+            checked={drawMode}
+            onChange={(e) => setDrawMode(e.target.checked)}
+          />
+          <span className="switch__track" />
+          <span className="switch__thumb" />
+        </span>
+      </label>
+
       {phase !== "base" && (
         <>
           <label className="pitch-ctl__row">
@@ -723,6 +766,16 @@ export default function App() {
           opponentColor={lineup.opponentColor ?? DEFAULT_OPPONENT_COLOR}
           onMoveOpponent={moveOpponent}
           onLabelOpponent={setOpponentLabel}
+          drawMode={drawMode}
+          drawTool={drawTool}
+          drawColor={drawColor}
+          drawColors={DRAW_COLORS}
+          drawings={lineup.drawings?.[phase] ?? []}
+          onAddDrawing={addDrawing}
+          onDrawTool={setDrawTool}
+          onDrawColor={setDrawColor}
+          onUndoDrawing={undoDrawing}
+          onClearDrawings={clearDrawings}
         />
       </main>
 

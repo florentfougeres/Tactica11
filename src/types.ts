@@ -113,6 +113,32 @@ export const OPPONENT_COLORS = [
 ];
 export const DEFAULT_OPPONENT_COLOR = OPPONENT_COLORS[0];
 
+// Free-hand tactical annotations drawn over the pitch, stored per phase.
+//  - "arrow"  : straight solid arrow (a run / a movement)
+//  - "dashed" : straight dashed arrow (a pass)
+//  - "free"   : free-hand polyline
+//  - "zone"   : free-hand closed area, translucent fill
+export type DrawTool = "arrow" | "dashed" | "free" | "zone";
+
+export interface Drawing {
+  id: string;
+  tool: DrawTool;
+  color: string;
+  // Points in pitch percent. arrow/dashed use [start, end]; free/zone keep the
+  // whole sampled polyline (so they follow the orientation like everything else).
+  points: Pos[];
+}
+
+// Pen palette for the drawing layer (kept legible over the green grass).
+export const DRAW_COLORS = [
+  "#f4c531", // amber
+  "#e0533a", // red
+  "#3f8fe0", // blue
+  "#23b083", // green
+  "#f2f2ee", // chalk white
+];
+export const DEFAULT_DRAW_COLOR = DRAW_COLORS[0];
+
 export interface Lineup {
   id: string;
   name: string;
@@ -121,6 +147,7 @@ export interface Lineup {
   slots: Slot[]; // always 11 on-pitch slots
   opponents?: Opponent[]; // optional opposing discs (attack/defense only)
   opponentColor?: string; // disc colour for the opposing team
+  drawings?: Partial<Record<Phase, Drawing[]>>; // optional annotations per phase
 }
 
 // Schema version for the exported .json files.
