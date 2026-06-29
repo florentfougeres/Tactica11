@@ -49,6 +49,7 @@ interface Props {
   onLabelOpponent: (id: string, label: string) => void;
   onSetOpponentColor: (color: string) => void;
   influenceControls: ReactNode;
+  influencePresets: ReactNode;
 }
 
 const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
@@ -78,6 +79,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     onLabelOpponent,
     onSetOpponentColor,
     influenceControls,
+    influencePresets,
   },
   ref,
 ) {
@@ -347,6 +349,13 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
       </div>
 
       <div className={`pitch-toolbar pitch-toolbar--${orient}`}>
+        {phase !== "base" && influencePresets && (
+          <div className="ptool-presets">
+            <span className="ptool-presets__title">Forme de la zone</span>
+            {influencePresets}
+          </div>
+        )}
+
         {phase !== "base" && (
           <div className="ptool-slider">
             <span>Déf</span>
@@ -387,7 +396,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
               aria-pressed={opponentMode}
               title="Positionner les 11 adversaires"
             >
-              Adv
+              Adversaires
             </button>
             {opponentMode && (
               <>

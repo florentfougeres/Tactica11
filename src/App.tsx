@@ -505,6 +505,7 @@ export default function App() {
   };
   const influenceControls = (
     <div className="influence-ctl">
+      <span className="influence-ctl__label">Zones d'influence</span>
       <div className="influence-mode" role="group" aria-label="Zones d'influence">
         {(["none", "player", "team"] as InfluenceMode[]).map((m) => (
           <button
@@ -516,17 +517,18 @@ export default function App() {
           </button>
         ))}
       </div>
-      {influenceMode === "player" && selSlot && selStarter && (
-        <div className="influence-ctl__roles">
-          <ZonePresets
-            presets={presetsFor(selSlot.role)}
-            activeKey={activePreset}
-            onPick={(k) => applyPreset(selSlot.id, k)}
-          />
-        </div>
-      )}
     </div>
   );
+  // Role-shape presets for the selected player's zone — shown in a separate
+  // floating card (not inline) so they never shift the toolbar layout.
+  const influencePresets =
+    influenceMode === "player" && selSlot && selStarter ? (
+      <ZonePresets
+        presets={presetsFor(selSlot.role)}
+        activeKey={activePreset}
+        onPick={(k) => applyPreset(selSlot.id, k)}
+      />
+    ) : null;
 
   return (
     <div className={`app ${presenting ? "app--present" : ""}`}>
@@ -603,6 +605,7 @@ export default function App() {
           onLabelOpponent={setOpponentLabel}
           onSetOpponentColor={setOpponentColor}
           influenceControls={influenceControls}
+          influencePresets={influencePresets}
         />
       </main>
 

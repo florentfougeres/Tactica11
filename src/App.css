@@ -691,6 +691,7 @@
    pitch (Déf on the left → Att on the right). */
 /* ---------- pitch toolbar (compact controls) ---------- */
 .pitch-toolbar {
+  position: relative;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
@@ -702,24 +703,25 @@
   flex-wrap: wrap;
   justify-content: center;
   align-self: stretch;
-  gap: 6px;
-}
-/* compact sizing so slider + zones + grille + adv fit on one line */
-.pitch-toolbar--portrait .ptool-slider {
-  padding: 4px 9px;
   gap: 5px;
+}
+/* compact sizing so slider + zones + grille + adversaires fit on one line */
+.pitch-toolbar--portrait .ptool-slider {
+  padding: 4px 8px;
+  gap: 4px;
 }
 .pitch-toolbar--portrait .ptool-slider span {
   font-size: 10px;
 }
 .pitch-toolbar--portrait .ptool-slider input[type="range"] {
-  width: 72px;
+  width: 52px;
 }
 .pitch-toolbar--portrait .ptool-btn {
   padding: 0 10px;
 }
 .pitch-toolbar--portrait .influence-mode__btn {
-  padding: 6px 8px;
+  padding: 5px 7px;
+  font-size: 12px;
 }
 /* landscape: a vertical bar floating on the right, pitch keeps the rest */
 .pitch-toolbar--landscape {
@@ -730,17 +732,53 @@
   align-items: center;
   gap: 10px;
 }
-/* influence modes shown inline (always visible, no submenu) */
+/* influence modes shown inline (always visible, no submenu): a small caption
+   above the Aucune/Joueur/Équipe segmented control */
 .pitch-toolbar .influence-ctl {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-}
-.pitch-toolbar--landscape .influence-ctl {
   flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.influence-ctl__label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-dim);
+  white-space: nowrap;
 }
 .pitch-toolbar--landscape .influence-mode {
   grid-template-columns: 1fr;
+}
+/* floating presets card — absolute so it never shifts the toolbar/pitch */
+.ptool-presets {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(13, 18, 26, 0.97);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.9);
+  z-index: 60;
+}
+.ptool-presets__title {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-dim);
+}
+.pitch-toolbar--landscape .ptool-presets {
+  bottom: auto;
+  top: 0;
+  left: auto;
+  right: calc(100% + 10px);
+  transform: none;
 }
 .ptool-slider {
   display: flex;
