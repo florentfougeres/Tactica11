@@ -1427,7 +1427,7 @@
 /* ---------- responsive (iPad portrait / narrow) ---------- */
 @media (max-width: 900px) {
   .layout {
-    grid-template-columns: 190px 1fr;
+    grid-template-columns: 240px 1fr;
   }
   .topbar__label {
     display: none;
