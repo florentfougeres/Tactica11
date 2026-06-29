@@ -96,8 +96,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   const [scrubbing, setScrubbing] = useState(false);
   // Juego de posición overlay — the 5 vertical corridors (off by default).
   const [showGrid, setShowGrid] = useState(false);
-  // Which toolbar popover is open (influence options / opponent colours).
-  const [openTool, setOpenTool] = useState<"influence" | "colors" | null>(null);
+  // Opponent-colour popover open state (the only collapsed toolbar control).
+  const [colorsOpen, setColorsOpen] = useState(false);
 
   const handleBlend = (v: number) => {
     setBlend(v);
@@ -189,16 +189,16 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     };
   }, [selectedSlot, onSelect]);
 
-  // Close a toolbar popover when clicking outside the toolbar.
+  // Close the colour popover when clicking outside the toolbar.
   useEffect(() => {
-    if (!openTool) return;
+    if (!colorsOpen) return;
     const onDown = (e: PointerEvent) => {
       const t = e.target as HTMLElement | null;
-      if (!t?.closest(".pitch-toolbar")) setOpenTool(null);
+      if (!t?.closest(".pitch-toolbar")) setColorsOpen(false);
     };
     document.addEventListener("pointerdown", onDown);
     return () => document.removeEventListener("pointerdown", onDown);
-  }, [openTool]);
+  }, [colorsOpen]);
 
   return (
     <div className={`pitch-col pitch-col--${orient}`}>
@@ -365,83 +365,63 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           </div>
         )}
 
-        <div className="ptool-row">
-          {phase !== "base" && (
-            <div className="ptool-item">
-              <button
-                type="button"
-                className={`ptool-btn ${influenceMode !== "none" ? "is-active" : ""}`}
-                onClick={() =>
-                  setOpenTool((o) => (o === "influence" ? null : "influence"))
-                }
-                aria-pressed={openTool === "influence"}
-                title="Zones d'influence"
-              >
-                Zones
-              </button>
-              {openTool === "influence" && (
-                <div className="ptool-pop">{influenceControls}</div>
-              )}
-            </div>
-          )}
+        {/* Zones d'influence — always visible, no submenu */}
+        {phase !== "base" && influenceControls}
 
-          <button
-            type="button"
-            className={`ptool-btn ${showGrid ? "is-active" : ""}`}
-            onClick={() => setShowGrid((g) => !g)}
-            aria-pressed={showGrid}
-            title="Afficher la grille de position"
-          >
-            Grille
-          </button>
+        <button
+          type="button"
+          className={`ptool-btn ${showGrid ? "is-active" : ""}`}
+          onClick={() => setShowGrid((g) => !g)}
+          aria-pressed={showGrid}
+          title="Afficher la grille de position"
+        >
+          Grille
+        </button>
 
-          {phase !== "base" && (
-            <div className="ptool-item ptool-item--opp">
-              <button
-                type="button"
-                className={`ptool-btn ${opponentMode ? "is-active" : ""}`}
-                onClick={onToggleOpponentMode}
-                aria-pressed={opponentMode}
-                title="Positionner les 11 adversaires"
-              >
-                Adv
-              </button>
-              {opponentMode && (
-                <>
-                  <button
-                    type="button"
-                    className="ptool-color"
-                    style={{ background: opponentColor }}
-                    onClick={() =>
-                      setOpenTool((o) => (o === "colors" ? null : "colors"))
-                    }
-                    aria-label="Couleur des adversaires"
-                    title="Couleur des adversaires"
-                  />
-                  {openTool === "colors" && (
-                    <div className="ptool-pop ptool-pop--colors">
-                      {OPPONENT_COLORS.map((c) => (
-                        <button
-                          key={c}
-                          type="button"
-                          className={`opp-swatch ${
-                            c === opponentColor ? "is-active" : ""
-                          }`}
-                          style={{ background: c }}
-                          onClick={() => {
-                            onSetOpponentColor(c);
-                            setOpenTool(null);
-                          }}
-                          aria-label={`Couleur ${c}`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-        </div>
+        {phase !== "base" && (
+          <div className="ptool-item ptool-item--opp">
+            <button
+              type="button"
+              className={`ptool-btn ${opponentMode ? "is-active" : ""}`}
+              onClick={onToggleOpponentMode}
+              aria-pressed={opponentMode}
+              title="Positionner les 11 adversaires"
+            >
+              Adv
+            </button>
+            {opponentMode && (
+              <>
+                <button
+                  type="button"
+                  className="ptool-color"
+                  style={{ background: opponentColor }}
+                  onClick={() => setColorsOpen((o) => !o)}
+                  aria-label="Couleur des adversaires"
+                  title="Couleur des adversaires"
+                />
+                {colorsOpen && (
+                  <div className="ptool-pop ptool-pop--colors">
+                    {OPPONENT_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className={`opp-swatch ${
+                          c === opponentColor ? "is-active" : ""
+                        }`}
+                        style={{ background: c }}
+                        onClick={() => {
+                          onSetOpponentColor(c);
+                          setColorsOpen(false);
+                        }}
+                        aria-label={`Couleur ${c}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

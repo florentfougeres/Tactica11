@@ -505,7 +505,6 @@ export default function App() {
   };
   const influenceControls = (
     <div className="influence-ctl">
-      <span className="influence-ctl__title">Zones d'influence</span>
       <div className="influence-mode" role="group" aria-label="Zones d'influence">
         {(["none", "player", "team"] as InfluenceMode[]).map((m) => (
           <button
@@ -517,28 +516,14 @@ export default function App() {
           </button>
         ))}
       </div>
-      {influenceMode === "player" &&
-        (selSlot && selStarter ? (
-          <div className="influence-ctl__roles">
-            <div className="influence-ctl__player">
-              {selSlot.role} · {selStarter.name} ·{" "}
-              {phase === "attack" ? "Attaque" : "Défense"}
-            </div>
-            <ZonePresets
-              presets={presetsFor(selSlot.role)}
-              activeKey={activePreset}
-              onPick={(k) => applyPreset(selSlot.id, k)}
-            />
-          </div>
-        ) : (
-          <p className="influence-ctl__hint">
-            Sélectionne un joueur pour ajuster sa zone.
-          </p>
-        ))}
-      {influenceMode === "team" && (
-        <p className="influence-ctl__hint">
-          Vert vif = zone bien couverte · terrain sombre = trou.
-        </p>
+      {influenceMode === "player" && selSlot && selStarter && (
+        <div className="influence-ctl__roles">
+          <ZonePresets
+            presets={presetsFor(selSlot.role)}
+            activeKey={activePreset}
+            onPick={(k) => applyPreset(selSlot.id, k)}
+          />
+        </div>
       )}
     </div>
   );

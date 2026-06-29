@@ -696,9 +696,30 @@
   align-items: center;
   gap: 8px;
 }
+/* portrait: a single row, everything side by side, minimal height */
 .pitch-toolbar--portrait {
-  flex-direction: column;
-  align-self: center;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-self: stretch;
+  gap: 6px;
+}
+/* compact sizing so slider + zones + grille + adv fit on one line */
+.pitch-toolbar--portrait .ptool-slider {
+  padding: 4px 9px;
+  gap: 5px;
+}
+.pitch-toolbar--portrait .ptool-slider span {
+  font-size: 10px;
+}
+.pitch-toolbar--portrait .ptool-slider input[type="range"] {
+  width: 72px;
+}
+.pitch-toolbar--portrait .ptool-btn {
+  padding: 0 10px;
+}
+.pitch-toolbar--portrait .influence-mode__btn {
+  padding: 6px 8px;
 }
 /* landscape: a vertical bar floating on the right, pitch keeps the rest */
 .pitch-toolbar--landscape {
@@ -709,8 +730,17 @@
   align-items: center;
   gap: 10px;
 }
-.pitch-toolbar--landscape .ptool-row {
+/* influence modes shown inline (always visible, no submenu) */
+.pitch-toolbar .influence-ctl {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.pitch-toolbar--landscape .influence-ctl {
   flex-direction: column;
+}
+.pitch-toolbar--landscape .influence-mode {
+  grid-template-columns: 1fr;
 }
 .ptool-slider {
   display: flex;
@@ -742,11 +772,6 @@
   direction: rtl;
   width: 10px;
   height: 90px;
-}
-.ptool-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 .ptool-item {
   position: relative;
@@ -788,7 +813,7 @@
   cursor: pointer;
   padding: 0;
 }
-/* popover above (portrait) / left of (landscape) the toolbar button */
+/* the only collapsed control: the opponent colour swatches popover */
 .ptool-pop {
   position: absolute;
   bottom: calc(100% + 10px);
@@ -805,35 +830,15 @@
   display: flex;
   gap: 8px;
 }
-/* portrait: wide & short → barely overlaps the pitch (it sits in the gap
-   between the pitch and the toolbar) */
-.pitch-toolbar--portrait .ptool-pop {
-  width: 360px;
-  max-width: 78vw;
-}
-.pitch-toolbar--portrait .ptool-pop .influence-ctl {
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 14px;
-}
-.pitch-toolbar--portrait .ptool-pop .influence-ctl__roles {
-  flex: 1 1 100%;
-}
-.pitch-toolbar--portrait .ptool-pop--colors {
-  width: auto;
-}
-/* landscape: narrow & tall, opening toward the pitch side */
+/* landscape: open the colour popover toward the pitch, stacked */
 .pitch-toolbar--landscape .ptool-pop {
   bottom: auto;
   top: 0;
   left: auto;
   right: calc(100% + 10px);
   transform: none;
-  width: 150px;
 }
 .pitch-toolbar--landscape .ptool-pop--colors {
-  width: auto;
   flex-direction: column;
 }
 /* contextual EA-FC role presets, shown above the foot when a player is selected */
