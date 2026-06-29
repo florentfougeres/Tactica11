@@ -1,7 +1,9 @@
 import {
   FILE_VERSION,
+  OPPONENT_FORMATION,
   type Lineup,
   type LineupFile,
+  type Opponent,
   type Phase,
   type Slot,
   type ZoneRadii,
@@ -25,6 +27,16 @@ const STORAGE_KEY = "tactica11.lineup";
 
 export function uid(prefix = "id"): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+// Spawn the 11 opposing discs from the default block — same positions for both
+// phases initially; the user then tweaks each phase independently.
+export function createOpponents(): Opponent[] {
+  return OPPONENT_FORMATION.map(({ label, x, y }) => ({
+    id: uid("opp"),
+    label,
+    positions: { attack: { x, y }, defense: { x, y } },
+  }));
 }
 
 export function createDefaultLineup(): Lineup {
@@ -60,7 +72,7 @@ export function migrateLineup(parsed: Lineup): Lineup {
       },
     };
   });
-  return { ...parsed, slots };
+  return { ...parsed, slots, opponents: parsed.opponents ?? [] };
 }
 
 // --- Library (several compos in localStorage) ---

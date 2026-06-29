@@ -33,6 +33,41 @@
   background: rgba(13, 18, 26, 0.95);
   border-color: rgba(255, 255, 255, 0.25);
 }
+/* fullscreen: collapsible controls drawer on the left */
+.present-tools {
+  position: fixed;
+  top: 14px;
+  left: 16px;
+  z-index: 300;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.present-tools__toggle {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  background: rgba(13, 18, 26, 0.8);
+  color: var(--text);
+  font-size: 18px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background 0.15s, border-color 0.15s;
+}
+.present-tools__toggle:hover {
+  background: rgba(13, 18, 26, 0.95);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.present-tools__panel {
+  width: 240px;
+  max-height: calc(100vh - 28px);
+  overflow-y: auto;
+  padding: 16px;
+  animation: menu-in 0.16s ease-out;
+}
 
 /* ---------- top bar (settings banner) ---------- */
 .topbar {
@@ -646,6 +681,7 @@
 /* ---------- pitch ---------- */
 /* column: control bar on top, pitch filling the rest */
 .pitch-col {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -654,12 +690,16 @@
   min-width: 0;
 }
 .pitch-bar {
+  position: relative;
   flex: 0 0 auto;
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
 }
 .pitch-rotate {
+  position: absolute;
+  right: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -678,31 +718,52 @@
   border-color: rgba(33, 208, 122, 0.5);
   background: rgba(33, 208, 122, 0.08);
 }
-/* Défense ⟷ Attaque transition scrubber — horizontal, in a pill just below the
-   pitch (Déf on the left → Att on the right). */
-.phase-slider {
-  flex: 0 0 auto;
-  align-self: center;
+/* ---------- pitch controls panel (bottom of the Effectif column) ---------- */
+.pitch-ctl {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  gap: 14px;
+}
+.pitch-ctl__slider {
+  display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--panel-border);
 }
-.phase-slider span {
+.pitch-ctl__slider span {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.3px;
   color: var(--text-dim);
 }
-.phase-slider input[type="range"] {
-  width: 180px;
-  height: 10px;
+.pitch-ctl__slider input[type="range"] {
+  flex: 1;
+  min-width: 0;
   accent-color: var(--accent);
   cursor: pointer;
+}
+/* iOS-style toggle row: label on the left, switch on the right */
+.pitch-ctl__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.influence-ctl__label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+.opp-colors-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 /* contextual EA-FC role presets, shown above the foot when a player is selected */
 .zone-presets {
@@ -847,26 +908,6 @@
   pointer-events: none;
 }
 /* footer under the pitch — holds the positional-grid toggle */
-.pitch-foot {
-  flex: 0 0 auto;
-  align-self: stretch;
-  display: flex;
-  justify-content: center;
-  padding-bottom: 2px;
-}
-/* label + reused .switch toggle */
-.pitch-foot label {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  user-select: none;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-dim);
-  white-space: nowrap;
-}
-
 /* influence heatmap (honeycomb) — sits above the grass, below the tokens */
 .heatmap {
   position: absolute;
@@ -1075,6 +1116,65 @@
 }
 .token--empty .token__names {
   display: none;
+}
+
+/* ---------- opponent discs ---------- */
+.opp-token {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.opp-token__disc {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 12px;
+  color: rgba(15, 20, 28, 0.92);
+  /* background colour set inline per the chosen team colour */
+  box-shadow: 0 5px 14px -5px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+.opp-token__label {
+  pointer-events: none;
+  letter-spacing: 0.3px;
+}
+.opp-token__input {
+  width: 26px;
+  background: transparent;
+  border: none;
+  outline: none;
+  text-align: center;
+  font: inherit;
+  color: rgba(15, 20, 28, 0.92);
+  text-transform: uppercase;
+}
+/* opponent colour swatches (shown in the toolbar colour popover) */
+.opp-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s, border-color 0.12s;
+}
+.opp-swatch:hover {
+  transform: scale(1.12);
+}
+.opp-swatch.is-active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5);
 }
 
 /* base-phase locked hint */

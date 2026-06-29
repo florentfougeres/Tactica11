@@ -78,12 +78,49 @@ export interface Slot {
   influence?: Partial<Record<Phase, ZoneRadii>>;
 }
 
+// An opposing player: a plain disc with a short free-text label (2-3 chars),
+// positioned independently in the attack and defense phases (never in base).
+export interface Opponent {
+  id: string;
+  label: string; // 2-3 characters shown inside the disc
+  positions: { attack: Pos; defense: Pos };
+}
+
+// Default opposing block (a 4-3-3 mirror sitting in the top half, since the
+// opponent attacks downward toward our goal). Used to spawn the 11 at once.
+export const OPPONENT_FORMATION: { label: string; x: number; y: number }[] = [
+  { label: "1", x: 50, y: 7 }, // GK
+  { label: "2", x: 82, y: 20 },
+  { label: "3", x: 60, y: 17 },
+  { label: "4", x: 40, y: 17 },
+  { label: "5", x: 18, y: 20 },
+  { label: "6", x: 50, y: 31 },
+  { label: "8", x: 28, y: 37 },
+  { label: "7", x: 72, y: 37 },
+  { label: "9", x: 50, y: 48 },
+  { label: "10", x: 30, y: 50 },
+  { label: "11", x: 70, y: 50 },
+];
+
+// Pastel palette for the opposing team's discs (kept clear of our green/white).
+export const OPPONENT_COLORS = [
+  "#8fb3e0", // blue
+  "#e0a0a0", // rose
+  "#e6c079", // amber
+  "#c4a7e0", // lavender
+  "#8fd0c8", // teal
+  "#aeb6c2", // slate
+];
+export const DEFAULT_OPPONENT_COLOR = OPPONENT_COLORS[0];
+
 export interface Lineup {
   id: string;
   name: string;
   formation: string; // e.g. "4-3-3"
   players: Player[]; // full roster (on pitch + bench)
   slots: Slot[]; // always 11 on-pitch slots
+  opponents?: Opponent[]; // optional opposing discs (attack/defense only)
+  opponentColor?: string; // disc colour for the opposing team
 }
 
 // Schema version for the exported .json files.

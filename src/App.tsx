@@ -8,10 +8,11 @@ import type {
   Player,
   ZoneRadii,
 } from "./types";
-import { pxToPos } from "./types";
+import { DEFAULT_OPPONENT_COLOR, OPPONENT_COLORS, pxToPos } from "./types";
 import { buildSlots } from "./formations";
 import {
   createDefaultLineup,
+  createOpponents,
   exportLineup,
   importLineup,
   loadLibrary,
@@ -57,10 +58,34 @@ export default function App() {
   const [orient, setOrient] = useState<Orient>("portrait");
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [presenting, setPresenting] = useState(false);
+  // Fullscreen: the controls drawer on the left, collapsed by default.
+  const [presentToolsOpen, setPresentToolsOpen] = useState(false);
+  // Opponent-placement mode (attack/defense only): shows + lets you drag the
+  // opposing discs. Ephemeral view state; the discs themselves are persisted.
+  const [opponentMode, setOpponentMode] = useState(false);
+  // Pitch view controls (lifted here so they can live in the Effectif panel):
+  // the Défense(0)↔Attaque(1) scrub, whether the user is actively scrubbing,
+  // and the positional grid overlay.
+  const [blend, setBlend] = useState(0);
+  const [scrubbing, setScrubbing] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
+
+  // Keep the scrub in sync when the phase is set from the toggle buttons.
+  useEffect(() => {
+    if (phase === "attack") setBlend(1);
+    else if (phase === "defense") setBlend(0);
+  }, [phase]);
+
+  const handleBlend = (v: number) => {
+    setBlend(v);
+    if (v === 0) setPhase("defense");
+    else if (v === 1) setPhase("attack");
+  };
 
   // Fullscreen presentation: hide the panels, fill the screen with the pitch.
   const enterPresent = () => {
     setPresenting(true);
+    setPresentToolsOpen(false); // start collapsed in fullscreen
     document.documentElement.requestFullscreen?.().catch(() => {});
   };
   const exitPresent = () => {
@@ -235,6 +260,37 @@ export default function App() {
           : s,
       ),
     }));
+
+  // --- opponents (attack/defense only) ---
+  const toggleOpponentMode = () => {
+    // Enforce the "11 or nothing" invariant: spawn a fresh block whenever the
+    // count isn't exactly 11 (fresh start, or a partial set left by an older
+    // version that allowed individual removal).
+    if (!opponentMode && (lineup.opponents?.length ?? 0) !== 11)
+      setLineup((l) => ({ ...l, opponents: createOpponents() }));
+    setOpponentMode((on) => !on);
+  };
+
+  const moveOpponent = (id: string, pos: Point) => {
+    if (phase === "base") return; // opponents live only in attack/defense
+    setLineup((l) => ({
+      ...l,
+      opponents: (l.opponents ?? []).map((o) =>
+        o.id === id ? { ...o, positions: { ...o.positions, [phase]: pos } } : o,
+      ),
+    }));
+  };
+
+  const setOpponentLabel = (id: string, label: string) =>
+    setLineup((l) => ({
+      ...l,
+      opponents: (l.opponents ?? []).map((o) =>
+        o.id === id ? { ...o, label } : o,
+      ),
+    }));
+
+  const setOpponentColor = (color: string) =>
+    setLineup((l) => ({ ...l, opponentColor: color }));
 
   // Influence shape is per phase; edits apply to the current (attack/defense) one.
   const setInfluence = (slotId: string, radii: ZoneRadii) =>
@@ -459,8 +515,8 @@ export default function App() {
     }
   };
 
-  // Influence controls live at the bottom of the Effectif panel (attack/defense
-  // only) so they don't shrink the pitch.
+  // Influence controls now live in the pitch toolbar (passed as a node) so the
+  // Effectif column is purely the roster.
   const selSlot = lineup.slots.find((s) => s.id === selectedSlot) ?? null;
   const selStarter = selSlot ? playerById(selSlot.starterId) : null;
   const INFLUENCE_LABEL: Record<InfluenceMode, string> = {
@@ -468,46 +524,111 @@ export default function App() {
     player: "Joueur",
     team: "Équipe",
   };
-  const influenceFooter =
-    phase === "base" ? undefined : (
-      <div className="influence-ctl">
-        <span className="influence-ctl__title">Zones d'influence</span>
-        <div className="influence-mode" role="group" aria-label="Zones d'influence">
-          {(["none", "player", "team"] as InfluenceMode[]).map((m) => (
-            <button
-              key={m}
-              className={`influence-mode__btn ${influenceMode === m ? "is-active" : ""}`}
-              onClick={() => setInfluenceMode(m)}
-            >
-              {INFLUENCE_LABEL[m]}
-            </button>
-          ))}
+  // All pitch view controls, pinned at the bottom of the Effectif column so they
+  // never overlap or shrink the pitch.
+  const pitchControls = (
+    <div className="pitch-ctl">
+      {phase !== "base" && (
+        <div className="pitch-ctl__slider">
+          <span>Déf</span>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.02}
+            value={blend}
+            aria-label="Transition Défense → Attaque"
+            onPointerDown={() => setScrubbing(true)}
+            onPointerUp={() => setScrubbing(false)}
+            onChange={(e) => handleBlend(Number(e.target.value))}
+          />
+          <span>Att</span>
         </div>
-        {influenceMode === "player" &&
-          (selSlot && selStarter ? (
+      )}
+
+      {phase !== "base" && (
+        <div className="influence-ctl">
+          <span className="influence-ctl__label">Zones d'influence</span>
+          <div
+            className="influence-mode"
+            role="group"
+            aria-label="Zones d'influence"
+          >
+            {(["none", "player", "team"] as InfluenceMode[]).map((m) => (
+              <button
+                key={m}
+                className={`influence-mode__btn ${influenceMode === m ? "is-active" : ""}`}
+                onClick={() => setInfluenceMode(m)}
+              >
+                {INFLUENCE_LABEL[m]}
+              </button>
+            ))}
+          </div>
+          {influenceMode === "player" && selSlot && selStarter && (
             <div className="influence-ctl__roles">
-              <div className="influence-ctl__player">
-                {selSlot.role} · {selStarter.name} ·{" "}
-                {phase === "attack" ? "Attaque" : "Défense"}
-              </div>
               <ZonePresets
                 presets={presetsFor(selSlot.role)}
                 activeKey={activePreset}
                 onPick={(k) => applyPreset(selSlot.id, k)}
               />
             </div>
-          ) : (
-            <p className="influence-ctl__hint">
-              Sélectionne un joueur pour ajuster sa zone.
-            </p>
-          ))}
-        {influenceMode === "team" && (
-          <p className="influence-ctl__hint">
-            Vert vif = zone bien couverte · terrain sombre = trou.
-          </p>
-        )}
-      </div>
-    );
+          )}
+        </div>
+      )}
+
+      <label className="pitch-ctl__row">
+        <span>Afficher la grille</span>
+        <span className="switch">
+          <input
+            type="checkbox"
+            checked={showGrid}
+            onChange={(e) => setShowGrid(e.target.checked)}
+          />
+          <span className="switch__track" />
+          <span className="switch__thumb" />
+        </span>
+      </label>
+
+      {phase !== "base" && (
+        <>
+          <label className="pitch-ctl__row">
+            <span>Adversaires</span>
+            <span className="switch">
+              <input
+                type="checkbox"
+                checked={opponentMode}
+                onChange={toggleOpponentMode}
+              />
+              <span className="switch__track" />
+              <span className="switch__thumb" />
+            </span>
+          </label>
+          {opponentMode && (
+            <div
+              className="opp-colors-row"
+              role="group"
+              aria-label="Couleur des adversaires"
+            >
+              {OPPONENT_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={`opp-swatch ${
+                    c === (lineup.opponentColor ?? DEFAULT_OPPONENT_COLOR)
+                      ? "is-active"
+                      : ""
+                  }`}
+                  style={{ background: c }}
+                  onClick={() => setOpponentColor(c)}
+                  aria-label={`Couleur ${c}`}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 
   return (
     <div className={`app ${presenting ? "app--present" : ""}`}>
@@ -515,6 +636,23 @@ export default function App() {
         <button className="present-exit" onClick={exitPresent}>
           ✕ Quitter
         </button>
+      )}
+      {presenting && (
+        <div
+          className={`present-tools ${presentToolsOpen ? "is-open" : ""}`}
+        >
+          <button
+            className="present-tools__toggle"
+            onClick={() => setPresentToolsOpen((o) => !o)}
+            aria-expanded={presentToolsOpen}
+            title={presentToolsOpen ? "Fermer les outils" : "Ouvrir les outils"}
+          >
+            {presentToolsOpen ? "✕" : "⚙"}
+          </button>
+          {presentToolsOpen && (
+            <div className="present-tools__panel glass">{pitchControls}</div>
+          )}
+        </div>
       )}
       <TopBar
         name={lineup.name}
@@ -550,7 +688,7 @@ export default function App() {
           onDragStateChange={setBenchDragging}
           canDrag={phase === "base"}
           onImportCsv={() => setCsvOpen(true)}
-          footer={influenceFooter}
+          footer={pitchControls}
         />
 
         <Pitch
@@ -577,6 +715,14 @@ export default function App() {
           onSwap={swapStarterSub}
           onSetNumber={setPlayerNumber}
           onInfluence={setInfluenceManual}
+          blend={blend}
+          scrubbing={scrubbing}
+          showGrid={showGrid}
+          opponents={lineup.opponents ?? []}
+          opponentMode={opponentMode}
+          opponentColor={lineup.opponentColor ?? DEFAULT_OPPONENT_COLOR}
+          onMoveOpponent={moveOpponent}
+          onLabelOpponent={setOpponentLabel}
         />
       </main>
 

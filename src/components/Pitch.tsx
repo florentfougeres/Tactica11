@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   InfluenceMode,
+  Opponent,
   Orient,
   Phase,
   Player,
@@ -13,6 +14,7 @@ import PitchMarkings from "./PitchMarkings";
 import PositionalGrid from "./PositionalGrid";
 import PhaseToggle from "./PhaseToggle";
 import PitchToken, { TOKEN_SIZE } from "./PitchToken";
+import OpponentToken from "./OpponentToken";
 import HeatmapOverlay from "./HeatmapOverlay";
 import InfluenceHandles from "./InfluenceHandles";
 interface Props {
@@ -33,6 +35,14 @@ interface Props {
   onSwap: (slotId: string) => void;
   onSetNumber: (playerId: string, number: number | null) => void;
   onInfluence: (slotId: string, radii: ZoneRadii) => void;
+  blend: number; // Défense(0) ↔ Attaque(1) scrub, owned by App
+  scrubbing: boolean; // user is dragging the scrub → follow it 1:1
+  showGrid: boolean; // positional-grid overlay
+  opponents: Opponent[];
+  opponentMode: boolean;
+  opponentColor: string;
+  onMoveOpponent: (id: string, pos: { x: number; y: number }) => void;
+  onLabelOpponent: (id: string, label: string) => void;
 }
 
 const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
@@ -54,6 +64,14 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     onSwap,
     onSetNumber,
     onInfluence,
+    blend,
+    scrubbing,
+    showGrid,
+    opponents,
+    opponentMode,
+    opponentColor,
+    onMoveOpponent,
+    onLabelOpponent,
   },
   ref,
 ) {
@@ -66,19 +84,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   const [liveCenter, setLiveCenter] = useState<{ x: number; y: number } | null>(
     null,
   );
-  // Slider scrub between Défense (0) and Attaque (1). Mid-values = a read-only
-  // preview where tokens interpolate between the two dispositions.
-  const [blend, setBlend] = useState(phase === "attack" ? 1 : 0);
-  const [scrubbing, setScrubbing] = useState(false);
-  // Juego de posición overlay — the 5 vertical corridors (off by default).
-  const [showGrid, setShowGrid] = useState(false);
-
-  // Keep the slider in sync when the phase is set from the toggle buttons.
-  useEffect(() => {
-    if (phase === "attack") setBlend(1);
-    else if (phase === "defense") setBlend(0);
-  }, [phase]);
-
+  // blend / scrubbing / showGrid are owned by App (the controls live in the
+  // Effectif panel) and arrive as props.
   const atEndpoint = blend === 0 || blend === 1;
   const frozen = phase !== "base" && !atEndpoint;
 
@@ -90,6 +97,13 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           x: lerp(slot.positions.defense.x, slot.positions.attack.x, blend),
           y: lerp(slot.positions.defense.y, slot.positions.attack.y, blend),
         };
+
+  // Opponents have no base disposition; lerp between defense (0) and attack (1)
+  // so they scrub along with our tokens.
+  const displayOppPos = (o: Opponent) => ({
+    x: lerp(o.positions.defense.x, o.positions.attack.x, blend),
+    y: lerp(o.positions.defense.y, o.positions.attack.y, blend),
+  });
 
   const onPitch = phase !== "base";
   const showPlayer = onPitch && !frozen && influenceMode === "player";
@@ -132,9 +146,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
       if (
         t?.closest(".slot-pop") ||
         t?.closest(".token--filled") ||
-        t?.closest(".influence-ctl") ||
-        t?.closest(".zone-handles") ||
-        t?.closest(".phase-slider")
+        t?.closest(".bench__footer") ||
+        t?.closest(".zone-handles")
       )
         return;
       onSelect(null);
@@ -151,7 +164,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   }, [selectedSlot, onSelect]);
 
   return (
-    <div className="pitch-col">
+    <div className={`pitch-col pitch-col--${orient}`}>
       <div className="pitch-bar">
         <PhaseToggle phase={phase} onPhase={onPhase} />
         <button
@@ -235,6 +248,24 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           <div className="pitch__drop-hint">Dépose le joueur sur un poste</div>
         )}
 
+        {opponentMode &&
+          phase !== "base" &&
+          size.w > 0 &&
+          opponents.map((o) => (
+            <OpponentToken
+              key={o.id}
+              opponent={o}
+              pos={displayOppPos(o)}
+              size={size}
+              orient={orient}
+              color={opponentColor}
+              editable={!frozen}
+              instant={scrubbing}
+              onMove={onMoveOpponent}
+              onLabel={onLabelOpponent}
+            />
+          ))}
+
         {size.w > 0 &&
           slots.map((slot) => (
             <PitchToken
@@ -276,44 +307,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           </div>
         </div>
 
-      </div>
-
-      {phase !== "base" && (
-        <div className="phase-slider">
-          <span>Déf</span>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.02}
-            value={blend}
-            aria-label="Transition Défense → Attaque"
-            onPointerDown={() => setScrubbing(true)}
-            onPointerUp={() => setScrubbing(false)}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              setBlend(v);
-              if (v === 0) onPhase("defense");
-              else if (v === 1) onPhase("attack");
-            }}
-          />
-          <span>Att</span>
-        </div>
-      )}
-
-      <div className="pitch-foot">
-        <label>
-          <span>Afficher les zones</span>
-          <span className="switch">
-            <input
-              type="checkbox"
-              checked={showGrid}
-              onChange={(e) => setShowGrid(e.target.checked)}
-            />
-            <span className="switch__track" />
-            <span className="switch__thumb" />
-          </span>
-        </label>
       </div>
     </div>
   );
