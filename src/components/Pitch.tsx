@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   InfluenceMode,
+  Opponent,
   Orient,
   Phase,
   Player,
@@ -13,6 +14,7 @@ import PitchMarkings from "./PitchMarkings";
 import PositionalGrid from "./PositionalGrid";
 import PhaseToggle from "./PhaseToggle";
 import PitchToken, { TOKEN_SIZE } from "./PitchToken";
+import OpponentToken from "./OpponentToken";
 import HeatmapOverlay from "./HeatmapOverlay";
 import InfluenceHandles from "./InfluenceHandles";
 interface Props {
@@ -33,6 +35,12 @@ interface Props {
   onSwap: (slotId: string) => void;
   onSetNumber: (playerId: string, number: number | null) => void;
   onInfluence: (slotId: string, radii: ZoneRadii) => void;
+  opponents: Opponent[];
+  opponentMode: boolean;
+  onToggleOpponentMode: () => void;
+  onMoveOpponent: (id: string, pos: { x: number; y: number }) => void;
+  onLabelOpponent: (id: string, label: string) => void;
+  onRemoveOpponent: (id: string) => void;
 }
 
 const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
@@ -54,6 +62,12 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     onSwap,
     onSetNumber,
     onInfluence,
+    opponents,
+    opponentMode,
+    onToggleOpponentMode,
+    onMoveOpponent,
+    onLabelOpponent,
+    onRemoveOpponent,
   },
   ref,
 ) {
@@ -90,6 +104,13 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           x: lerp(slot.positions.defense.x, slot.positions.attack.x, blend),
           y: lerp(slot.positions.defense.y, slot.positions.attack.y, blend),
         };
+
+  // Opponents have no base disposition; lerp between defense (0) and attack (1)
+  // so they scrub along with our tokens.
+  const displayOppPos = (o: Opponent) => ({
+    x: lerp(o.positions.defense.x, o.positions.attack.x, blend),
+    y: lerp(o.positions.defense.y, o.positions.attack.y, blend),
+  });
 
   const onPitch = phase !== "base";
   const showPlayer = onPitch && !frozen && influenceMode === "player";
@@ -167,6 +188,17 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         >
           ⤢
         </button>
+        {phase !== "base" && (
+          <button
+            type="button"
+            className={`opp-toggle ${opponentMode ? "is-active" : ""}`}
+            onClick={onToggleOpponentMode}
+            aria-pressed={opponentMode}
+            title="Positionner les 11 adversaires"
+          >
+            Adversaires
+          </button>
+        )}
       </div>
 
       <div
@@ -234,6 +266,24 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         {dropActive && (
           <div className="pitch__drop-hint">Dépose le joueur sur un poste</div>
         )}
+
+        {opponentMode &&
+          phase !== "base" &&
+          size.w > 0 &&
+          opponents.map((o) => (
+            <OpponentToken
+              key={o.id}
+              opponent={o}
+              pos={displayOppPos(o)}
+              size={size}
+              orient={orient}
+              editable={!frozen}
+              instant={scrubbing}
+              onMove={onMoveOpponent}
+              onLabel={onLabelOpponent}
+              onRemove={onRemoveOpponent}
+            />
+          ))}
 
         {size.w > 0 &&
           slots.map((slot) => (

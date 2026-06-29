@@ -12,6 +12,7 @@ import { pxToPos } from "./types";
 import { buildSlots } from "./formations";
 import {
   createDefaultLineup,
+  createOpponents,
   exportLineup,
   importLineup,
   loadLibrary,
@@ -57,6 +58,9 @@ export default function App() {
   const [orient, setOrient] = useState<Orient>("portrait");
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [presenting, setPresenting] = useState(false);
+  // Opponent-placement mode (attack/defense only): shows + lets you drag the
+  // opposing discs. Ephemeral view state; the discs themselves are persisted.
+  const [opponentMode, setOpponentMode] = useState(false);
 
   // Fullscreen presentation: hide the panels, fill the screen with the pitch.
   const enterPresent = () => {
@@ -234,6 +238,38 @@ export default function App() {
           ? { ...s, positions: { ...s.positions, [phase]: pos } }
           : s,
       ),
+    }));
+
+  // --- opponents (attack/defense only) ---
+  const toggleOpponentMode = () => {
+    // First time on with no discs yet → spawn the default block of 11.
+    if (!opponentMode && (lineup.opponents?.length ?? 0) === 0)
+      setLineup((l) => ({ ...l, opponents: createOpponents() }));
+    setOpponentMode((on) => !on);
+  };
+
+  const moveOpponent = (id: string, pos: Point) => {
+    if (phase === "base") return; // opponents live only in attack/defense
+    setLineup((l) => ({
+      ...l,
+      opponents: (l.opponents ?? []).map((o) =>
+        o.id === id ? { ...o, positions: { ...o.positions, [phase]: pos } } : o,
+      ),
+    }));
+  };
+
+  const setOpponentLabel = (id: string, label: string) =>
+    setLineup((l) => ({
+      ...l,
+      opponents: (l.opponents ?? []).map((o) =>
+        o.id === id ? { ...o, label } : o,
+      ),
+    }));
+
+  const removeOpponent = (id: string) =>
+    setLineup((l) => ({
+      ...l,
+      opponents: (l.opponents ?? []).filter((o) => o.id !== id),
     }));
 
   // Influence shape is per phase; edits apply to the current (attack/defense) one.
@@ -577,6 +613,12 @@ export default function App() {
           onSwap={swapStarterSub}
           onSetNumber={setPlayerNumber}
           onInfluence={setInfluenceManual}
+          opponents={lineup.opponents ?? []}
+          opponentMode={opponentMode}
+          onToggleOpponentMode={toggleOpponentMode}
+          onMoveOpponent={moveOpponent}
+          onLabelOpponent={setOpponentLabel}
+          onRemoveOpponent={removeOpponent}
         />
       </main>
 
