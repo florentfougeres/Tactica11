@@ -646,12 +646,17 @@
 /* ---------- pitch ---------- */
 /* column: control bar on top, pitch filling the rest */
 .pitch-col {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
   min-height: 0;
   min-width: 0;
+}
+/* landscape: reserve room on the right for the floating vertical toolbar */
+.pitch-col--landscape .pitch-wrap {
+  padding-right: 78px;
 }
 .pitch-bar {
   position: relative;
@@ -684,11 +689,31 @@
 }
 /* Défense ⟷ Attaque transition scrubber — horizontal, in a pill just below the
    pitch (Déf on the left → Att on the right). */
-.phase-slider {
+/* ---------- pitch toolbar (compact controls) ---------- */
+.pitch-toolbar {
   flex: 0 0 auto;
-  align-self: center;
   display: flex;
-  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.pitch-toolbar--portrait {
+  flex-direction: column;
+  align-self: center;
+}
+/* landscape: a vertical bar floating on the right, pitch keeps the rest */
+.pitch-toolbar--landscape {
+  position: absolute;
+  right: 0;
+  top: 56px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.pitch-toolbar--landscape .ptool-row {
+  flex-direction: column;
+}
+.ptool-slider {
+  display: flex;
   align-items: center;
   gap: 10px;
   padding: 6px 14px;
@@ -696,17 +721,98 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--panel-border);
 }
-.phase-slider span {
+.ptool-slider span {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.3px;
   color: var(--text-dim);
 }
-.phase-slider input[type="range"] {
-  width: 180px;
+.ptool-slider input[type="range"] {
+  width: 150px;
   height: 10px;
   accent-color: var(--accent);
   cursor: pointer;
+}
+.pitch-toolbar--landscape .ptool-slider {
+  flex-direction: column-reverse; /* Att on top, Déf at bottom */
+  padding: 12px 6px;
+}
+.pitch-toolbar--landscape .ptool-slider input[type="range"] {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 10px;
+  height: 90px;
+}
+.ptool-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ptool-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ptool-btn {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.ptool-btn:hover {
+  border-color: rgba(33, 208, 122, 0.5);
+  background: rgba(33, 208, 122, 0.08);
+}
+.ptool-btn.is-active {
+  border-color: var(--accent);
+  background: rgba(33, 208, 122, 0.18);
+  color: var(--accent);
+}
+.ptool-item--opp .ptool-btn.is-active {
+  border-color: #8fb3e0;
+  background: rgba(143, 179, 224, 0.2);
+  color: #cfe0f4;
+}
+.ptool-color {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 0;
+}
+/* popover above (portrait) / left of (landscape) the toolbar button */
+.ptool-pop {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 210px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(13, 18, 26, 0.97);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.9);
+  z-index: 60;
+}
+.ptool-pop--colors {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+.pitch-toolbar--landscape .ptool-pop {
+  bottom: auto;
+  top: 50%;
+  left: auto;
+  right: calc(100% + 10px);
+  transform: translateY(-50%);
 }
 /* contextual EA-FC role presets, shown above the foot when a player is selected */
 .zone-presets {
@@ -851,28 +957,6 @@
   pointer-events: none;
 }
 /* footer under the pitch — holds the positional-grid toggle */
-.pitch-foot {
-  flex: 0 0 auto;
-  align-self: stretch;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding-bottom: 2px;
-}
-/* label + reused .switch toggle */
-.pitch-foot label {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  user-select: none;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-dim);
-  white-space: nowrap;
-}
-
 /* influence heatmap (honeycomb) — sits above the grass, below the tokens */
 .heatmap {
   position: absolute;
@@ -1124,38 +1208,7 @@
   color: rgba(15, 20, 28, 0.92);
   text-transform: uppercase;
 }
-/* bottom-bar controls: opponent toggle + colour swatches */
-.opp-ctl {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.opp-toggle {
-  height: 32px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid var(--panel-border);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
-}
-.opp-toggle:hover {
-  border-color: rgba(143, 179, 224, 0.6);
-  background: rgba(143, 179, 224, 0.1);
-}
-.opp-toggle.is-active {
-  border-color: #8fb3e0;
-  background: rgba(143, 179, 224, 0.2);
-  color: #cfe0f4;
-}
-.opp-colors {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+/* opponent colour swatches (shown in the toolbar colour popover) */
 .opp-swatch {
   width: 20px;
   height: 20px;

@@ -494,8 +494,8 @@ export default function App() {
     }
   };
 
-  // Influence controls live at the bottom of the Effectif panel (attack/defense
-  // only) so they don't shrink the pitch.
+  // Influence controls now live in the pitch toolbar (passed as a node) so the
+  // Effectif column is purely the roster.
   const selSlot = lineup.slots.find((s) => s.id === selectedSlot) ?? null;
   const selStarter = selSlot ? playerById(selSlot.starterId) : null;
   const INFLUENCE_LABEL: Record<InfluenceMode, string> = {
@@ -503,46 +503,45 @@ export default function App() {
     player: "Joueur",
     team: "Équipe",
   };
-  const influenceFooter =
-    phase === "base" ? undefined : (
-      <div className="influence-ctl">
-        <span className="influence-ctl__title">Zones d'influence</span>
-        <div className="influence-mode" role="group" aria-label="Zones d'influence">
-          {(["none", "player", "team"] as InfluenceMode[]).map((m) => (
-            <button
-              key={m}
-              className={`influence-mode__btn ${influenceMode === m ? "is-active" : ""}`}
-              onClick={() => setInfluenceMode(m)}
-            >
-              {INFLUENCE_LABEL[m]}
-            </button>
-          ))}
-        </div>
-        {influenceMode === "player" &&
-          (selSlot && selStarter ? (
-            <div className="influence-ctl__roles">
-              <div className="influence-ctl__player">
-                {selSlot.role} · {selStarter.name} ·{" "}
-                {phase === "attack" ? "Attaque" : "Défense"}
-              </div>
-              <ZonePresets
-                presets={presetsFor(selSlot.role)}
-                activeKey={activePreset}
-                onPick={(k) => applyPreset(selSlot.id, k)}
-              />
-            </div>
-          ) : (
-            <p className="influence-ctl__hint">
-              Sélectionne un joueur pour ajuster sa zone.
-            </p>
-          ))}
-        {influenceMode === "team" && (
-          <p className="influence-ctl__hint">
-            Vert vif = zone bien couverte · terrain sombre = trou.
-          </p>
-        )}
+  const influenceControls = (
+    <div className="influence-ctl">
+      <span className="influence-ctl__title">Zones d'influence</span>
+      <div className="influence-mode" role="group" aria-label="Zones d'influence">
+        {(["none", "player", "team"] as InfluenceMode[]).map((m) => (
+          <button
+            key={m}
+            className={`influence-mode__btn ${influenceMode === m ? "is-active" : ""}`}
+            onClick={() => setInfluenceMode(m)}
+          >
+            {INFLUENCE_LABEL[m]}
+          </button>
+        ))}
       </div>
-    );
+      {influenceMode === "player" &&
+        (selSlot && selStarter ? (
+          <div className="influence-ctl__roles">
+            <div className="influence-ctl__player">
+              {selSlot.role} · {selStarter.name} ·{" "}
+              {phase === "attack" ? "Attaque" : "Défense"}
+            </div>
+            <ZonePresets
+              presets={presetsFor(selSlot.role)}
+              activeKey={activePreset}
+              onPick={(k) => applyPreset(selSlot.id, k)}
+            />
+          </div>
+        ) : (
+          <p className="influence-ctl__hint">
+            Sélectionne un joueur pour ajuster sa zone.
+          </p>
+        ))}
+      {influenceMode === "team" && (
+        <p className="influence-ctl__hint">
+          Vert vif = zone bien couverte · terrain sombre = trou.
+        </p>
+      )}
+    </div>
+  );
 
   return (
     <div className={`app ${presenting ? "app--present" : ""}`}>
@@ -585,7 +584,6 @@ export default function App() {
           onDragStateChange={setBenchDragging}
           canDrag={phase === "base"}
           onImportCsv={() => setCsvOpen(true)}
-          footer={influenceFooter}
         />
 
         <Pitch
@@ -619,6 +617,7 @@ export default function App() {
           onMoveOpponent={moveOpponent}
           onLabelOpponent={setOpponentLabel}
           onSetOpponentColor={setOpponentColor}
+          influenceControls={influenceControls}
         />
       </main>
 

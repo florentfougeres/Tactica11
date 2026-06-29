@@ -1,4 +1,10 @@
-import { forwardRef, useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import type {
   InfluenceMode,
@@ -42,6 +48,7 @@ interface Props {
   onMoveOpponent: (id: string, pos: { x: number; y: number }) => void;
   onLabelOpponent: (id: string, label: string) => void;
   onSetOpponentColor: (color: string) => void;
+  influenceControls: ReactNode;
 }
 
 const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
@@ -70,6 +77,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     onMoveOpponent,
     onLabelOpponent,
     onSetOpponentColor,
+    influenceControls,
   },
   ref,
 ) {
@@ -88,6 +96,14 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   const [scrubbing, setScrubbing] = useState(false);
   // Juego de posición overlay — the 5 vertical corridors (off by default).
   const [showGrid, setShowGrid] = useState(false);
+  // Which toolbar popover is open (influence options / opponent colours).
+  const [openTool, setOpenTool] = useState<"influence" | "colors" | null>(null);
+
+  const handleBlend = (v: number) => {
+    setBlend(v);
+    if (v === 0) onPhase("defense");
+    else if (v === 1) onPhase("attack");
+  };
 
   // Keep the slider in sync when the phase is set from the toggle buttons.
   useEffect(() => {
@@ -157,7 +173,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         t?.closest(".token--filled") ||
         t?.closest(".influence-ctl") ||
         t?.closest(".zone-handles") ||
-        t?.closest(".phase-slider")
+        t?.closest(".pitch-toolbar")
       )
         return;
       onSelect(null);
@@ -173,8 +189,19 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     };
   }, [selectedSlot, onSelect]);
 
+  // Close a toolbar popover when clicking outside the toolbar.
+  useEffect(() => {
+    if (!openTool) return;
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (!t?.closest(".pitch-toolbar")) setOpenTool(null);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [openTool]);
+
   return (
-    <div className="pitch-col">
+    <div className={`pitch-col pitch-col--${orient}`}>
       <div className="pitch-bar">
         <PhaseToggle phase={phase} onPhase={onPhase} />
         <button
@@ -319,75 +346,102 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
 
       </div>
 
-      {phase !== "base" && (
-        <div className="phase-slider">
-          <span>Déf</span>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.02}
-            value={blend}
-            aria-label="Transition Défense → Attaque"
-            onPointerDown={() => setScrubbing(true)}
-            onPointerUp={() => setScrubbing(false)}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              setBlend(v);
-              if (v === 0) onPhase("defense");
-              else if (v === 1) onPhase("attack");
-            }}
-          />
-          <span>Att</span>
-        </div>
-      )}
-
-      <div className="pitch-foot">
+      <div className={`pitch-toolbar pitch-toolbar--${orient}`}>
         {phase !== "base" && (
-          <div className="opp-ctl">
-            <button
-              type="button"
-              className={`opp-toggle ${opponentMode ? "is-active" : ""}`}
-              onClick={onToggleOpponentMode}
-              aria-pressed={opponentMode}
-              title="Positionner les 11 adversaires"
-            >
-              Adversaires
-            </button>
-            {opponentMode && (
-              <div
-                className="opp-colors"
-                role="group"
-                aria-label="Couleur des adversaires"
-              >
-                {OPPONENT_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className={`opp-swatch ${
-                      c === opponentColor ? "is-active" : ""
-                    }`}
-                    style={{ background: c }}
-                    onClick={() => onSetOpponentColor(c)}
-                    aria-label={`Couleur ${c}`}
-                  />
-                ))}
-              </div>
-            )}
+          <div className="ptool-slider">
+            <span>Déf</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.02}
+              value={blend}
+              aria-label="Transition Défense → Attaque"
+              onPointerDown={() => setScrubbing(true)}
+              onPointerUp={() => setScrubbing(false)}
+              onChange={(e) => handleBlend(Number(e.target.value))}
+            />
+            <span>Att</span>
           </div>
         )}
-        <label>
-          <span>Afficher les zones</span>
-          <span className="switch">
-            <input
-              type="checkbox"
-              checked={showGrid}
-              onChange={(e) => setShowGrid(e.target.checked)}
-            />
-            <span className="switch__track" />
-            <span className="switch__thumb" />
-          </span>
-        </label>
+
+        <div className="ptool-row">
+          {phase !== "base" && (
+            <div className="ptool-item">
+              <button
+                type="button"
+                className={`ptool-btn ${influenceMode !== "none" ? "is-active" : ""}`}
+                onClick={() =>
+                  setOpenTool((o) => (o === "influence" ? null : "influence"))
+                }
+                aria-pressed={openTool === "influence"}
+                title="Zones d'influence"
+              >
+                Zones
+              </button>
+              {openTool === "influence" && (
+                <div className="ptool-pop">{influenceControls}</div>
+              )}
+            </div>
+          )}
+
+          <button
+            type="button"
+            className={`ptool-btn ${showGrid ? "is-active" : ""}`}
+            onClick={() => setShowGrid((g) => !g)}
+            aria-pressed={showGrid}
+            title="Afficher la grille de position"
+          >
+            Grille
+          </button>
+
+          {phase !== "base" && (
+            <div className="ptool-item ptool-item--opp">
+              <button
+                type="button"
+                className={`ptool-btn ${opponentMode ? "is-active" : ""}`}
+                onClick={onToggleOpponentMode}
+                aria-pressed={opponentMode}
+                title="Positionner les 11 adversaires"
+              >
+                Adv
+              </button>
+              {opponentMode && (
+                <>
+                  <button
+                    type="button"
+                    className="ptool-color"
+                    style={{ background: opponentColor }}
+                    onClick={() =>
+                      setOpenTool((o) => (o === "colors" ? null : "colors"))
+                    }
+                    aria-label="Couleur des adversaires"
+                    title="Couleur des adversaires"
+                  />
+                  {openTool === "colors" && (
+                    <div className="ptool-pop ptool-pop--colors">
+                      {OPPONENT_COLORS.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          className={`opp-swatch ${
+                            c === opponentColor ? "is-active" : ""
+                          }`}
+                          style={{ background: c }}
+                          onClick={() => {
+                            onSetOpponentColor(c);
+                            setOpenTool(null);
+                          }}
+                          aria-label={`Couleur ${c}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
