@@ -8,7 +8,7 @@ import type {
   Player,
   ZoneRadii,
 } from "./types";
-import { pxToPos } from "./types";
+import { DEFAULT_OPPONENT_COLOR, pxToPos } from "./types";
 import { buildSlots } from "./formations";
 import {
   createDefaultLineup,
@@ -266,11 +266,8 @@ export default function App() {
       ),
     }));
 
-  const removeOpponent = (id: string) =>
-    setLineup((l) => ({
-      ...l,
-      opponents: (l.opponents ?? []).filter((o) => o.id !== id),
-    }));
+  const setOpponentColor = (color: string) =>
+    setLineup((l) => ({ ...l, opponentColor: color }));
 
   // Influence shape is per phase; edits apply to the current (attack/defense) one.
   const setInfluence = (slotId: string, radii: ZoneRadii) =>
@@ -615,10 +612,11 @@ export default function App() {
           onInfluence={setInfluenceManual}
           opponents={lineup.opponents ?? []}
           opponentMode={opponentMode}
+          opponentColor={lineup.opponentColor ?? DEFAULT_OPPONENT_COLOR}
           onToggleOpponentMode={toggleOpponentMode}
           onMoveOpponent={moveOpponent}
           onLabelOpponent={setOpponentLabel}
-          onRemoveOpponent={removeOpponent}
+          onSetOpponentColor={setOpponentColor}
         />
       </main>
 

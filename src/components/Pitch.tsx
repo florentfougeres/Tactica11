@@ -9,7 +9,7 @@ import type {
   Slot,
   ZoneRadii,
 } from "../types";
-import { DEFAULT_ZONE, posToPx } from "../types";
+import { DEFAULT_ZONE, OPPONENT_COLORS, posToPx } from "../types";
 import PitchMarkings from "./PitchMarkings";
 import PositionalGrid from "./PositionalGrid";
 import PhaseToggle from "./PhaseToggle";
@@ -37,10 +37,11 @@ interface Props {
   onInfluence: (slotId: string, radii: ZoneRadii) => void;
   opponents: Opponent[];
   opponentMode: boolean;
+  opponentColor: string;
   onToggleOpponentMode: () => void;
   onMoveOpponent: (id: string, pos: { x: number; y: number }) => void;
   onLabelOpponent: (id: string, label: string) => void;
-  onRemoveOpponent: (id: string) => void;
+  onSetOpponentColor: (color: string) => void;
 }
 
 const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
@@ -64,10 +65,11 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     onInfluence,
     opponents,
     opponentMode,
+    opponentColor,
     onToggleOpponentMode,
     onMoveOpponent,
     onLabelOpponent,
-    onRemoveOpponent,
+    onSetOpponentColor,
   },
   ref,
 ) {
@@ -188,17 +190,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         >
           ⤢
         </button>
-        {phase !== "base" && (
-          <button
-            type="button"
-            className={`opp-toggle ${opponentMode ? "is-active" : ""}`}
-            onClick={onToggleOpponentMode}
-            aria-pressed={opponentMode}
-            title="Positionner les 11 adversaires"
-          >
-            Adversaires
-          </button>
-        )}
       </div>
 
       <div
@@ -277,11 +268,11 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
               pos={displayOppPos(o)}
               size={size}
               orient={orient}
+              color={opponentColor}
               editable={!frozen}
               instant={scrubbing}
               onMove={onMoveOpponent}
               onLabel={onLabelOpponent}
-              onRemove={onRemoveOpponent}
             />
           ))}
 
@@ -352,6 +343,39 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
       )}
 
       <div className="pitch-foot">
+        {phase !== "base" && (
+          <div className="opp-ctl">
+            <button
+              type="button"
+              className={`opp-toggle ${opponentMode ? "is-active" : ""}`}
+              onClick={onToggleOpponentMode}
+              aria-pressed={opponentMode}
+              title="Positionner les 11 adversaires"
+            >
+              Adversaires
+            </button>
+            {opponentMode && (
+              <div
+                className="opp-colors"
+                role="group"
+                aria-label="Couleur des adversaires"
+              >
+                {OPPONENT_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`opp-swatch ${
+                      c === opponentColor ? "is-active" : ""
+                    }`}
+                    style={{ background: c }}
+                    onClick={() => onSetOpponentColor(c)}
+                    aria-label={`Couleur ${c}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <label>
           <span>Afficher les zones</span>
           <span className="switch">

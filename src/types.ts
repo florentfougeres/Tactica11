@@ -102,6 +102,17 @@ export const OPPONENT_FORMATION: { label: string; x: number; y: number }[] = [
   { label: "11", x: 70, y: 50 },
 ];
 
+// Pastel palette for the opposing team's discs (kept clear of our green/white).
+export const OPPONENT_COLORS = [
+  "#8fb3e0", // blue
+  "#e0a0a0", // rose
+  "#e6c079", // amber
+  "#c4a7e0", // lavender
+  "#8fd0c8", // teal
+  "#aeb6c2", // slate
+];
+export const DEFAULT_OPPONENT_COLOR = OPPONENT_COLORS[0];
+
 export interface Lineup {
   id: string;
   name: string;
@@ -109,6 +120,7 @@ export interface Lineup {
   players: Player[]; // full roster (on pitch + bench)
   slots: Slot[]; // always 11 on-pitch slots
   opponents?: Opponent[]; // optional opposing discs (attack/defense only)
+  opponentColor?: string; // disc colour for the opposing team
 }
 
 // Schema version for the exported .json files.

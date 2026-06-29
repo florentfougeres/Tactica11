@@ -14,11 +14,11 @@ interface Props {
   pos: Pos; // display position in % (interpolated while scrubbing)
   size: Size;
   orient: Orient;
+  color: string; // disc colour for the opposing team
   editable: boolean; // false while scrubbing a mid-transition preview
   instant: boolean; // follow the slider 1:1 instead of springing
   onMove: (id: string, pos: { x: number; y: number }) => void;
   onLabel: (id: string, label: string) => void;
-  onRemove: (id: string) => void;
 }
 
 const clampPct = (v: number) => Math.max(4, Math.min(96, v));
@@ -29,11 +29,11 @@ export default function OpponentToken({
   pos,
   size,
   orient,
+  color,
   editable,
   instant,
   onMove,
   onLabel,
-  onRemove,
 }: Props) {
   const half = TOKEN_SIZE / 2;
   const center = posToPx(pos, size, orient);
@@ -69,7 +69,7 @@ export default function OpponentToken({
     else setVal(opponent.label);
   }
 
-  function handleDragEnd(_e: unknown, info: PanInfo) {
+  function handleDragEnd(_e: unknown, _info: PanInfo) {
     dragging.current = false;
     if (!editable) return;
     const cx = x.get() + half;
@@ -80,11 +80,9 @@ export default function OpponentToken({
       const p = pxToPos(cx, cy, size, orient);
       onMove(opponent.id, { x: clampPct(p.x), y: clampPct(p.y) });
     } else {
-      // dropped outside → snap back
-      animate(x, targetX, spring);
+      animate(x, targetX, spring); // dropped outside → snap back
       animate(y, targetY, spring);
     }
-    void info;
   }
 
   return (
@@ -109,7 +107,7 @@ export default function OpponentToken({
       }}
       onDragEnd={handleDragEnd}
     >
-      <div className="opp-token__disc">
+      <div className="opp-token__disc" style={{ background: color }}>
         {editing ? (
           <input
             className="opp-token__input"
@@ -130,18 +128,6 @@ export default function OpponentToken({
           <span className="opp-token__label">{opponent.label}</span>
         )}
       </div>
-      {editable && !editing && (
-        <button
-          className="opp-token__remove"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove(opponent.id);
-          }}
-          aria-label="Retirer l'adversaire"
-        >
-          ×
-        </button>
-      )}
     </motion.div>
   );
 }
