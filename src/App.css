@@ -765,6 +765,26 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+/* mirror / reset actions for the current phase */
+.pitch-ctl__actions {
+  display: flex;
+  gap: 8px;
+}
+.pitch-ctl__btn {
+  flex: 1;
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  padding: 9px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pitch-ctl__btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
 /* contextual EA-FC role presets, shown above the foot when a player is selected */
 .zone-presets {
   display: flex;
