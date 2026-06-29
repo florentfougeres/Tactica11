@@ -52,18 +52,16 @@ const Bench = forwardRef<HTMLElement, Props>(function Bench(
       </header>
 
       <form className="bench__add" onSubmit={submit}>
-        {canDrag && (
-          <input
-            className="bench__num"
-            value={num}
-            onChange={(e) =>
-              setNum(e.target.value.replace(/\D/g, "").slice(0, 2))
-            }
-            inputMode="numeric"
-            placeholder="N°"
-            aria-label="Numéro (optionnel)"
-          />
-        )}
+        <input
+          className="bench__num"
+          value={num}
+          onChange={(e) =>
+            setNum(e.target.value.replace(/\D/g, "").slice(0, 2))
+          }
+          inputMode="numeric"
+          placeholder="N°"
+          aria-label="Numéro (optionnel)"
+        />
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -209,8 +207,8 @@ function BenchItem({
           inputMode="numeric"
           aria-label="Numéro"
         />
-      ) : canDrag ? (
-        // Base phase: editable chip ("#" placeholder when no number yet).
+      ) : (
+        // Always editable, identical in every phase ("#" when no number yet).
         <button
           className={`bench__numchip ${
             player.number == null ? "bench__numchip--empty" : ""
@@ -220,13 +218,6 @@ function BenchItem({
         >
           {player.number ?? "#"}
         </button>
-      ) : (
-        // Locked phases: keep the number visible (read-only), no placeholder.
-        player.number != null && (
-          <span className="bench__numchip bench__numchip--static">
-            {player.number}
-          </span>
-        )
       )}
       {editing ? (
         <input
