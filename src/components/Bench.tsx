@@ -52,18 +52,16 @@ const Bench = forwardRef<HTMLElement, Props>(function Bench(
       </header>
 
       <form className="bench__add" onSubmit={submit}>
-        {canDrag && (
-          <input
-            className="bench__num"
-            value={num}
-            onChange={(e) =>
-              setNum(e.target.value.replace(/\D/g, "").slice(0, 2))
-            }
-            inputMode="numeric"
-            placeholder="N°"
-            aria-label="Numéro (optionnel)"
-          />
-        )}
+        <input
+          className="bench__num"
+          value={num}
+          onChange={(e) =>
+            setNum(e.target.value.replace(/\D/g, "").slice(0, 2))
+          }
+          inputMode="numeric"
+          placeholder="N°"
+          aria-label="Numéro (optionnel)"
+        />
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -190,9 +188,6 @@ function BenchItem({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
     >
-      <span className="bench__avatar" aria-hidden="true">
-        {player.name.slice(0, 1).toUpperCase()}
-      </span>
       {numEditing ? (
         <input
           className="bench__num"
@@ -213,17 +208,16 @@ function BenchItem({
           aria-label="Numéro"
         />
       ) : (
-        canDrag && (
-          <button
-            className={`bench__numchip ${
-              player.number == null ? "bench__numchip--empty" : ""
-            }`}
-            onClick={() => setNumEditing(true)}
-            title="Numéro (optionnel)"
-          >
-            {player.number ?? "#"}
-          </button>
-        )
+        // Always editable, identical in every phase ("#" when no number yet).
+        <button
+          className={`bench__numchip ${
+            player.number == null ? "bench__numchip--empty" : ""
+          }`}
+          onClick={() => setNumEditing(true)}
+          title="Numéro (optionnel)"
+        >
+          {player.number ?? "#"}
+        </button>
       )}
       {editing ? (
         <input

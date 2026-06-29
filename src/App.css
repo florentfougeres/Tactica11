@@ -678,31 +678,29 @@
   border-color: rgba(33, 208, 122, 0.5);
   background: rgba(33, 208, 122, 0.08);
 }
-/* Défense ⟷ Attaque transition scrubber — vertical, outside the pitch on the
-   right (Att on top since the pitch attacks upward) */
+/* Défense ⟷ Attaque transition scrubber — horizontal, in a pill just below the
+   pitch (Déf on the left → Att on the right). */
 .phase-slider {
+  flex: 0 0 auto;
+  align-self: center;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 6px;
-  padding: 8px 4px;
+  gap: 10px;
+  padding: 6px 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--panel-border);
 }
 .phase-slider span {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.3px;
   color: var(--text-dim);
 }
 .phase-slider input[type="range"] {
-  -webkit-appearance: slider-vertical;
-  appearance: slider-vertical;
-  writing-mode: vertical-lr;
-  direction: rtl;
-  width: 10px;
-  height: 150px;
+  width: 180px;
+  height: 10px;
   accent-color: var(--accent);
   cursor: pointer;
 }
@@ -742,25 +740,13 @@
   flex: 1 1 auto;
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  gap: 6px;
   min-height: 0;
   min-width: 0;
   /* Establish a size container so the pitch can be sized against BOTH the
      available width and height (via cqw/cqh) and never lose its ratio. */
   container-type: size;
-}
-/* side gutters: symmetric spacers keep the pitch centred; the right one holds
-   the Défense↔Attaque slider, outside the pitch. */
-.pitch-aside {
-  flex: 0 0 auto;
-  width: 40px;
-  align-self: stretch;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 8px;
 }
 /* While dragging a token, lift the whole pitch column above the side panels so
    a token dragged toward the bench stays visible instead of slipping under it. */
@@ -773,9 +759,9 @@
   position: relative;
   aspect-ratio: var(--ar);
   /* Fit inside the wrap in BOTH orientations without distortion: cap the height
-     by the available width too (gutters: 40px asides + 6px gaps on each side =
-     92px). width follows from aspect-ratio, so the ratio is always exact. */
-  height: min(100cqh, calc((100cqw - 92px) / var(--ar)));
+     by the available width too. width follows from aspect-ratio, so the ratio
+     is always exact. */
+  height: min(100cqh, calc(100cqw / var(--ar)));
   width: auto;
   max-height: 100%;
   max-width: 100%;
@@ -1427,7 +1413,7 @@
 /* ---------- responsive (iPad portrait / narrow) ---------- */
 @media (max-width: 900px) {
   .layout {
-    grid-template-columns: 190px 1fr;
+    grid-template-columns: 240px 1fr;
   }
   .topbar__label {
     display: none;

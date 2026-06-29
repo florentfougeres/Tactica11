@@ -175,8 +175,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
         }`}
         ref={ref}
       >
-        <div className="pitch-aside" aria-hidden="true" />
-
         <div
           className={`pitch ${dropActive ? "pitch--drop" : ""} ${
             tokenDragging && phase === "base" ? "pitch--dragging" : ""
@@ -278,31 +276,30 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           </div>
         </div>
 
-        <div className="pitch-aside pitch-aside--right">
-          {phase !== "base" && (
-            <div className="phase-slider">
-              <span>Att</span>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.02}
-                value={blend}
-                aria-label="Transition Défense → Attaque"
-                onPointerDown={() => setScrubbing(true)}
-                onPointerUp={() => setScrubbing(false)}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  setBlend(v);
-                  if (v === 0) onPhase("defense");
-                  else if (v === 1) onPhase("attack");
-                }}
-              />
-              <span>Déf</span>
-            </div>
-          )}
-        </div>
       </div>
+
+      {phase !== "base" && (
+        <div className="phase-slider">
+          <span>Déf</span>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.02}
+            value={blend}
+            aria-label="Transition Défense → Attaque"
+            onPointerDown={() => setScrubbing(true)}
+            onPointerUp={() => setScrubbing(false)}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              setBlend(v);
+              if (v === 0) onPhase("defense");
+              else if (v === 1) onPhase("attack");
+            }}
+          />
+          <span>Att</span>
+        </div>
+      )}
 
       <div className="pitch-foot">
         <label>
