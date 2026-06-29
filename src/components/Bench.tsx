@@ -190,9 +190,6 @@ function BenchItem({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
     >
-      <span className="bench__avatar" aria-hidden="true">
-        {player.name.slice(0, 1).toUpperCase()}
-      </span>
       {numEditing ? (
         <input
           className="bench__num"
