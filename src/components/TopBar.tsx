@@ -6,6 +6,9 @@ interface Props {
   formation: string;
   compos: { id: string; name: string }[];
   currentId: string;
+  projectName: string;
+  projects: { id: string; name: string }[];
+  currentProjectId: string;
   canUndo: boolean;
   canRedo: boolean;
   onName: (name: string) => void;
@@ -14,12 +17,18 @@ interface Props {
   onNewCompo: () => void;
   onDuplicate: () => void;
   onDelete: (id: string) => void;
+  onProjectName: (name: string) => void;
+  onOpenProject: (id: string) => void;
+  onNewProject: () => void;
+  onDuplicateProject: () => void;
+  onDeleteProject: (id: string) => void;
+  onOpenRoster: () => void;
   onUndo: () => void;
   onRedo: () => void;
-  onExport: () => void;
   onExportPng: () => void;
   onCopyLink: () => void;
-  onImport: (file: File) => void;
+  onSaveProject: () => void;
+  onImportProject: (file: File) => void;
   onPresent: () => void;
   onHelp: () => void;
 }
@@ -47,6 +56,9 @@ export default function TopBar({
   formation,
   compos,
   currentId,
+  projectName,
+  projects,
+  currentProjectId,
   canUndo,
   canRedo,
   onName,
@@ -55,12 +67,18 @@ export default function TopBar({
   onNewCompo,
   onDuplicate,
   onDelete,
+  onProjectName,
+  onOpenProject,
+  onNewProject,
+  onDuplicateProject,
+  onDeleteProject,
+  onOpenRoster,
   onUndo,
   onRedo,
-  onExport,
   onExportPng,
   onCopyLink,
-  onImport,
+  onSaveProject,
+  onImportProject,
   onPresent,
   onHelp,
 }: Props) {
@@ -68,14 +86,17 @@ export default function TopBar({
   const fmRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   const compoRef = useRef<HTMLDivElement>(null);
+  const projectRef = useRef<HTMLDivElement>(null);
   const [fmOpen, setFmOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [compoOpen, setCompoOpen] = useState(false);
+  const [projectOpen, setProjectOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useDismiss(fmOpen, () => setFmOpen(false), fmRef);
   useDismiss(exportOpen, () => setExportOpen(false), exportRef);
   useDismiss(compoOpen, () => setCompoOpen(false), compoRef);
+  useDismiss(projectOpen, () => setProjectOpen(false), projectRef);
 
   const copyLink = () => {
     onCopyLink();
@@ -90,6 +111,94 @@ export default function TopBar({
         <span className="brand__name">
           Tactica<span className="brand__accent">11</span>
         </span>
+      </div>
+
+      <div className="topbar__field topbar__field--name">
+        <span className="topbar__label">Projet</span>
+        <div className="compo" ref={projectRef}>
+          <input
+            className="compo__name"
+            value={projectName}
+            onChange={(e) => onProjectName(e.target.value)}
+            aria-label="Nom du projet"
+          />
+          <button
+            type="button"
+            className="compo__toggle"
+            onClick={() => setProjectOpen((o) => !o)}
+            aria-haspopup="menu"
+            aria-expanded={projectOpen}
+            aria-label="Mes projets"
+          >
+            ▾
+          </button>
+          {projectOpen && (
+            <div className="compo-menu" role="menu">
+              <div className="compo-menu__list">
+                {projects.map((p) => (
+                  <button
+                    key={p.id}
+                    role="menuitemradio"
+                    aria-checked={p.id === currentProjectId}
+                    className={p.id === currentProjectId ? "is-active" : ""}
+                    onClick={() => {
+                      onOpenProject(p.id);
+                      setProjectOpen(false);
+                    }}
+                  >
+                    {p.name || "Sans nom"}
+                  </button>
+                ))}
+              </div>
+              <div className="compo-menu__sep" />
+              <button
+                className="compo-menu__action"
+                onClick={() => {
+                  onNewProject();
+                  setProjectOpen(false);
+                }}
+              >
+                Nouveau projet
+              </button>
+              <button
+                className="compo-menu__action"
+                onClick={() => {
+                  fileRef.current?.click();
+                  setProjectOpen(false);
+                }}
+              >
+                Ouvrir…
+              </button>
+              <button
+                className="compo-menu__action"
+                onClick={() => {
+                  onDuplicateProject();
+                  setProjectOpen(false);
+                }}
+              >
+                Dupliquer
+              </button>
+              <button
+                className="compo-menu__action"
+                onClick={() => {
+                  onSaveProject();
+                  setProjectOpen(false);
+                }}
+              >
+                Enregistrer
+              </button>
+              <button
+                className="compo-menu__action compo-menu__danger"
+                onClick={() => {
+                  onDeleteProject(currentProjectId);
+                  setProjectOpen(false);
+                }}
+              >
+                Supprimer
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="topbar__field topbar__field--name">
@@ -130,6 +239,15 @@ export default function TopBar({
                 ))}
               </div>
               <div className="compo-menu__sep" />
+              <button
+                className="compo-menu__action"
+                onClick={() => {
+                  onNewCompo();
+                  setCompoOpen(false);
+                }}
+              >
+                Nouvelle compo
+              </button>
               <button
                 className="compo-menu__action"
                 onClick={() => {
@@ -234,7 +352,7 @@ export default function TopBar({
             aria-haspopup="menu"
             aria-expanded={exportOpen}
           >
-            Exporter <span className="export__chevron" aria-hidden="true">▾</span>
+            Partager <span className="export__chevron" aria-hidden="true">▾</span>
           </button>
           {exportOpen && (
             <div className="export-menu" role="menu">
@@ -245,28 +363,18 @@ export default function TopBar({
                   onExportPng();
                 }}
               >
-                <span>Image</span>
+                <span>Image (vue actuelle)</span>
                 <span className="export-menu__ext">.png</span>
               </button>
-              <button
-                role="menuitem"
-                onClick={() => {
-                  setExportOpen(false);
-                  onExport();
-                }}
-              >
-                <span>Données</span>
-                <span className="export-menu__ext">.json</span>
-              </button>
               <button role="menuitem" onClick={copyLink}>
-                <span>{copied ? "Lien copié ✓" : "Copier le lien"}</span>
+                <span>{copied ? "Lien copié ✓" : "Copier le lien (cette compo)"}</span>
                 <span className="export-menu__ext">URL</span>
               </button>
             </div>
           )}
         </div>
-        <button className="btn" onClick={() => fileRef.current?.click()}>
-          Importer…
+        <button className="btn" onClick={onOpenRoster}>
+          Base de joueurs
         </button>
         <button
           className="btn btn--icon"
@@ -292,22 +400,6 @@ export default function TopBar({
             />
           </svg>
         </button>
-        <button
-          className="btn btn--icon"
-          onClick={onNewCompo}
-          title="Nouvelle compo"
-          aria-label="Nouvelle compo"
-        >
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9l-6-6Z"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinejoin="round"
-            />
-            <path d="M13 3v6h6M12 12v5M9.5 14.5h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
         <input
           ref={fileRef}
           type="file"
@@ -315,7 +407,7 @@ export default function TopBar({
           hidden
           onChange={(e) => {
             const f = e.target.files?.[0];
-            if (f) onImport(f);
+            if (f) onImportProject(f);
             e.target.value = "";
           }}
         />

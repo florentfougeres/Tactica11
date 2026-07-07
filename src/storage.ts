@@ -1,10 +1,15 @@
 import {
   FILE_VERSION,
   OPPONENT_FORMATION,
+  PROJECT_FILE_VERSION,
+  type AttributeDef,
   type Lineup,
   type LineupFile,
   type Opponent,
   type Phase,
+  type Player,
+  type Project,
+  type ProjectFile,
   type Slot,
   type ZoneRadii,
 } from "./types";
@@ -22,8 +27,6 @@ function migrateInfluence(
   }
   return inf as Partial<Record<Phase, ZoneRadii>>;
 }
-
-const STORAGE_KEY = "tactica11.lineup";
 
 export function uid(prefix = "id"): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
@@ -46,14 +49,29 @@ export function createDefaultLineup(): Lineup {
     id: uid("lineup"),
     name: "Ma compo",
     formation,
-    players: [],
     slots,
   };
 }
 
-// Normalise a lineup that may come from an older schema (v1 used `playerId`
-// and only had attack/defense positions, no locked "base" phase, no sub).
-export function migrateLineup(parsed: Lineup): Lineup {
+export function createDefaultProject(): Project {
+  const lineup = createDefaultLineup();
+  return {
+    id: uid("proj"),
+    name: "Mon projet",
+    players: [],
+    attributeDefs: [],
+    lineups: [lineup],
+    currentLineupId: lineup.id,
+  };
+}
+
+// Normalise a lineup that may come from an older schema (v1 used `playerId`,
+// carried its own `players` array, and only had attack/defense positions, no
+// locked "base" phase, no sub). The returned Lineup never carries `players` —
+// that field now lives on the parent Project.
+export function migrateLineup(
+  parsed: Lineup & { players?: Player[] },
+): Lineup {
   const fresh = buildSlots(parsed.formation || "4-3-3");
   const slots = fresh.map((s, i) => {
     const old = parsed.slots[i] as
@@ -72,84 +90,281 @@ export function migrateLineup(parsed: Lineup): Lineup {
       },
     };
   });
-  return { ...parsed, slots, opponents: parsed.opponents ?? [] };
+  return {
+    id: parsed.id,
+    name: parsed.name,
+    formation: parsed.formation,
+    slots,
+    opponents: parsed.opponents ?? [],
+    opponentColor: parsed.opponentColor,
+    drawings: parsed.drawings,
+  };
 }
 
-// --- Library (several compos in localStorage) ---
+// Wrap a legacy (pre-project) compo — which carried its own `players` array —
+// into its own single-compo project. Used only during migration: rosters are
+// never merged across legacy compos.
+function wrapLegacyLineup(parsed: Lineup & { players?: Player[] }): Project {
+  const lineup = migrateLineup(parsed);
+  return {
+    id: uid("proj"),
+    name: parsed.name?.trim() || "Projet",
+    players: parsed.players ?? [],
+    attributeDefs: [],
+    lineups: [lineup],
+    currentLineupId: lineup.id,
+  };
+}
 
-const LIBRARY_KEY = "tactica11.library";
-const CURRENT_KEY = "tactica11.currentId";
+function migrateProject(parsed: Project): Project {
+  let lineups = (parsed.lineups ?? [])
+    .filter((l) => l && l.slots)
+    .map(migrateLineup);
+  if (!lineups.length) lineups = [createDefaultLineup()];
+  const currentLineupId = lineups.some((l) => l.id === parsed.currentLineupId)
+    ? parsed.currentLineupId
+    : lineups[0].id;
+  return {
+    id: parsed.id,
+    name: parsed.name,
+    players: parsed.players ?? [],
+    attributeDefs: parsed.attributeDefs ?? [],
+    lineups,
+    currentLineupId,
+  };
+}
+
+// --- Library (several projects in localStorage, each holding its own roster
+// and its own compos) ---
+
+const PROJECTS_KEY = "tactica11.projects";
+const CURRENT_PROJECT_KEY = "tactica11.currentProjectId";
+
+// Legacy keys from before the "project" concept existed — read-only
+// migration sources, never written to again.
+const LEGACY_LIBRARY_KEY = "tactica11.library";
+const LEGACY_CURRENT_KEY = "tactica11.currentId";
+const LEGACY_LINEUP_KEY = "tactica11.lineup";
 
 export interface Library {
-  lineups: Lineup[];
-  currentId: string;
+  projects: Project[];
+  currentProjectId: string;
 }
 
 export function loadLibrary(): Library {
   try {
-    const raw = localStorage.getItem(LIBRARY_KEY);
+    const raw = localStorage.getItem(PROJECTS_KEY);
     if (raw) {
-      const lineups = (JSON.parse(raw) as Lineup[])
-        .filter((l) => l && l.slots && l.players)
-        .map(migrateLineup);
-      if (lineups.length) {
-        const saved = localStorage.getItem(CURRENT_KEY);
-        const currentId = lineups.some((l) => l.id === saved)
+      const projects = (JSON.parse(raw) as Project[])
+        .filter((p) => p && p.lineups)
+        .map(migrateProject);
+      if (projects.length) {
+        const saved = localStorage.getItem(CURRENT_PROJECT_KEY);
+        const currentProjectId = projects.some((p) => p.id === saved)
           ? (saved as string)
-          : lineups[0].id;
-        return { lineups, currentId };
+          : projects[0].id;
+        return { projects, currentProjectId };
       }
     }
-    // migrate a legacy single-lineup save into the library
-    const legacy = localStorage.getItem(STORAGE_KEY);
-    if (legacy) {
-      const parsed = JSON.parse(legacy) as Lineup;
+  } catch {
+    // fall through to legacy migration / fresh library
+  }
+
+  // First run after this feature shipped: migrate the old flat "library of
+  // compos". Each legacy compo becomes its own single-compo project — rosters
+  // are NOT merged across compos.
+  try {
+    const legacyLib = localStorage.getItem(LEGACY_LIBRARY_KEY);
+    if (legacyLib) {
+      const legacyLineups = JSON.parse(legacyLib) as (Lineup & {
+        players?: Player[];
+      })[];
+      const valid = legacyLineups.filter((l) => l && l.slots && l.players);
+      if (valid.length) {
+        const projects = valid.map(wrapLegacyLineup);
+        const savedId = localStorage.getItem(LEGACY_CURRENT_KEY);
+        const target = projects.find((p) => p.lineups[0].id === savedId);
+        return { projects, currentProjectId: (target ?? projects[0]).id };
+      }
+    }
+    const legacySingle = localStorage.getItem(LEGACY_LINEUP_KEY);
+    if (legacySingle) {
+      const parsed = JSON.parse(legacySingle) as Lineup & {
+        players?: Player[];
+      };
       if (parsed.slots && parsed.players) {
-        const lineup = migrateLineup(parsed);
-        return { lineups: [lineup], currentId: lineup.id };
+        const project = wrapLegacyLineup(parsed);
+        return { projects: [project], currentProjectId: project.id };
       }
     }
   } catch {
     // fall through to a fresh library
   }
-  const def = createDefaultLineup();
-  return { lineups: [def], currentId: def.id };
+
+  const def = createDefaultProject();
+  return { projects: [def], currentProjectId: def.id };
 }
 
 export function saveLibrary(lib: Library): void {
   try {
-    localStorage.setItem(LIBRARY_KEY, JSON.stringify(lib.lineups));
-    localStorage.setItem(CURRENT_KEY, lib.currentId);
+    localStorage.setItem(PROJECTS_KEY, JSON.stringify(lib.projects));
+    localStorage.setItem(CURRENT_PROJECT_KEY, lib.currentProjectId);
   } catch {
     // storage full or unavailable — ignore, export still works
   }
 }
 
-// --- File export / import (.json) ---
+// --- Whole-project export / import ("Enregistrer" / "Ouvrir un projet") ---
 
-export function exportLineup(lineup: Lineup): void {
-  const file: LineupFile = { app: "tactica11", version: FILE_VERSION, lineup };
+export function exportProject(project: Project): void {
+  const file: ProjectFile = {
+    app: "tactica11",
+    version: PROJECT_FILE_VERSION,
+    project,
+  };
   const blob = new Blob([JSON.stringify(file, null, 2)], {
     type: "application/json",
   });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const safeName = lineup.name.trim().replace(/[^\w-]+/g, "_") || "compo";
+  const safeName = project.name.trim().replace(/[^\w-]+/g, "_") || "projet";
   a.href = url;
-  a.download = `${safeName}.tactica11.json`;
+  a.download = `${safeName}.tactica11-projet.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
 }
 
-export async function importLineup(file: File): Promise<Lineup> {
+export async function importProject(file: File): Promise<Project> {
   const text = await file.text();
-  const data = JSON.parse(text) as Partial<LineupFile> & Partial<Lineup>;
-  // Accept both the wrapped file format and a bare lineup object.
-  const lineup = (data as LineupFile).lineup ?? (data as Lineup);
-  if (!lineup || !lineup.slots || !lineup.players) {
-    throw new Error("Fichier invalide");
+  const data = JSON.parse(text) as Partial<ProjectFile>;
+  const raw = data.project;
+  if (!raw || !raw.lineups || !raw.players) {
+    throw new Error("Fichier de projet invalide");
   }
-  return migrateLineup(lineup);
+  return { ...migrateProject(raw), id: uid("proj") };
+}
+
+// --- Share links (self-contained, single compo) ---
+
+function referencedPlayerIds(lineup: Lineup): Set<string> {
+  const ids = new Set<string>();
+  lineup.slots.forEach((s) => {
+    if (s.starterId) ids.add(s.starterId);
+    if (s.subId) ids.add(s.subId);
+  });
+  return ids;
+}
+
+// A compo file/link is self-contained: it embeds only the players actually on
+// the pitch (starters + subs), not the whole project roster/bench. Shared by
+// .json export and share-link encoding.
+export function buildLineupFile(project: Project, lineup: Lineup): LineupFile {
+  const ids = referencedPlayerIds(lineup);
+  const players = project.players.filter((p) => ids.has(p.id));
+  const usedAttrIds = new Set<string>();
+  players.forEach((p) =>
+    Object.keys(p.attributes ?? {}).forEach((k) => usedAttrIds.add(k)),
+  );
+  const attributeDefs = project.attributeDefs.filter((d) =>
+    usedAttrIds.has(d.id),
+  );
+  return {
+    app: "tactica11",
+    version: FILE_VERSION,
+    lineup,
+    players,
+    attributeDefs,
+  };
+}
+
+export interface ImportedBundle {
+  lineup: Lineup;
+  players: Player[];
+  attributeDefs: AttributeDef[];
+}
+
+// Shared by share-link decoding: accepts both the current (v2, denormalized)
+// format and the older v1 format where players were embedded directly inside
+// the lineup.
+export function parseLineupBundle(text: string): ImportedBundle {
+  const data = JSON.parse(text) as Partial<LineupFile> &
+    Partial<Lineup & { players?: Player[] }>;
+  const rawLineup = (data.lineup ?? data) as
+    | (Lineup & { players?: Player[] })
+    | undefined;
+  if (!rawLineup || !rawLineup.slots) throw new Error("Fichier invalide");
+
+  if (data.players) {
+    // v2: players/attributeDefs are denormalized alongside `lineup`.
+    return {
+      lineup: migrateLineup(rawLineup),
+      players: data.players,
+      attributeDefs: data.attributeDefs ?? [],
+    };
+  }
+  // v1 (or a bare lineup): players were embedded inside the lineup itself.
+  const players = rawLineup.players ?? [];
+  return { lineup: migrateLineup(rawLineup), players, attributeDefs: [] };
+}
+
+// Merge an imported/shared compo bundle into a project: mints fresh ids for
+// the compo and every player it references (imported players are always new
+// roster entries), remaps the slot references accordingly, and dedupes
+// custom-attribute columns against the project's existing ones by name+type.
+export function mergeImportedBundle(
+  project: Project,
+  bundle: ImportedBundle,
+): { project: Project; lineup: Lineup } {
+  const attrIdMap = new Map<string, string>();
+  let attributeDefs = project.attributeDefs;
+  bundle.attributeDefs.forEach((def) => {
+    const existing = attributeDefs.find(
+      (d) => d.name === def.name && d.type === def.type,
+    );
+    if (existing) {
+      attrIdMap.set(def.id, existing.id);
+    } else {
+      const fresh: AttributeDef = { ...def, id: uid("attr") };
+      attributeDefs = [...attributeDefs, fresh];
+      attrIdMap.set(def.id, fresh.id);
+    }
+  });
+
+  const playerIdMap = new Map<string, string>();
+  const newPlayers: Player[] = bundle.players.map((p) => {
+    const id = uid("p");
+    playerIdMap.set(p.id, id);
+    const attributes = p.attributes
+      ? Object.fromEntries(
+          Object.entries(p.attributes).map(([k, v]) => [
+            attrIdMap.get(k) ?? k,
+            v,
+          ]),
+        )
+      : undefined;
+    return { ...p, id, ...(attributes ? { attributes } : {}) };
+  });
+
+  const lineup: Lineup = {
+    ...bundle.lineup,
+    id: uid("lineup"),
+    slots: bundle.lineup.slots.map((s) => ({
+      ...s,
+      starterId: s.starterId ? (playerIdMap.get(s.starterId) ?? null) : null,
+      subId: s.subId ? (playerIdMap.get(s.subId) ?? null) : null,
+    })),
+  };
+
+  return {
+    project: {
+      ...project,
+      players: [...project.players, ...newPlayers],
+      attributeDefs,
+      lineups: [...project.lineups, lineup],
+      currentLineupId: lineup.id,
+    },
+    lineup,
+  };
 }

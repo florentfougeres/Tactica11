@@ -13,6 +13,7 @@ interface Props {
   onDragStateChange?: (active: boolean) => void;
   canDrag: boolean; // roster drag only allowed in the "base" phase
   onImportCsv: () => void;
+  onOpenRoster: () => void; // open the full project roster table (custom columns)
   footer?: ReactNode; // pinned section at the bottom (e.g. influence controls)
 }
 
@@ -27,6 +28,7 @@ const Bench = forwardRef<HTMLElement, Props>(function Bench(
     onDragStateChange,
     canDrag,
     onImportCsv,
+    onOpenRoster,
     footer,
   },
   ref,
@@ -49,6 +51,14 @@ const Bench = forwardRef<HTMLElement, Props>(function Bench(
       <header className="panel__header">
         <h2>Effectif</h2>
         <span className="chip">{players.length}</span>
+        <button
+          type="button"
+          className="bench__roster-btn"
+          onClick={onOpenRoster}
+          title="Éditer la base de joueurs (attributs personnalisés)"
+        >
+          Base de joueurs
+        </button>
       </header>
 
       <form className="bench__add" onSubmit={submit}>
