@@ -1626,25 +1626,60 @@
   justify-content: flex-end;
 }
 
-/* ---------- roster table (project's shared player base) ---------- */
-.bench__roster-btn {
-  padding: 5px 10px;
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-dim);
-  font-size: 11px;
-  font-weight: 600;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+/* ---------- view tabs (Terrain / Effectif) ---------- */
+.view-tabs {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 18px;
+  margin: 0 0 12px;
+  border-bottom: 1px solid var(--panel-border);
 }
-.bench__roster-btn:hover {
-  border-color: rgba(33, 208, 122, 0.5);
-  color: var(--accent);
-  background: rgba(33, 208, 122, 0.06);
+.view-tabs__btn {
+  position: relative;
+  border: none;
+  background: none;
+  padding: 6px 1px 10px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-dim);
+  transition: color 0.15s;
+}
+.view-tabs__btn.is-active {
+  color: var(--text);
+}
+.view-tabs__btn:not(.is-active):hover {
+  color: var(--text);
+}
+.view-tabs__pill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.view-tabs__label {
+  position: relative;
+  z-index: 1;
 }
 
-.roster-modal {
-  max-width: 760px;
+/* ---------- roster page (project's shared player base, full page) ---------- */
+.roster-page {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.roster-page__header {
+  flex: 0 0 auto;
+}
+.roster-page__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 10px 18px 20px;
+  overflow-y: auto;
 }
 .roster-table__scroll {
   overflow-x: auto;

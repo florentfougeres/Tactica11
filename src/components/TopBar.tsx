@@ -22,7 +22,6 @@ interface Props {
   onNewProject: () => void;
   onDuplicateProject: () => void;
   onDeleteProject: (id: string) => void;
-  onOpenRoster: () => void;
   onUndo: () => void;
   onRedo: () => void;
   onExportPng: () => void;
@@ -72,7 +71,6 @@ export default function TopBar({
   onNewProject,
   onDuplicateProject,
   onDeleteProject,
-  onOpenRoster,
   onUndo,
   onRedo,
   onExportPng,
@@ -373,9 +371,6 @@ export default function TopBar({
             </div>
           )}
         </div>
-        <button className="btn" onClick={onOpenRoster}>
-          Base de joueurs
-        </button>
         <button
           className="btn btn--icon"
           onClick={onHelp}

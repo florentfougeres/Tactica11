@@ -36,6 +36,7 @@ import Pitch from "./components/Pitch";
 import TopBar from "./components/TopBar";
 import CsvImportDialog from "./components/CsvImportDialog";
 import RosterTable from "./components/RosterTable";
+import ViewTabs, { type View } from "./components/ViewTabs";
 import Onboarding from "./components/Onboarding";
 import ZonePresets from "./components/ZonePresets";
 import { presetsFor, presetRadii } from "./zonePresets";
@@ -87,7 +88,7 @@ export default function App() {
     [currentProjectId],
   );
 
-  const [rosterOpen, setRosterOpen] = useState(false);
+  const [view, setView] = useState<View>("pitch");
   const [phase, setPhase] = useState<Phase>("base");
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [benchDragging, setBenchDragging] = useState(false);
@@ -145,6 +146,7 @@ export default function App() {
   const enterPresent = () => {
     setPresenting(true);
     setPresentToolsOpen(false); // start collapsed in fullscreen
+    setView("pitch"); // presentation always shows the tactical board, not the roster page
     document.documentElement.requestFullscreen?.().catch(() => {});
   };
   const exitPresent = () => {
@@ -1039,7 +1041,6 @@ export default function App() {
         onNewProject={newProject}
         onDuplicateProject={duplicateProject}
         onDeleteProject={deleteProject}
-        onOpenRoster={() => setRosterOpen(true)}
         onUndo={undo}
         onRedo={redo}
         onExportPng={handleExportPng}
@@ -1048,90 +1049,92 @@ export default function App() {
         onImportProject={openProjectFile}
       />
 
-      <main className="layout">
-        <Bench
-          ref={benchRef}
-          players={benchPlayers}
-          onAdd={addPlayer}
-          onRename={renamePlayer}
-          onSetNumber={setPlayerNumber}
-          onRemove={removePlayer}
-          onDropToPitch={handleBenchDrop}
-          onDragStateChange={setBenchDragging}
-          canDrag={phase === "base"}
-          onImportCsv={() => setCsvOpen(true)}
-          onOpenRoster={() => setRosterOpen(true)}
-          footer={pitchControls}
-        />
+      {!presenting && <ViewTabs view={view} onView={setView} />}
 
-        <Pitch
-          ref={pitchRef}
-          slots={lineup.slots}
-          phase={phase}
-          playerById={playerById}
-          selectedSlot={selectedSlot}
-          dropActive={benchDragging}
-          influenceMode={influenceMode}
-          orient={orient}
-          onToggleOrient={() =>
-            setOrient((o) => (o === "portrait" ? "landscape" : "portrait"))
-          }
-          onPhase={(p) => {
-            setPhase(p);
-            setSelectedSlot(null); // roster popover is base-only
-          }}
-          onSelect={setSelectedSlot}
-          onMove={moveSlot}
-          onSetRoleLabel={setRoleLabel}
-          onPlayerDrop={handlePlayerDrop}
-          onRemoveStarter={removeStarter}
-          onRemoveSub={removeSub}
-          onSwap={swapStarterSub}
-          onSetNumber={setPlayerNumber}
-          onInfluence={setInfluenceManual}
-          blend={blend}
-          scrubbing={scrubbing}
-          showGrid={showGrid}
-          showNumbers={showNumbers}
-          opponents={lineup.opponents ?? []}
-          opponentMode={opponentMode}
-          opponentColor={lineup.opponentColor ?? DEFAULT_OPPONENT_COLOR}
-          onMoveOpponent={moveOpponent}
-          onLabelOpponent={setOpponentLabel}
-          drawMode={drawMode}
-          drawTool={drawTool}
-          drawColor={drawColor}
-          drawColors={DRAW_COLORS}
-          drawings={lineup.drawings?.[phase] ?? []}
-          onAddDrawing={addDrawing}
-          onDrawTool={setDrawTool}
-          onDrawColor={setDrawColor}
-          onUndoDrawing={undoDrawing}
-          onClearDrawings={clearDrawings}
-        />
+      <main className="layout">
+        {view === "roster" ? (
+          <RosterTable
+            players={project.players}
+            attributeDefs={project.attributeDefs}
+            onAddPlayer={addPlayer}
+            onRenamePlayer={renamePlayer}
+            onSetNumber={setPlayerNumber}
+            onSetAttribute={setAttribute}
+            onRemovePlayer={removePlayer}
+            onAddColumn={addColumn}
+            onRenameColumn={renameColumn}
+            onRemoveColumn={removeColumn}
+            onImportCsv={() => setCsvOpen(true)}
+          />
+        ) : (
+          <>
+            <Bench
+              ref={benchRef}
+              players={benchPlayers}
+              onAdd={addPlayer}
+              onRename={renamePlayer}
+              onSetNumber={setPlayerNumber}
+              onRemove={removePlayer}
+              onDropToPitch={handleBenchDrop}
+              onDragStateChange={setBenchDragging}
+              canDrag={phase === "base"}
+              onImportCsv={() => setCsvOpen(true)}
+              footer={pitchControls}
+            />
+
+            <Pitch
+              ref={pitchRef}
+              slots={lineup.slots}
+              phase={phase}
+              playerById={playerById}
+              selectedSlot={selectedSlot}
+              dropActive={benchDragging}
+              influenceMode={influenceMode}
+              orient={orient}
+              onToggleOrient={() =>
+                setOrient((o) => (o === "portrait" ? "landscape" : "portrait"))
+              }
+              onPhase={(p) => {
+                setPhase(p);
+                setSelectedSlot(null); // roster popover is base-only
+              }}
+              onSelect={setSelectedSlot}
+              onMove={moveSlot}
+              onSetRoleLabel={setRoleLabel}
+              onPlayerDrop={handlePlayerDrop}
+              onRemoveStarter={removeStarter}
+              onRemoveSub={removeSub}
+              onSwap={swapStarterSub}
+              onSetNumber={setPlayerNumber}
+              onInfluence={setInfluenceManual}
+              blend={blend}
+              scrubbing={scrubbing}
+              showGrid={showGrid}
+              showNumbers={showNumbers}
+              opponents={lineup.opponents ?? []}
+              opponentMode={opponentMode}
+              opponentColor={lineup.opponentColor ?? DEFAULT_OPPONENT_COLOR}
+              onMoveOpponent={moveOpponent}
+              onLabelOpponent={setOpponentLabel}
+              drawMode={drawMode}
+              drawTool={drawTool}
+              drawColor={drawColor}
+              drawColors={DRAW_COLORS}
+              drawings={lineup.drawings?.[phase] ?? []}
+              onAddDrawing={addDrawing}
+              onDrawTool={setDrawTool}
+              onDrawColor={setDrawColor}
+              onUndoDrawing={undoDrawing}
+              onClearDrawings={clearDrawings}
+            />
+          </>
+        )}
       </main>
 
       {csvOpen && (
         <CsvImportDialog
           onClose={() => setCsvOpen(false)}
           onImport={addPlayers}
-        />
-      )}
-
-      {rosterOpen && (
-        <RosterTable
-          players={project.players}
-          attributeDefs={project.attributeDefs}
-          onClose={() => setRosterOpen(false)}
-          onAddPlayer={addPlayer}
-          onRenamePlayer={renamePlayer}
-          onSetNumber={setPlayerNumber}
-          onSetAttribute={setAttribute}
-          onRemovePlayer={removePlayer}
-          onAddColumn={addColumn}
-          onRenameColumn={renameColumn}
-          onRemoveColumn={removeColumn}
-          onImportCsv={() => setCsvOpen(true)}
         />
       )}
 
