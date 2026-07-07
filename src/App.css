@@ -1409,6 +1409,10 @@
   border-color: var(--accent);
   background: rgba(33, 208, 122, 0.1);
 }
+.role-pop__input {
+  width: 70px;
+  text-transform: uppercase;
+}
 .slot-pop__num::placeholder {
   color: var(--text-dim);
   font-weight: 600;

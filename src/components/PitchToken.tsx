@@ -22,6 +22,7 @@ interface Props {
   phase: Phase;
   pos: Pos; // display position in % (interpolated while scrubbing the slider)
   frozen: boolean; // mid-transition preview → no drag / select
+  showNumbers: boolean; // base-only: shirt number becomes the main disc label
   instant: boolean; // follow the slider 1:1 instead of springing
   size: Size;
   orient: Orient;
@@ -42,6 +43,7 @@ export default function PitchToken({
   phase,
   pos,
   frozen,
+  showNumbers,
   instant,
   size,
   orient,
@@ -90,10 +92,20 @@ export default function PitchToken({
   // Mid-transition (frozen) the tokens are a read-only preview.
   const canDrag = !empty && !frozen;
 
-  const label = starter ? starter.name || "Joueur" : slot.role;
-  // Main disc is always the position (role); the shirt number, when set, rides
-  // as a small secondary disc — and only for the starter (titulaire).
+  // Attack/defense: the role badge can be freely relabelled (e.g. "MOC" → "ZZ");
+  // base always shows the system role.
+  const effectiveRole =
+    (!isBase && slot.roleLabels?.[phase]?.trim()) || slot.role;
+
+  const label = starter ? starter.name || "Joueur" : effectiveRole;
+  // Main disc is normally the position (role); the shirt number, when set,
+  // rides as a small secondary disc — and only for the starter (titulaire).
+  // Base-only toggle: swap the two — if there's no number, the main disc is
+  // simply left blank rather than falling back to the role.
   const number = starter?.number;
+  const swapLabels = isBase && showNumbers;
+  const discPrimary = swapLabels ? (number ?? "") : effectiveRole;
+  const discSecondary = swapLabels ? effectiveRole : (number ?? null);
 
   function handleDragEnd(_e: unknown, info: PanInfo) {
     dragging.current = false;
@@ -153,8 +165,10 @@ export default function PitchToken({
       onDragEnd={handleDragEnd}
     >
       <div className="token__disc">
-        <span className="token__badge">{slot.role}</span>
-        {number != null && <span className="token__number">{number}</span>}
+        <span className="token__badge">{discPrimary}</span>
+        {discSecondary != null && (
+          <span className="token__number">{discSecondary}</span>
+        )}
       </div>
       <div className="token__names">
         <span className="token__name">{label}</span>

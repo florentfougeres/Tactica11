@@ -100,6 +100,9 @@ export default function App() {
   const [blend, setBlend] = useState(0);
   const [scrubbing, setScrubbing] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
+  // Base-only display toggle: swap which label rides the main disc (role vs
+  // shirt number). Purely a view preference, not persisted with the lineup.
+  const [showNumbers, setShowNumbers] = useState(false);
   // Drawing layer: free-hand annotations stored per phase on the lineup. Tool /
   // colour are ephemeral view state; the strokes themselves are persisted.
   const [drawMode, setDrawMode] = useState(false);
@@ -295,6 +298,21 @@ export default function App() {
           ? { ...s, positions: { ...s.positions, [phase]: pos } }
           : s,
       ),
+    }));
+
+  // Free-text role label, edited per phase (attack/defense only — base always
+  // shows the formation's role). Clearing the text removes the override.
+  const setRoleLabel = (slotId: string, text: string) =>
+    setLineup((l) => ({
+      ...l,
+      slots: l.slots.map((s) => {
+        if (s.id !== slotId) return s;
+        const trimmed = text.trim();
+        const next = { ...s.roleLabels };
+        if (trimmed) next[phase] = trimmed;
+        else delete next[phase];
+        return { ...s, roleLabels: next };
+      }),
     }));
 
   // Mirror the current phase left↔right (x → 100 − x): players, their influence
@@ -718,6 +736,21 @@ export default function App() {
         </span>
       </label>
 
+      {phase === "base" && (
+        <label className="pitch-ctl__row">
+          <span>Afficher les numéros</span>
+          <span className="switch">
+            <input
+              type="checkbox"
+              checked={showNumbers}
+              onChange={(e) => setShowNumbers(e.target.checked)}
+            />
+            <span className="switch__track" />
+            <span className="switch__thumb" />
+          </span>
+        </label>
+      )}
+
       <label className="pitch-ctl__row">
         <span>Dessin</span>
         <span className="switch">
@@ -852,6 +885,7 @@ export default function App() {
           }}
           onSelect={setSelectedSlot}
           onMove={moveSlot}
+          onSetRoleLabel={setRoleLabel}
           onPlayerDrop={handlePlayerDrop}
           onRemoveStarter={removeStarter}
           onRemoveSub={removeSub}
@@ -861,6 +895,7 @@ export default function App() {
           blend={blend}
           scrubbing={scrubbing}
           showGrid={showGrid}
+          showNumbers={showNumbers}
           opponents={lineup.opponents ?? []}
           opponentMode={opponentMode}
           opponentColor={lineup.opponentColor ?? DEFAULT_OPPONENT_COLOR}

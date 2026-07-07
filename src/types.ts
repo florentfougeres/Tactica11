@@ -76,6 +76,10 @@ export interface Slot {
   // Custom influence-zone shape per phase (base has no zone). Falls back to
   // DEFAULT_ZONE when a phase isn't set.
   influence?: Partial<Record<Phase, ZoneRadii>>;
+  // Free-text override for the role badge (e.g. "MOC" → "ZZ"), editable only in
+  // attack/defense — base always shows the formation's role. Falls back to
+  // `role` when unset for that phase.
+  roleLabels?: Partial<Record<Phase, string>>;
 }
 
 // An opposing player: a plain disc with a short free-text label (2-3 chars),
