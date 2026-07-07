@@ -1337,6 +1337,13 @@
     transform: translate(-50%, 0) scale(0.94);
   }
 }
+/* role-label popover (attack/defense) — same layer as the slot popover, above
+   the influence heatmap (z-index 1) and zone handles (z-index 3). */
+.role-pop-anchor {
+  position: absolute;
+  z-index: 80;
+  animation: slot-pop-in 0.14s ease-out;
+}
 .slot-pop {
   width: max-content;
   max-width: 230px;
