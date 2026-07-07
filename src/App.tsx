@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import type {
+  AttrType,
   DrawTool,
   Drawing,
   InfluenceMode,
@@ -8,6 +9,7 @@ import type {
   Orient,
   Phase,
   Player,
+  Project,
   ZoneRadii,
 } from "./types";
 import {
@@ -20,11 +22,12 @@ import {
 import { buildSlots } from "./formations";
 import {
   createDefaultLineup,
+  createDefaultProject,
   createOpponents,
-  exportLineup,
-  importLineup,
+  exportProject,
+  importProject,
   loadLibrary,
-  migrateLineup,
+  mergeImportedBundle,
   saveLibrary,
   uid,
 } from "./storage";
@@ -32,6 +35,8 @@ import Bench from "./components/Bench";
 import Pitch from "./components/Pitch";
 import TopBar from "./components/TopBar";
 import CsvImportDialog from "./components/CsvImportDialog";
+import RosterTable from "./components/RosterTable";
+import ViewTabs, { type View } from "./components/ViewTabs";
 import Onboarding from "./components/Onboarding";
 import ZonePresets from "./components/ZonePresets";
 import { presetsFor, presetRadii } from "./zonePresets";
@@ -61,13 +66,29 @@ function pointInRect(p: Point, el: HTMLElement | null): boolean {
 
 export default function App() {
   const initialLib = useMemo(() => loadLibrary(), []);
-  const [library, setLibrary] = useState<Lineup[]>(initialLib.lineups);
+  const [projects, setProjects] = useState<Project[]>(initialLib.projects);
+  const [currentProjectId, setCurrentProjectId] = useState(
+    initialLib.currentProjectId,
+  );
+  const project = useMemo(
+    () => projects.find((p) => p.id === currentProjectId) ?? projects[0],
+    [projects, currentProjectId],
+  );
   const { lineup, setLineup, undo, redo, reset, canUndo, canRedo } =
     useUndoableLineup(
-      initialLib.lineups.find((l) => l.id === initialLib.currentId) ??
-        initialLib.lineups[0],
+      project.lineups.find((l) => l.id === project.currentLineupId) ??
+        project.lineups[0],
     );
+  // Mutate the current project's shared roster / attribute columns.
+  const updateProject = useCallback(
+    (fn: (p: Project) => Project) =>
+      setProjects((ps) =>
+        ps.map((p) => (p.id === currentProjectId ? fn(p) : p)),
+      ),
+    [currentProjectId],
+  );
 
+  const [view, setView] = useState<View>("pitch");
   const [phase, setPhase] = useState<Phase>("base");
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [benchDragging, setBenchDragging] = useState(false);
@@ -125,6 +146,7 @@ export default function App() {
   const enterPresent = () => {
     setPresenting(true);
     setPresentToolsOpen(false); // start collapsed in fullscreen
+    setView("pitch"); // presentation always shows the tactical board, not the roster page
     document.documentElement.requestFullscreen?.().catch(() => {});
   };
   const exitPresent = () => {
@@ -154,30 +176,46 @@ export default function App() {
   const pitchRef = useRef<HTMLDivElement>(null);
   const benchRef = useRef<HTMLElement>(null);
 
-  // If opened on a share link, import the encoded compo as a new entry.
+  // If opened on a share link, merge the encoded compo (and the players/
+  // attribute columns it references) into the current project as a new entry.
   useEffect(() => {
     const enc = takeSharedFromUrl();
     if (!enc) return;
-    const decoded = decodeLineup(enc);
-    if (!decoded) return;
-    const compo = { ...migrateLineup(decoded), id: uid("lineup") };
-    setLibrary((lib) => [...lib, compo]);
-    reset(compo);
+    const bundle = decodeLineup(enc);
+    if (!bundle) return;
+    const { project: merged, lineup: newLineup } = mergeImportedBundle(
+      project,
+      bundle,
+    );
+    setProjects((ps) => ps.map((p) => (p.id === merged.id ? merged : p)));
+    reset(newLineup);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Keep the current compo's library entry in sync (debounced, so a drag burst
-  // syncs once), then persist the whole library.
+  // Fold the actively-edited compo back into its project's lineups (debounced,
+  // so a drag burst syncs once), then persist the whole project library.
   useEffect(() => {
     const t = setTimeout(() => {
-      setLibrary((lib) => lib.map((l) => (l.id === lineup.id ? lineup : l)));
+      setProjects((ps) =>
+        ps.map((p) =>
+          p.id === currentProjectId
+            ? {
+                ...p,
+                lineups: p.lineups.map((l) =>
+                  l.id === lineup.id ? lineup : l,
+                ),
+                currentLineupId: lineup.id,
+              }
+            : p,
+        ),
+      );
     }, 400);
     return () => clearTimeout(t);
-  }, [lineup]);
+  }, [lineup, currentProjectId]);
 
   useEffect(() => {
-    saveLibrary({ lineups: library, currentId: lineup.id });
-  }, [library, lineup.id]);
+    saveLibrary({ projects, currentProjectId });
+  }, [projects, currentProjectId]);
 
   // Invariant: a slot can never hold a sub without a starter (that would render
   // as an empty token with an invisible, trapped player). Auto-promote the sub.
@@ -196,9 +234,9 @@ export default function App() {
 
   const playerMap = useMemo(() => {
     const m = new Map<string, Player>();
-    lineup.players.forEach((p) => m.set(p.id, p));
+    project.players.forEach((p) => m.set(p.id, p));
     return m;
-  }, [lineup.players]);
+  }, [project.players]);
 
   const playerById = useCallback(
     (id: string | null) => (id ? playerMap.get(id) ?? null : null),
@@ -215,62 +253,113 @@ export default function App() {
   }, [lineup.slots]);
 
   const benchPlayers = useMemo(
-    () => lineup.players.filter((p) => !assignedIds.has(p.id)),
-    [lineup.players, assignedIds],
+    () => project.players.filter((p) => !assignedIds.has(p.id)),
+    [project.players, assignedIds],
   );
 
-  // --- roster ---
+  // --- roster (shared across every compo in the current project) ---
   const addPlayer = (name: string, number?: number) =>
-    setLineup((l) => ({
-      ...l,
+    updateProject((p) => ({
+      ...p,
       players: [
-        ...l.players,
+        ...p.players,
         { id: uid("p"), name, ...(number != null ? { number } : {}) },
       ],
     }));
 
   // Set or clear a player's (optional) shirt number. Pass null to remove it.
   const setPlayerNumber = (id: string, number: number | null) =>
-    setLineup((l) => ({
-      ...l,
-      players: l.players.map((p) => {
-        if (p.id !== id) return p;
+    updateProject((p) => ({
+      ...p,
+      players: p.players.map((pl) => {
+        if (pl.id !== id) return pl;
         if (number == null) {
-          const { number: _omit, ...rest } = p;
+          const { number: _omit, ...rest } = pl;
           return rest;
         }
-        return { ...p, number };
+        return { ...pl, number };
       }),
     }));
 
   const addPlayers = (players: ImportedPlayer[]) =>
-    setLineup((l) => ({
-      ...l,
+    updateProject((p) => ({
+      ...p,
       players: [
-        ...l.players,
-        ...players.map((p) => ({
+        ...p.players,
+        ...players.map((pl) => ({
           id: uid("p"),
-          name: p.name,
-          ...(p.number != null ? { number: p.number } : {}),
+          name: pl.name,
+          ...(pl.number != null ? { number: pl.number } : {}),
         })),
       ],
     }));
 
   const renamePlayer = (id: string, name: string) =>
-    setLineup((l) => ({
-      ...l,
-      players: l.players.map((p) => (p.id === id ? { ...p, name } : p)),
+    updateProject((p) => ({
+      ...p,
+      players: p.players.map((pl) => (pl.id === id ? { ...pl, name } : pl)),
     }));
 
-  const removePlayer = (id: string) =>
-    setLineup((l) => ({
-      ...l,
-      players: l.players.filter((p) => p.id !== id),
-      slots: l.slots.map((s) => ({
+  // Removing a player clears its reference from every slot of every compo in
+  // the project (the roster is shared), not just the one currently open. The
+  // currently-open compo also needs a direct write, since it only lives in
+  // `project.lineups` once the debounced sync effect folds it back in.
+  const removePlayer = (id: string) => {
+    const clearSlots = (slots: Lineup["slots"]) =>
+      slots.map((s) => ({
         ...s,
         starterId: s.starterId === id ? null : s.starterId,
         subId: s.subId === id ? null : s.subId,
-      })),
+      }));
+    updateProject((p) => ({
+      ...p,
+      players: p.players.filter((pl) => pl.id !== id),
+      lineups: p.lineups.map((l) => ({ ...l, slots: clearSlots(l.slots) })),
+    }));
+    setLineup((l) => ({ ...l, slots: clearSlots(l.slots) }));
+  };
+
+  // Set/clear a custom attribute value for a player. Pass null to remove it.
+  const setAttribute = (
+    id: string,
+    attrId: string,
+    value: string | number | null,
+  ) =>
+    updateProject((p) => ({
+      ...p,
+      players: p.players.map((pl) => {
+        if (pl.id !== id) return pl;
+        const attributes = { ...pl.attributes };
+        if (value == null) delete attributes[attrId];
+        else attributes[attrId] = value;
+        return { ...pl, attributes };
+      }),
+    }));
+
+  const addColumn = (name: string, type: AttrType) =>
+    updateProject((p) => ({
+      ...p,
+      attributeDefs: [...p.attributeDefs, { id: uid("attr"), name, type }],
+    }));
+
+  const renameColumn = (attrId: string, name: string) =>
+    updateProject((p) => ({
+      ...p,
+      attributeDefs: p.attributeDefs.map((d) =>
+        d.id === attrId ? { ...d, name } : d,
+      ),
+    }));
+
+  const removeColumn = (attrId: string) =>
+    updateProject((p) => ({
+      ...p,
+      attributeDefs: p.attributeDefs.filter((d) => d.id !== attrId),
+      players: p.players.map((pl) => {
+        if (!pl.attributes || !(attrId in pl.attributes)) return pl;
+        const attributes = { ...pl.attributes };
+        delete attributes[attrId];
+        return { ...pl, attributes };
+      }),
     }));
 
   // --- formation / phase ---
@@ -549,22 +638,29 @@ export default function App() {
       ),
     }));
 
-  // --- file / library ---
-  const handleImport = async (file: File) => {
+  // --- whole-project save / open (.json) ---
+  const saveProject = () => exportProject(project);
+
+  const openProjectFile = async (file: File) => {
     try {
-      const imported = { ...(await importLineup(file)), id: uid("lineup") };
-      setLibrary((lib) => [...lib, imported]);
-      reset(imported);
+      const p = await importProject(file);
+      setProjects((ps) => [...ps, p]);
+      setCurrentProjectId(p.id);
+      reset(p.lineups.find((l) => l.id === p.currentLineupId) ?? p.lineups[0]);
       setSelectedSlot(null);
     } catch {
-      alert("Impossible de lire ce fichier Tactica11.");
+      alert("Impossible de lire ce fichier projet Tactica11.");
     }
   };
 
+  // --- compos (within the current project) ---
   const openCompo = (id: string) => {
     if (id === lineup.id) return;
-    setLibrary((lib) => lib.map((l) => (l.id === lineup.id ? lineup : l)));
-    const target = library.find((l) => l.id === id);
+    updateProject((p) => ({
+      ...p,
+      lineups: p.lineups.map((l) => (l.id === lineup.id ? lineup : l)),
+    }));
+    const target = project.lineups.find((l) => l.id === id);
     if (target) {
       reset(structuredClone(target));
       setSelectedSlot(null);
@@ -573,7 +669,7 @@ export default function App() {
 
   const newCompo = () => {
     const c = createDefaultLineup();
-    setLibrary((lib) => [...lib, c]);
+    updateProject((p) => ({ ...p, lineups: [...p.lineups, c] }));
     reset(c);
     setSelectedSlot(null);
   };
@@ -584,32 +680,125 @@ export default function App() {
       id: uid("lineup"),
       name: `${lineup.name} (copie)`,
     };
-    setLibrary((lib) => [...lib, c]);
+    updateProject((p) => ({ ...p, lineups: [...p.lineups, c] }));
     reset(c);
     setSelectedSlot(null);
   };
 
   const deleteCompo = (id: string) => {
-    const target = library.find((l) => l.id === id);
+    const target = project.lineups.find((l) => l.id === id);
     const label = target?.name?.trim() || "cette compo";
     // Deletion clears the undo history (reset), so there's no taking it back.
     if (!window.confirm(`Supprimer « ${label} » ? Cette action est définitive.`))
       return;
-    const rest = library.filter((l) => l.id !== id);
+    const rest = project.lineups.filter((l) => l.id !== id);
     if (rest.length === 0) {
       const def = createDefaultLineup();
-      setLibrary([def]);
+      updateProject((p) => ({ ...p, lineups: [def], currentLineupId: def.id }));
       reset(def);
     } else {
-      setLibrary(rest);
+      updateProject((p) => ({ ...p, lineups: rest }));
       if (id === lineup.id) reset(structuredClone(rest[0]));
+    }
+    setSelectedSlot(null);
+  };
+
+  // --- projects ---
+  const setProjectName = (name: string) => updateProject((p) => ({ ...p, name }));
+
+  const openProject = (id: string) => {
+    if (id === currentProjectId) return;
+    updateProject((p) => ({
+      ...p,
+      lineups: p.lineups.map((l) => (l.id === lineup.id ? lineup : l)),
+      currentLineupId: lineup.id,
+    }));
+    const target = projects.find((p) => p.id === id);
+    if (!target) return;
+    setCurrentProjectId(id);
+    const targetLineup =
+      target.lineups.find((l) => l.id === target.currentLineupId) ??
+      target.lineups[0];
+    reset(structuredClone(targetLineup));
+    setSelectedSlot(null);
+  };
+
+  const newProject = () => {
+    const p = createDefaultProject();
+    setProjects((ps) => [...ps, p]);
+    setCurrentProjectId(p.id);
+    reset(p.lineups[0]);
+    setSelectedSlot(null);
+  };
+
+  // Duplicates the whole project: roster, attribute columns and every compo,
+  // with fresh ids throughout (including players) so the copy never shares
+  // identity with the original — slot references are remapped accordingly.
+  const duplicateProject = () => {
+    const base: Project = {
+      ...project,
+      lineups: project.lineups.map((l) => (l.id === lineup.id ? lineup : l)),
+    };
+    const src = structuredClone(base);
+    const playerIdMap = new Map<string, string>();
+    const players = src.players.map((pl) => {
+      const id = uid("p");
+      playerIdMap.set(pl.id, id);
+      return { ...pl, id };
+    });
+    const lineups = src.lineups.map((l) => ({
+      ...l,
+      id: uid("lineup"),
+      slots: l.slots.map((s) => ({
+        ...s,
+        starterId: s.starterId ? (playerIdMap.get(s.starterId) ?? null) : null,
+        subId: s.subId ? (playerIdMap.get(s.subId) ?? null) : null,
+      })),
+    }));
+    const p: Project = {
+      ...src,
+      id: uid("proj"),
+      name: `${src.name} (copie)`,
+      players,
+      lineups,
+      currentLineupId: lineups[0].id,
+    };
+    setProjects((ps) => [...ps, p]);
+    setCurrentProjectId(p.id);
+    reset(p.lineups[0]);
+    setSelectedSlot(null);
+  };
+
+  const deleteProject = (id: string) => {
+    const target = projects.find((p) => p.id === id);
+    const label = target?.name?.trim() || "ce projet";
+    if (!window.confirm(`Supprimer « ${label} » ? Cette action est définitive.`))
+      return;
+    const rest = projects.filter((p) => p.id !== id);
+    if (rest.length === 0) {
+      const def = createDefaultProject();
+      setProjects([def]);
+      setCurrentProjectId(def.id);
+      reset(def.lineups[0]);
+    } else {
+      setProjects(rest);
+      if (id === currentProjectId) {
+        const next = rest[0];
+        setCurrentProjectId(next.id);
+        reset(
+          structuredClone(
+            next.lineups.find((l) => l.id === next.currentLineupId) ??
+              next.lineups[0],
+          ),
+        );
+      }
     }
     setSelectedSlot(null);
   };
 
   const copyShareLink = async () => {
     try {
-      await navigator.clipboard.writeText(buildShareUrl(lineup));
+      await navigator.clipboard.writeText(buildShareUrl(project, lineup));
     } catch {
       alert("Impossible de copier le lien.");
     }
@@ -834,8 +1023,11 @@ export default function App() {
         formation={lineup.formation}
         onPresent={enterPresent}
         onHelp={() => setOnboardOpen(true)}
-        compos={library.map((l) => ({ id: l.id, name: l.name }))}
+        compos={project.lineups.map((l) => ({ id: l.id, name: l.name }))}
         currentId={lineup.id}
+        projectName={project.name}
+        projects={projects.map((p) => ({ id: p.id, name: p.name }))}
+        currentProjectId={project.id}
         canUndo={canUndo}
         canRedo={canRedo}
         onName={(name) => setLineup((l) => ({ ...l, name }))}
@@ -844,74 +1036,99 @@ export default function App() {
         onNewCompo={newCompo}
         onDuplicate={duplicateCompo}
         onDelete={deleteCompo}
+        onProjectName={setProjectName}
+        onOpenProject={openProject}
+        onNewProject={newProject}
+        onDuplicateProject={duplicateProject}
+        onDeleteProject={deleteProject}
         onUndo={undo}
         onRedo={redo}
-        onExport={() => exportLineup(lineup)}
         onExportPng={handleExportPng}
         onCopyLink={copyShareLink}
-        onImport={handleImport}
+        onSaveProject={saveProject}
+        onImportProject={openProjectFile}
       />
 
-      <main className="layout">
-        <Bench
-          ref={benchRef}
-          players={benchPlayers}
-          onAdd={addPlayer}
-          onRename={renamePlayer}
-          onSetNumber={setPlayerNumber}
-          onRemove={removePlayer}
-          onDropToPitch={handleBenchDrop}
-          onDragStateChange={setBenchDragging}
-          canDrag={phase === "base"}
-          onImportCsv={() => setCsvOpen(true)}
-          footer={pitchControls}
-        />
+      {!presenting && <ViewTabs view={view} onView={setView} />}
 
-        <Pitch
-          ref={pitchRef}
-          slots={lineup.slots}
-          phase={phase}
-          playerById={playerById}
-          selectedSlot={selectedSlot}
-          dropActive={benchDragging}
-          influenceMode={influenceMode}
-          orient={orient}
-          onToggleOrient={() =>
-            setOrient((o) => (o === "portrait" ? "landscape" : "portrait"))
-          }
-          onPhase={(p) => {
-            setPhase(p);
-            setSelectedSlot(null); // roster popover is base-only
-          }}
-          onSelect={setSelectedSlot}
-          onMove={moveSlot}
-          onSetRoleLabel={setRoleLabel}
-          onPlayerDrop={handlePlayerDrop}
-          onRemoveStarter={removeStarter}
-          onRemoveSub={removeSub}
-          onSwap={swapStarterSub}
-          onSetNumber={setPlayerNumber}
-          onInfluence={setInfluenceManual}
-          blend={blend}
-          scrubbing={scrubbing}
-          showGrid={showGrid}
-          showNumbers={showNumbers}
-          opponents={lineup.opponents ?? []}
-          opponentMode={opponentMode}
-          opponentColor={lineup.opponentColor ?? DEFAULT_OPPONENT_COLOR}
-          onMoveOpponent={moveOpponent}
-          onLabelOpponent={setOpponentLabel}
-          drawMode={drawMode}
-          drawTool={drawTool}
-          drawColor={drawColor}
-          drawColors={DRAW_COLORS}
-          drawings={lineup.drawings?.[phase] ?? []}
-          onAddDrawing={addDrawing}
-          onDrawTool={setDrawTool}
-          onDrawColor={setDrawColor}
-          onUndoDrawing={undoDrawing}
-          onClearDrawings={clearDrawings}
-        />
+      <main className="layout">
+        {view === "roster" ? (
+          <RosterTable
+            players={project.players}
+            attributeDefs={project.attributeDefs}
+            onAddPlayer={addPlayer}
+            onRenamePlayer={renamePlayer}
+            onSetNumber={setPlayerNumber}
+            onSetAttribute={setAttribute}
+            onRemovePlayer={removePlayer}
+            onAddColumn={addColumn}
+            onRenameColumn={renameColumn}
+            onRemoveColumn={removeColumn}
+            onImportCsv={() => setCsvOpen(true)}
+          />
+        ) : (
+          <>
+            <Bench
+              ref={benchRef}
+              players={benchPlayers}
+              onAdd={addPlayer}
+              onRename={renamePlayer}
+              onSetNumber={setPlayerNumber}
+              onRemove={removePlayer}
+              onDropToPitch={handleBenchDrop}
+              onDragStateChange={setBenchDragging}
+              canDrag={phase === "base"}
+              onImportCsv={() => setCsvOpen(true)}
+              footer={pitchControls}
+            />
+
+            <Pitch
+              ref={pitchRef}
+              slots={lineup.slots}
+              phase={phase}
+              playerById={playerById}
+              selectedSlot={selectedSlot}
+              dropActive={benchDragging}
+              influenceMode={influenceMode}
+              orient={orient}
+              onToggleOrient={() =>
+                setOrient((o) => (o === "portrait" ? "landscape" : "portrait"))
+              }
+              onPhase={(p) => {
+                setPhase(p);
+                setSelectedSlot(null); // roster popover is base-only
+              }}
+              onSelect={setSelectedSlot}
+              onMove={moveSlot}
+              onSetRoleLabel={setRoleLabel}
+              onPlayerDrop={handlePlayerDrop}
+              onRemoveStarter={removeStarter}
+              onRemoveSub={removeSub}
+              onSwap={swapStarterSub}
+              onSetNumber={setPlayerNumber}
+              onInfluence={setInfluenceManual}
+              blend={blend}
+              scrubbing={scrubbing}
+              showGrid={showGrid}
+              showNumbers={showNumbers}
+              opponents={lineup.opponents ?? []}
+              opponentMode={opponentMode}
+              opponentColor={lineup.opponentColor ?? DEFAULT_OPPONENT_COLOR}
+              onMoveOpponent={moveOpponent}
+              onLabelOpponent={setOpponentLabel}
+              drawMode={drawMode}
+              drawTool={drawTool}
+              drawColor={drawColor}
+              drawColors={DRAW_COLORS}
+              drawings={lineup.drawings?.[phase] ?? []}
+              onAddDrawing={addDrawing}
+              onDrawTool={setDrawTool}
+              onDrawColor={setDrawColor}
+              onUndoDrawing={undoDrawing}
+              onClearDrawings={clearDrawings}
+            />
+          </>
+        )}
       </main>
 
       {csvOpen && (

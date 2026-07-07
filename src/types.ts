@@ -45,10 +45,22 @@ export function pxToPos(x: number, y: number, size: Size, orient: Orient): Pos {
   return { x: (x / size.w) * 100, y: (y / size.h) * 100 };
 }
 
+// Custom roster columns, defined per project. "text" values are free strings,
+// "number" values are stored/edited as numbers (e.g. age, vitesse, taille).
+export type AttrType = "text" | "number";
+
+export interface AttributeDef {
+  id: string;
+  name: string; // column header, user-editable
+  type: AttrType;
+}
+
 export interface Player {
   id: string;
   name: string;
   number?: number;
+  // Custom attribute values, keyed by AttributeDef.id.
+  attributes?: Record<string, string | number>;
 }
 
 // Influence zone radii, as a fraction of the pitch WIDTH, in each direction
@@ -147,18 +159,44 @@ export interface Lineup {
   id: string;
   name: string;
   formation: string; // e.g. "4-3-3"
-  players: Player[]; // full roster (on pitch + bench)
   slots: Slot[]; // always 11 on-pitch slots
   opponents?: Opponent[]; // optional opposing discs (attack/defense only)
   opponentColor?: string; // disc colour for the opposing team
   drawings?: Partial<Record<Phase, Drawing[]>>; // optional annotations per phase
 }
 
-// Schema version for the exported .json files.
-export const FILE_VERSION = 1;
+// A project owns ONE shared player roster (+ its custom attribute columns),
+// used by every compo inside it. Slots reference players by id — resolved
+// against `players` here, not against the individual Lineup anymore.
+export interface Project {
+  id: string;
+  name: string;
+  players: Player[]; // shared roster (on pitch + bench, across all lineups)
+  attributeDefs: AttributeDef[]; // custom roster columns, project-scoped
+  lineups: Lineup[];
+  currentLineupId: string;
+}
 
+// Schema version for the share links (self-contained, single-compo).
+export const FILE_VERSION = 2;
+
+// A self-contained, denormalized single-compo share payload: the compo plus a
+// snapshot of only the players (and the attribute columns they use)
+// referenced by its slots, so a shared link works without the project.
 export interface LineupFile {
   app: "tactica11";
   version: number;
   lineup: Lineup;
+  players: Player[];
+  attributeDefs: AttributeDef[];
+}
+
+// Schema version for the "Enregistrer le projet" / "Ouvrir un projet" .json
+// files — a whole project (shared roster, attribute columns, every compo).
+export const PROJECT_FILE_VERSION = 1;
+
+export interface ProjectFile {
+  app: "tactica11";
+  version: number;
+  project: Project;
 }

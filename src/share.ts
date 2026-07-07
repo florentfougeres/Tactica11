@@ -1,29 +1,33 @@
 import LZString from "lz-string";
-import { FILE_VERSION, type Lineup, type LineupFile } from "./types";
+import type { Lineup, Project } from "./types";
+import {
+  buildLineupFile,
+  parseLineupBundle,
+  type ImportedBundle,
+} from "./storage";
 
-// Encode a whole lineup into a compact, URL-safe string (no backend).
-export function encodeLineup(lineup: Lineup): string {
-  const file: LineupFile = { app: "tactica11", version: FILE_VERSION, lineup };
+// Encode a compo into a compact, URL-safe string (no backend). Self-contained:
+// embeds only the players (and attribute columns) referenced by its slots, not
+// the whole project roster.
+export function encodeLineup(project: Project, lineup: Lineup): string {
+  const file = buildLineupFile(project, lineup);
   return LZString.compressToEncodedURIComponent(JSON.stringify(file));
 }
 
-export function decodeLineup(encoded: string): Lineup | null {
+export function decodeLineup(encoded: string): ImportedBundle | null {
   try {
     const json = LZString.decompressFromEncodedURIComponent(encoded);
     if (!json) return null;
-    const data = JSON.parse(json) as Partial<LineupFile> & Partial<Lineup>;
-    const lineup = (data as LineupFile).lineup ?? (data as Lineup);
-    if (!lineup || !lineup.slots || !lineup.players) return null;
-    return lineup;
+    return parseLineupBundle(json);
   } catch {
     return null;
   }
 }
 
 // Full shareable URL with the compo in the hash fragment.
-export function buildShareUrl(lineup: Lineup): string {
+export function buildShareUrl(project: Project, lineup: Lineup): string {
   const base = `${location.origin}${location.pathname}`;
-  return `${base}#c=${encodeLineup(lineup)}`;
+  return `${base}#c=${encodeLineup(project, lineup)}`;
 }
 
 // If the page was opened on a share link, return the encoded payload (and
