@@ -8,10 +8,13 @@ function safeName(name: string): string {
   return name.trim().replace(/[^\w-]+/g, "_") || "compo";
 }
 
-// Capture the pitch element to a PNG and trigger a download.
+// Capture the pitch element to a PNG and trigger a download. The optional
+// suffix (e.g. the current phase) keeps successive captures from overwriting
+// each other in the downloads folder.
 export async function exportPitchPng(
   pitchEl: HTMLElement,
   name: string,
+  suffix?: string,
 ): Promise<void> {
   const filter = (node: HTMLElement) => {
     const cls = node.classList;
@@ -26,7 +29,8 @@ export async function exportPitchPng(
 
   const a = document.createElement("a");
   a.href = dataUrl;
-  a.download = `${safeName(name)}.png`;
+  const tail = suffix ? `-${safeName(suffix)}` : "";
+  a.download = `${safeName(name)}${tail}.png`;
   document.body.appendChild(a);
   a.click();
   a.remove();

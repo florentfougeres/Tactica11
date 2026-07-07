@@ -8,6 +8,7 @@ import type {
   Orient,
   Phase,
   Player,
+  Pos,
   Slot,
   ZoneRadii,
 } from "../types";
@@ -33,6 +34,7 @@ interface Props {
   onPhase: (phase: Phase) => void;
   onSelect: (slotId: string | null) => void;
   onMove: (slotId: string, pos: { x: number; y: number }) => void;
+  onSetRoleLabel: (slotId: string, text: string) => void;
   onPlayerDrop: (slotId: string, point: { x: number; y: number }) => void;
   onRemoveStarter: (slotId: string) => void;
   onRemoveSub: (slotId: string) => void;
@@ -42,6 +44,7 @@ interface Props {
   blend: number; // Défense(0) ↔ Attaque(1) scrub, owned by App
   scrubbing: boolean; // user is dragging the scrub → follow it 1:1
   showGrid: boolean; // positional-grid overlay
+  showNumbers: boolean; // base-only: swap the disc's role/number labels
   opponents: Opponent[];
   opponentMode: boolean;
   opponentColor: string;
@@ -72,6 +75,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     onPhase,
     onSelect,
     onMove,
+    onSetRoleLabel,
     onPlayerDrop,
     onRemoveStarter,
     onRemoveSub,
@@ -81,6 +85,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     blend,
     scrubbing,
     showGrid,
+    showNumbers,
     opponents,
     opponentMode,
     opponentColor,
@@ -327,6 +332,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
               phase={phase}
               pos={displayPos(slot)}
               frozen={frozen}
+              showNumbers={showNumbers}
               instant={scrubbing}
               size={size}
               orient={orient}
@@ -353,6 +359,19 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
             onRemoveSub={onRemoveSub}
             onSwap={onSwap}
             onSetNumber={onSetNumber}
+          />
+        )}
+
+        {selected && size.w > 0 && phase !== "base" && !frozen && (
+          <RoleLabelPopover
+            key={`${selected.id}-role`}
+            slot={selected}
+            phase={phase}
+            pos={displayPos(selected)}
+            size={size}
+            orient={orient}
+            fieldRef={innerRef}
+            onChange={(text) => onSetRoleLabel(selected.id, text)}
           />
         )}
           </div>
@@ -488,6 +507,70 @@ function SlotPopover({
             </button>
           </div>
         )}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+// Attack/defense only: lets you freely relabel a slot's role badge (e.g.
+// "MOC" → "ZZ"). Clearing the field reverts to the formation's role.
+function RoleLabelPopover({
+  slot,
+  phase,
+  pos,
+  size,
+  orient,
+  fieldRef,
+  onChange,
+}: {
+  slot: Slot;
+  phase: Phase;
+  pos: Pos;
+  size: { w: number; h: number };
+  orient: Orient;
+  fieldRef: React.RefObject<HTMLDivElement | null>;
+  onChange: (text: string) => void;
+}) {
+  const current = slot.roleLabels?.[phase] ?? slot.role;
+  const [val, setVal] = useState(current);
+
+  useEffect(() => {
+    setVal(current);
+  }, [current]);
+
+  const c = posToPx(pos, size, orient);
+  const rect = fieldRef.current?.getBoundingClientRect();
+  if (!rect) return null;
+  const cx = rect.left + c.x;
+  const cyTop = rect.top + c.y;
+  const below = c.y < size.h - 90;
+  const top = below ? cyTop + TOKEN_SIZE / 2 + 10 : cyTop - TOKEN_SIZE / 2 - 10;
+  const left = Math.min(Math.max(cx, 70), window.innerWidth - 70);
+
+  return createPortal(
+    <div
+      className="role-pop-anchor"
+      style={{
+        position: "fixed",
+        left,
+        top,
+        transform: `translate(-50%, ${below ? "0" : "-100%"})`,
+      }}
+    >
+      <div className="slot-pop glass" onPointerDown={(e) => e.stopPropagation()}>
+        <input
+          className="slot-pop__num role-pop__input"
+          value={val}
+          onChange={(e) => setVal(e.target.value.toUpperCase().slice(0, 5))}
+          onBlur={() => onChange(val)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") e.currentTarget.blur();
+          }}
+          placeholder={slot.role}
+          title="Étiquette du poste pour cette phase (vide = revient au poste système)"
+          aria-label="Étiquette du poste"
+        />
       </div>
     </div>,
     document.body,
