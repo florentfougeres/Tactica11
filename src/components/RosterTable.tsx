@@ -41,8 +41,7 @@ export default function RosterTable({
   const [colName, setColName] = useState("");
   const [colType, setColType] = useState<AttrType>("text");
 
-  function submitAdd(e: React.FormEvent) {
-    e.preventDefault();
+  function submitAdd() {
     const v = newName.trim();
     if (!v) return;
     const n = parseInt(newNum.trim(), 10);
@@ -66,6 +65,13 @@ export default function RosterTable({
       <header className="panel__header roster-page__header">
         <h2>Base de joueurs</h2>
         <span className="chip">{players.length}</span>
+        <button
+          type="button"
+          className="roster-page__csv-btn"
+          onClick={onImportCsv}
+        >
+          Importer CSV
+        </button>
       </header>
 
       <div className="roster-page__body">
@@ -216,35 +222,48 @@ export default function RosterTable({
                   </td>
                 </tr>
               )}
+              <tr className="roster-table__row--add">
+                <td>
+                  <input
+                    className="roster-table__num-input"
+                    value={newNum}
+                    onChange={(e) =>
+                      setNewNum(e.target.value.replace(/\D/g, "").slice(0, 2))
+                    }
+                    onKeyDown={(e) => e.key === "Enter" && submitAdd()}
+                    inputMode="numeric"
+                    placeholder="N°"
+                    aria-label="Numéro du nouveau joueur"
+                  />
+                </td>
+                <td>
+                  <input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && submitAdd()}
+                    placeholder="Ajouter un joueur…"
+                    aria-label="Nom du nouveau joueur"
+                  />
+                </td>
+                {attributeDefs.map((attr) => (
+                  <td key={attr.id} aria-hidden="true" />
+                ))}
+                <td>
+                  <button
+                    type="button"
+                    className="roster-table__add-btn"
+                    onClick={submitAdd}
+                    disabled={!newName.trim()}
+                    aria-label="Ajouter ce joueur"
+                    title="Ajouter ce joueur"
+                  >
+                    +
+                  </button>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
-
-        <form className="roster-table__add" onSubmit={submitAdd}>
-          <input
-            className="bench__num"
-            value={newNum}
-            onChange={(e) =>
-              setNewNum(e.target.value.replace(/\D/g, "").slice(0, 2))
-            }
-            inputMode="numeric"
-            placeholder="N°"
-            aria-label="Numéro (optionnel)"
-          />
-          <input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="Ajouter un joueur…"
-            aria-label="Nom du joueur"
-          />
-          <button type="submit" aria-label="Ajouter">
-            +
-          </button>
-        </form>
-
-        <button className="bench__csv" onClick={onImportCsv}>
-          Importer une liste (CSV)
-        </button>
       </div>
     </section>
   );
