@@ -49,7 +49,7 @@ export default function HeatmapOverlay({
 
   const { hexes, poly } = useMemo(() => {
     const R = ref / 17; // small cells
-    const poly = hexPoints(R);
+    const hexPoly = hexPoints(R);
     const stepX = Math.sqrt(3) * R; // pointy-top column spacing (cells touch)
     const stepY = 1.5 * R;
     const k = 2.3; // falloff steepness (edge opacity ≈ 0.10)
@@ -73,7 +73,7 @@ export default function HeatmapOverlay({
         out.push({ id: `${r}.${c}`, x, y, o: Math.exp(-nd2 * k) });
       }
     }
-    return { hexes: out, poly };
+    return { hexes: out, poly: hexPoly };
   }, [ref, up, down, left, right]);
 
   if (!w || !h) return null;
