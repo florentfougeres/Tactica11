@@ -25,6 +25,10 @@ import DrawToolbar from "./DrawToolbar";
 interface Props {
   slots: Slot[];
   phase: Phase;
+  // Whether to render the Base/Attaque/Défense toggle inline above the pitch.
+  // Normally it lives in the top view-row next to Terrain/Effectif; in
+  // presentation mode that row is hidden, so the pitch renders it itself.
+  showPhaseToggle?: boolean;
   playerById: (id: string | null) => Player | null;
   selectedSlot: string | null;
   dropActive?: boolean;
@@ -66,6 +70,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   {
     slots,
     phase,
+    showPhaseToggle = false,
     playerById,
     selectedSlot,
     dropActive,
@@ -195,7 +200,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
   return (
     <div className={`pitch-col pitch-col--${orient}`}>
       <div className="pitch-bar">
-        <PhaseToggle phase={phase} onPhase={onPhase} />
+        {showPhaseToggle && <PhaseToggle phase={phase} onPhase={onPhase} />}
         <button
           type="button"
           className="pitch-rotate"

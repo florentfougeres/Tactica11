@@ -24,6 +24,7 @@ import TopBar from "./components/TopBar";
 import CsvImportDialog from "./components/CsvImportDialog";
 import RosterTable from "./components/RosterTable";
 import ViewTabs, { type View } from "./components/ViewTabs";
+import PhaseToggle from "./components/PhaseToggle";
 import Onboarding from "./components/Onboarding";
 import ZonePresets from "./components/ZonePresets";
 import { presetsFor, presetRadii } from "./zonePresets";
@@ -106,6 +107,11 @@ export default function App() {
     setBlend(v);
     if (v === 0) setPhase("defense");
     else if (v === 1) setPhase("attack");
+  };
+
+  const handlePhase = (p: Phase) => {
+    setPhase(p);
+    setSelectedSlot(null); // roster popover is base-only
   };
 
   // Fullscreen presentation: hide the panels, fill the screen with the pitch.
@@ -730,7 +736,16 @@ export default function App() {
         onImportProject={openProjectFile}
       />
 
-      {!presenting && <ViewTabs view={view} onView={setView} />}
+      {!presenting && (
+        <div className="view-row">
+          <ViewTabs view={view} onView={setView} />
+          {view === "pitch" && (
+            <div className="view-row__phase">
+              <PhaseToggle phase={phase} onPhase={handlePhase} />
+            </div>
+          )}
+        </div>
+      )}
 
       <main className="layout">
         {view === "roster" ? (
@@ -767,6 +782,7 @@ export default function App() {
               ref={pitchRef}
               slots={lineup.slots}
               phase={phase}
+              showPhaseToggle={presenting}
               playerById={playerById}
               selectedSlot={selectedSlot}
               dropActive={benchDragging}
@@ -775,10 +791,7 @@ export default function App() {
               onToggleOrient={() =>
                 setOrient((o) => (o === "portrait" ? "landscape" : "portrait"))
               }
-              onPhase={(p) => {
-                setPhase(p);
-                setSelectedSlot(null); // roster popover is base-only
-              }}
+              onPhase={handlePhase}
               onSelect={setSelectedSlot}
               onMove={moveSlot}
               onSetRoleLabel={setRoleLabel}
