@@ -16,6 +16,18 @@ iPad et ordinateur, installable comme une app (PWA).
 
 (Déployée automatiquement sur GitHub Pages à chaque `push` sur `main`.)
 
+## Installer en PWA
+
+L'app peut s'installer comme une vraie application, avec icône et fenêtre
+dédiée, sans passer par un app store :
+
+- **Safari (macOS)** : ouvrir le lien ci-dessus → menu **Fichier → Ajouter au Dock**.
+- **Chrome / Edge** : icône d'installation ⊕ dans la barre d'adresse, ou
+  menu **⋮ → Installer Tactica11…**.
+- **iPad / iPhone (Safari)** : bouton **Partager → Sur l'écran d'accueil**.
+
+Fonctionne ensuite hors-ligne, tout est stocké localement sur l'appareil.
+
 ## Capture d'écran
 
 ![Capture d'écran](./public/screenshot.png)
@@ -61,8 +73,9 @@ npm run preview  # prévisualiser le build
 npm run lint     # oxlint
 ```
 
-> ⚠️ Le build utilise `base: '/Tactica11/'` (pour GitHub Pages). En dev et en
-> `preview`, la base reste `/` — voir `vite.config.ts`.
+> ⚠️ Le build utilise `base: '/Tactica11/'` (pour GitHub Pages). En dev,
+> la base reste `/` — voir `vite.config.ts`. `npm run preview` force
+> `--base=/Tactica11/` pour coller au build et servir la PWA correctement.
 
 ## Stack
 
