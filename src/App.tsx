@@ -1,15 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import type {
-  AttrType,
   DrawTool,
   Drawing,
   InfluenceMode,
-  Lineup,
   Orient,
   Phase,
   Player,
-  Project,
   ZoneRadii,
 } from "./types";
 import {
@@ -20,17 +17,7 @@ import {
   pxToPos,
 } from "./types";
 import { buildSlots } from "./formations";
-import {
-  createDefaultLineup,
-  createDefaultProject,
-  createOpponents,
-  exportProject,
-  importProject,
-  loadLibrary,
-  mergeImportedBundle,
-  saveLibrary,
-  uid,
-} from "./storage";
+import { createOpponents, loadLibrary } from "./storage";
 import Bench from "./components/Bench";
 import Pitch from "./components/Pitch";
 import TopBar from "./components/TopBar";
@@ -41,13 +28,15 @@ import Onboarding from "./components/Onboarding";
 import ZonePresets from "./components/ZonePresets";
 import { presetsFor, presetRadii } from "./zonePresets";
 import { exportPitchPng } from "./exportImage";
-import { buildShareUrl, decodeLineup, takeSharedFromUrl } from "./share";
 import { useUndoableLineup } from "./useUndoableLineup";
-import type { ImportedPlayer } from "./csv";
+import { useOnboarding } from "./hooks/useOnboarding";
+import { usePresentation } from "./hooks/usePresentation";
+import { useShareLink } from "./hooks/useShareLink";
+import { usePlayerRoster } from "./hooks/usePlayerRoster";
+import { useProjectStore } from "./hooks/useProjectStore";
+import { useProjectActions } from "./hooks/useProjectActions";
 
 type Point = { x: number; y: number };
-
-const ONBOARD_KEY = "tactica11.onboarded";
 
 // French phase labels, used to suffix exported PNG filenames.
 const PHASE_LABEL: Record<Phase, string> = {
@@ -66,52 +55,29 @@ function pointInRect(p: Point, el: HTMLElement | null): boolean {
 
 export default function App() {
   const initialLib = useMemo(() => loadLibrary(), []);
-  const [projects, setProjects] = useState<Project[]>(initialLib.projects);
-  const [currentProjectId, setCurrentProjectId] = useState(
-    initialLib.currentProjectId,
-  );
-  const project = useMemo(
-    () => projects.find((p) => p.id === currentProjectId) ?? projects[0],
-    [projects, currentProjectId],
-  );
+  const {
+    projects,
+    setProjects,
+    currentProjectId,
+    setCurrentProjectId,
+    project,
+    updateProject,
+  } = useProjectStore(initialLib);
   const { lineup, setLineup, undo, redo, reset, canUndo, canRedo } =
     useUndoableLineup(
       project.lineups.find((l) => l.id === project.currentLineupId) ??
         project.lineups[0],
     );
-  // Mutate the current project's shared roster / attribute columns.
-  const updateProject = useCallback(
-    (fn: (p: Project) => Project) =>
-      setProjects((ps) =>
-        ps.map((p) => (p.id === currentProjectId ? fn(p) : p)),
-      ),
-    [currentProjectId],
-  );
 
   const [view, setView] = useState<View>("pitch");
   const [phase, setPhase] = useState<Phase>("base");
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [benchDragging, setBenchDragging] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
-  // First-launch walkthrough of the existing features (reopenable from the top
-  // bar). The flag lives in localStorage so it shows exactly once per device.
-  const [onboardOpen, setOnboardOpen] = useState(
-    () => localStorage.getItem(ONBOARD_KEY) == null,
-  );
-  const closeOnboarding = () => {
-    setOnboardOpen(false);
-    try {
-      localStorage.setItem(ONBOARD_KEY, "1");
-    } catch {
-      // storage unavailable — the tour just shows again next time, harmless
-    }
-  };
+  const { onboardOpen, openOnboarding, closeOnboarding } = useOnboarding();
   const [influenceMode, setInfluenceMode] = useState<InfluenceMode>("none");
   const [orient, setOrient] = useState<Orient>("portrait");
   const [activePreset, setActivePreset] = useState<string | null>(null);
-  const [presenting, setPresenting] = useState(false);
-  // Fullscreen: the controls drawer on the left, collapsed by default.
-  const [presentToolsOpen, setPresentToolsOpen] = useState(false);
   // Opponent-placement mode (attack/defense only): shows + lets you drag the
   // opposing discs. Ephemeral view state; the discs themselves are persisted.
   const [opponentMode, setOpponentMode] = useState(false);
@@ -143,30 +109,14 @@ export default function App() {
   };
 
   // Fullscreen presentation: hide the panels, fill the screen with the pitch.
-  const enterPresent = () => {
-    setPresenting(true);
-    setPresentToolsOpen(false); // start collapsed in fullscreen
-    setView("pitch"); // presentation always shows the tactical board, not the roster page
-    document.documentElement.requestFullscreen?.().catch(() => {});
-  };
-  const exitPresent = () => {
-    setPresenting(false);
-    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
-  };
-  useEffect(() => {
-    const onFs = () => {
-      if (!document.fullscreenElement) setPresenting(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setPresenting(false);
-    };
-    document.addEventListener("fullscreenchange", onFs);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("fullscreenchange", onFs);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, []);
+  // Presentation always shows the tactical board, not the roster page.
+  const {
+    presenting,
+    presentToolsOpen,
+    setPresentToolsOpen,
+    enterPresent,
+    exitPresent,
+  } = usePresentation(() => setView("pitch"));
 
   // Forget the active preset whenever the selected player changes.
   useEffect(() => {
@@ -176,46 +126,35 @@ export default function App() {
   const pitchRef = useRef<HTMLDivElement>(null);
   const benchRef = useRef<HTMLElement>(null);
 
-  // If opened on a share link, merge the encoded compo (and the players/
-  // attribute columns it references) into the current project as a new entry.
-  useEffect(() => {
-    const enc = takeSharedFromUrl();
-    if (!enc) return;
-    const bundle = decodeLineup(enc);
-    if (!bundle) return;
-    const { project: merged, lineup: newLineup } = mergeImportedBundle(
-      project,
-      bundle,
-    );
-    setProjects((ps) => ps.map((p) => (p.id === merged.id ? merged : p)));
-    reset(newLineup);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Share-link import (on mount) + "copy share link" for the current compo.
+  const { copyShareLink } = useShareLink(project, lineup, setProjects, reset);
 
-  // Fold the actively-edited compo back into its project's lineups (debounced,
-  // so a drag burst syncs once), then persist the whole project library.
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setProjects((ps) =>
-        ps.map((p) =>
-          p.id === currentProjectId
-            ? {
-                ...p,
-                lineups: p.lineups.map((l) =>
-                  l.id === lineup.id ? lineup : l,
-                ),
-                currentLineupId: lineup.id,
-              }
-            : p,
-        ),
-      );
-    }, 400);
-    return () => clearTimeout(t);
-  }, [lineup, currentProjectId]);
-
-  useEffect(() => {
-    saveLibrary({ projects, currentProjectId });
-  }, [projects, currentProjectId]);
+  // Project- and compo-level actions (create/open/duplicate/delete, .json
+  // import/export) plus the debounced sync of the actively-edited compo back
+  // into its project's lineups.
+  const {
+    openCompo,
+    newCompo,
+    duplicateCompo,
+    deleteCompo,
+    setProjectName,
+    openProject,
+    newProject,
+    duplicateProject,
+    deleteProject,
+    saveProject,
+    openProjectFile,
+  } = useProjectActions({
+    projects,
+    setProjects,
+    project,
+    currentProjectId,
+    setCurrentProjectId,
+    updateProject,
+    lineup,
+    reset,
+    setSelectedSlot,
+  });
 
   // Invariant: a slot can never hold a sub without a starter (that would render
   // as an empty token with an invisible, trapped player). Auto-promote the sub.
@@ -258,109 +197,17 @@ export default function App() {
   );
 
   // --- roster (shared across every compo in the current project) ---
-  const addPlayer = (name: string, number?: number) =>
-    updateProject((p) => ({
-      ...p,
-      players: [
-        ...p.players,
-        { id: uid("p"), name, ...(number != null ? { number } : {}) },
-      ],
-    }));
-
-  // Set or clear a player's (optional) shirt number. Pass null to remove it.
-  const setPlayerNumber = (id: string, number: number | null) =>
-    updateProject((p) => ({
-      ...p,
-      players: p.players.map((pl) => {
-        if (pl.id !== id) return pl;
-        if (number == null) {
-          const { number: _omit, ...rest } = pl;
-          return rest;
-        }
-        return { ...pl, number };
-      }),
-    }));
-
-  const addPlayers = (players: ImportedPlayer[]) =>
-    updateProject((p) => ({
-      ...p,
-      players: [
-        ...p.players,
-        ...players.map((pl) => ({
-          id: uid("p"),
-          name: pl.name,
-          ...(pl.number != null ? { number: pl.number } : {}),
-        })),
-      ],
-    }));
-
-  const renamePlayer = (id: string, name: string) =>
-    updateProject((p) => ({
-      ...p,
-      players: p.players.map((pl) => (pl.id === id ? { ...pl, name } : pl)),
-    }));
-
-  // Removing a player clears its reference from every slot of every compo in
-  // the project (the roster is shared), not just the one currently open. The
-  // currently-open compo also needs a direct write, since it only lives in
-  // `project.lineups` once the debounced sync effect folds it back in.
-  const removePlayer = (id: string) => {
-    const clearSlots = (slots: Lineup["slots"]) =>
-      slots.map((s) => ({
-        ...s,
-        starterId: s.starterId === id ? null : s.starterId,
-        subId: s.subId === id ? null : s.subId,
-      }));
-    updateProject((p) => ({
-      ...p,
-      players: p.players.filter((pl) => pl.id !== id),
-      lineups: p.lineups.map((l) => ({ ...l, slots: clearSlots(l.slots) })),
-    }));
-    setLineup((l) => ({ ...l, slots: clearSlots(l.slots) }));
-  };
-
-  // Set/clear a custom attribute value for a player. Pass null to remove it.
-  const setAttribute = (
-    id: string,
-    attrId: string,
-    value: string | number | null,
-  ) =>
-    updateProject((p) => ({
-      ...p,
-      players: p.players.map((pl) => {
-        if (pl.id !== id) return pl;
-        const attributes = { ...pl.attributes };
-        if (value == null) delete attributes[attrId];
-        else attributes[attrId] = value;
-        return { ...pl, attributes };
-      }),
-    }));
-
-  const addColumn = (name: string, type: AttrType) =>
-    updateProject((p) => ({
-      ...p,
-      attributeDefs: [...p.attributeDefs, { id: uid("attr"), name, type }],
-    }));
-
-  const renameColumn = (attrId: string, name: string) =>
-    updateProject((p) => ({
-      ...p,
-      attributeDefs: p.attributeDefs.map((d) =>
-        d.id === attrId ? { ...d, name } : d,
-      ),
-    }));
-
-  const removeColumn = (attrId: string) =>
-    updateProject((p) => ({
-      ...p,
-      attributeDefs: p.attributeDefs.filter((d) => d.id !== attrId),
-      players: p.players.map((pl) => {
-        if (!pl.attributes || !(attrId in pl.attributes)) return pl;
-        const attributes = { ...pl.attributes };
-        delete attributes[attrId];
-        return { ...pl, attributes };
-      }),
-    }));
+  const {
+    addPlayer,
+    setPlayerNumber,
+    addPlayers,
+    renamePlayer,
+    removePlayer,
+    setAttribute,
+    addColumn,
+    renameColumn,
+    removeColumn,
+  } = usePlayerRoster(updateProject, setLineup);
 
   // --- formation / phase ---
   const changeFormation = (formation: string) =>
@@ -638,172 +485,6 @@ export default function App() {
       ),
     }));
 
-  // --- whole-project save / open (.json) ---
-  const saveProject = () => exportProject(project);
-
-  const openProjectFile = async (file: File) => {
-    try {
-      const p = await importProject(file);
-      setProjects((ps) => [...ps, p]);
-      setCurrentProjectId(p.id);
-      reset(p.lineups.find((l) => l.id === p.currentLineupId) ?? p.lineups[0]);
-      setSelectedSlot(null);
-    } catch {
-      alert("Impossible de lire ce fichier projet Tactica11.");
-    }
-  };
-
-  // --- compos (within the current project) ---
-  const openCompo = (id: string) => {
-    if (id === lineup.id) return;
-    updateProject((p) => ({
-      ...p,
-      lineups: p.lineups.map((l) => (l.id === lineup.id ? lineup : l)),
-    }));
-    const target = project.lineups.find((l) => l.id === id);
-    if (target) {
-      reset(structuredClone(target));
-      setSelectedSlot(null);
-    }
-  };
-
-  const newCompo = () => {
-    const c = createDefaultLineup();
-    updateProject((p) => ({ ...p, lineups: [...p.lineups, c] }));
-    reset(c);
-    setSelectedSlot(null);
-  };
-
-  const duplicateCompo = () => {
-    const c = {
-      ...structuredClone(lineup),
-      id: uid("lineup"),
-      name: `${lineup.name} (copie)`,
-    };
-    updateProject((p) => ({ ...p, lineups: [...p.lineups, c] }));
-    reset(c);
-    setSelectedSlot(null);
-  };
-
-  const deleteCompo = (id: string) => {
-    const target = project.lineups.find((l) => l.id === id);
-    const label = target?.name?.trim() || "cette compo";
-    // Deletion clears the undo history (reset), so there's no taking it back.
-    if (!window.confirm(`Supprimer « ${label} » ? Cette action est définitive.`))
-      return;
-    const rest = project.lineups.filter((l) => l.id !== id);
-    if (rest.length === 0) {
-      const def = createDefaultLineup();
-      updateProject((p) => ({ ...p, lineups: [def], currentLineupId: def.id }));
-      reset(def);
-    } else {
-      updateProject((p) => ({ ...p, lineups: rest }));
-      if (id === lineup.id) reset(structuredClone(rest[0]));
-    }
-    setSelectedSlot(null);
-  };
-
-  // --- projects ---
-  const setProjectName = (name: string) => updateProject((p) => ({ ...p, name }));
-
-  const openProject = (id: string) => {
-    if (id === currentProjectId) return;
-    updateProject((p) => ({
-      ...p,
-      lineups: p.lineups.map((l) => (l.id === lineup.id ? lineup : l)),
-      currentLineupId: lineup.id,
-    }));
-    const target = projects.find((p) => p.id === id);
-    if (!target) return;
-    setCurrentProjectId(id);
-    const targetLineup =
-      target.lineups.find((l) => l.id === target.currentLineupId) ??
-      target.lineups[0];
-    reset(structuredClone(targetLineup));
-    setSelectedSlot(null);
-  };
-
-  const newProject = () => {
-    const p = createDefaultProject();
-    setProjects((ps) => [...ps, p]);
-    setCurrentProjectId(p.id);
-    reset(p.lineups[0]);
-    setSelectedSlot(null);
-  };
-
-  // Duplicates the whole project: roster, attribute columns and every compo,
-  // with fresh ids throughout (including players) so the copy never shares
-  // identity with the original — slot references are remapped accordingly.
-  const duplicateProject = () => {
-    const base: Project = {
-      ...project,
-      lineups: project.lineups.map((l) => (l.id === lineup.id ? lineup : l)),
-    };
-    const src = structuredClone(base);
-    const playerIdMap = new Map<string, string>();
-    const players = src.players.map((pl) => {
-      const id = uid("p");
-      playerIdMap.set(pl.id, id);
-      return { ...pl, id };
-    });
-    const lineups = src.lineups.map((l) => ({
-      ...l,
-      id: uid("lineup"),
-      slots: l.slots.map((s) => ({
-        ...s,
-        starterId: s.starterId ? (playerIdMap.get(s.starterId) ?? null) : null,
-        subId: s.subId ? (playerIdMap.get(s.subId) ?? null) : null,
-      })),
-    }));
-    const p: Project = {
-      ...src,
-      id: uid("proj"),
-      name: `${src.name} (copie)`,
-      players,
-      lineups,
-      currentLineupId: lineups[0].id,
-    };
-    setProjects((ps) => [...ps, p]);
-    setCurrentProjectId(p.id);
-    reset(p.lineups[0]);
-    setSelectedSlot(null);
-  };
-
-  const deleteProject = (id: string) => {
-    const target = projects.find((p) => p.id === id);
-    const label = target?.name?.trim() || "ce projet";
-    if (!window.confirm(`Supprimer « ${label} » ? Cette action est définitive.`))
-      return;
-    const rest = projects.filter((p) => p.id !== id);
-    if (rest.length === 0) {
-      const def = createDefaultProject();
-      setProjects([def]);
-      setCurrentProjectId(def.id);
-      reset(def.lineups[0]);
-    } else {
-      setProjects(rest);
-      if (id === currentProjectId) {
-        const next = rest[0];
-        setCurrentProjectId(next.id);
-        reset(
-          structuredClone(
-            next.lineups.find((l) => l.id === next.currentLineupId) ??
-              next.lineups[0],
-          ),
-        );
-      }
-    }
-    setSelectedSlot(null);
-  };
-
-  const copyShareLink = async () => {
-    try {
-      await navigator.clipboard.writeText(buildShareUrl(project, lineup));
-    } catch {
-      alert("Impossible de copier le lien.");
-    }
-  };
-
   // Undo / redo keyboard shortcuts (ignored while typing in a field).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -1022,7 +703,7 @@ export default function App() {
         name={lineup.name}
         formation={lineup.formation}
         onPresent={enterPresent}
-        onHelp={() => setOnboardOpen(true)}
+        onHelp={openOnboarding}
         compos={project.lineups.map((l) => ({ id: l.id, name: l.name }))}
         currentId={lineup.id}
         projectName={project.name}
