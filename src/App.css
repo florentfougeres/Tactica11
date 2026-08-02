@@ -1446,6 +1446,7 @@
   color: #06130c;
 }
 .btn--primary:hover {
+  background: linear-gradient(150deg, var(--accent), var(--accent-2));
   filter: brightness(1.08);
 }
 .btn--ghost {
