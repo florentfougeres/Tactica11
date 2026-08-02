@@ -693,14 +693,15 @@
   position: relative;
   flex: 0 0 auto;
   width: 100%;
-  min-height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .pitch-rotate {
   position: absolute;
-  right: 0;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -708,7 +709,9 @@
   height: 34px;
   border-radius: 10px;
   border: 1px solid var(--panel-border);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(8, 12, 18, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   color: var(--text);
   font-size: 17px;
   line-height: 1;
