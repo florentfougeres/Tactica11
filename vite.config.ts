@@ -3,10 +3,11 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
-// On GitHub Pages the app is served from /Tactica11/, but locally (dev/preview)
-// we keep the root base so the dev server and Claude preview work unchanged.
-export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/Tactica11/' : '/',
+// On GitHub Pages the app is served from /Tactica11/. Everywhere else (dev,
+// local preview, Netlify/Vercel/Cloudflare Pages) it's served from the domain
+// root, so the GH Pages subpath is opt-in via DEPLOY_TARGET=gh-pages.
+export default defineConfig(() => ({
+  base: process.env.DEPLOY_TARGET === 'gh-pages' ? '/Tactica11/' : '/',
   plugins: [
     react(),
     VitePWA({

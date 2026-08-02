@@ -12,21 +12,30 @@ iPad et ordinateur, installable comme une app (PWA).
 
 ## 🔗 En ligne
 
-👉 **[florentfougeres.github.io/Tactica11](https://florentfougeres.github.io/Tactica11/)**
-
-(Déployée automatiquement sur GitHub Pages à chaque `push` sur `main`.)
+Le repo étant privé, GitHub Pages (gratuit uniquement sur repo public) n'est
+plus utilisable. L'app est prévue pour être déployée sur un hébergeur
+statique gratuit compatible repo privé — **Netlify** (config prête, voir
+`netlify.toml`), Vercel ou Cloudflare Pages. Il suffit de connecter le repo
+GitHub sur l'un de ces services (build : `npm run build`, dossier : `dist`)
+pour retrouver le déploiement automatique à chaque `push` sur `main`.
 
 ## Installer en PWA
 
-L'app peut s'installer comme une vraie application, avec icône et fenêtre
-dédiée, sans passer par un app store :
+Une fois l'app ouverte (via l'hébergeur choisi, ou en local avec
+`npm run build && npm run preview`), elle s'installe comme une vraie
+application, avec icône et fenêtre dédiée, sans passer par un app store :
 
-- **Safari (macOS)** : ouvrir le lien ci-dessus → menu **Fichier → Ajouter au Dock**.
+- **Safari (macOS)** : menu **Fichier → Ajouter au Dock**.
 - **Chrome / Edge** : icône d'installation ⊕ dans la barre d'adresse, ou
   menu **⋮ → Installer Tactica11…**.
 - **iPad / iPhone (Safari)** : bouton **Partager → Sur l'écran d'accueil**.
 
 Fonctionne ensuite hors-ligne, tout est stocké localement sur l'appareil.
+
+> ⚠️ Une install faite depuis `http://localhost:...` reste rattachée à ce
+> serveur local et ne survit pas à son arrêt définitif. Pour une install
+> permanente, installe depuis une URL d'hébergeur stable (Netlify, etc.),
+> pas depuis `npm run preview`.
 
 ## Capture d'écran
 
@@ -73,9 +82,9 @@ npm run preview  # prévisualiser le build
 npm run lint     # oxlint
 ```
 
-> ⚠️ Le build utilise `base: '/Tactica11/'` (pour GitHub Pages). En dev,
-> la base reste `/` — voir `vite.config.ts`. `npm run preview` force
-> `--base=/Tactica11/` pour coller au build et servir la PWA correctement.
+> ⚠️ La base est `/` partout (dev, `preview`, Netlify/Vercel/Cloudflare Pages),
+> sauf sur GitHub Pages (`/Tactica11/`) où le workflow CI passe
+> `DEPLOY_TARGET=gh-pages` au build — voir `vite.config.ts`.
 
 ## Stack
 
