@@ -56,7 +56,9 @@ export function usePlayerRoster(
   // Removing a player clears its reference from every slot of every compo in
   // the project (the roster is shared), not just the one currently open. The
   // currently-open compo also needs a direct write, since it only lives in
-  // `project.lineups` once the debounced sync effect folds it back in.
+  // `project.lineups` once the debounced sync effect folds it back in. Set
+  // pieces hold a bare `playerId` on their tokens (no "empty" state to fall
+  // back to like a slot), so a removed player's tokens are dropped outright.
   const removePlayer = (id: string) => {
     const clearSlots = (slots: Lineup["slots"]) =>
       slots.map((s) => ({
@@ -64,12 +66,25 @@ export function usePlayerRoster(
         starterId: s.starterId === id ? null : s.starterId,
         subId: s.subId === id ? null : s.subId,
       }));
+    const clearSetPieces = (setPieces: Lineup["setPieces"]) =>
+      setPieces.map((sp) => ({
+        ...sp,
+        tokens: sp.tokens.filter((t) => t.playerId !== id),
+      }));
     updateProject((p) => ({
       ...p,
       players: p.players.filter((pl) => pl.id !== id),
-      lineups: p.lineups.map((l) => ({ ...l, slots: clearSlots(l.slots) })),
+      lineups: p.lineups.map((l) => ({
+        ...l,
+        slots: clearSlots(l.slots),
+        setPieces: clearSetPieces(l.setPieces),
+      })),
     }));
-    setLineup((l) => ({ ...l, slots: clearSlots(l.slots) }));
+    setLineup((l) => ({
+      ...l,
+      slots: clearSlots(l.slots),
+      setPieces: clearSetPieces(l.setPieces),
+    }));
   };
 
   // Set/clear a custom attribute value for a player. Pass null to remove it.

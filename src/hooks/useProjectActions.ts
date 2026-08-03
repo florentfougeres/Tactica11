@@ -158,6 +158,20 @@ export function useProjectActions({
         starterId: s.starterId ? (playerIdMap.get(s.starterId) ?? null) : null,
         subId: s.subId ? (playerIdMap.get(s.subId) ?? null) : null,
       })),
+      // Set-piece tokens only ever reference on-pitch starters, so the same
+      // playerIdMap remap applies; mint fresh ids throughout.
+      setPieces: l.setPieces.map((sp) => ({
+        ...sp,
+        id: uid("sp"),
+        tokens: sp.tokens
+          .filter((t) => playerIdMap.has(t.playerId))
+          .map((t) => ({
+            ...t,
+            id: uid("spt"),
+            playerId: playerIdMap.get(t.playerId)!,
+          })),
+        opponents: sp.opponents.map((o) => ({ ...o, id: uid("spo") })),
+      })),
     }));
     const p: Project = {
       ...src,

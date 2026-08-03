@@ -163,6 +163,51 @@ export interface Lineup {
   opponents?: Opponent[]; // optional opposing discs (attack/defense only)
   opponentColor?: string; // disc colour for the opposing team
   drawings?: Partial<Record<Phase, Drawing[]>>; // optional annotations per phase
+  setPieces: SetPiece[]; // corners / coups francs belonging to this compo
+}
+
+// Set pieces (corners / coups francs): compo-scoped combinations — a set
+// piece's players are drawn from that compo's own starting XI, so it's tied
+// to a Lineup rather than shared across the whole project. Each one is edited
+// on a half-pitch and has exactly two states — the positions right as the
+// kick is taken ("start") and where everyone/the ball ends up ("end") — so a
+// slider can scrub between them like the main pitch's défense↔attaque blend.
+export type SetPieceType = "corner" | "free-kick";
+export type SetPieceState = "start" | "end";
+export const SET_PIECE_STATES: SetPieceState[] = ["start", "end"];
+
+// Half-pitch coordinates: x is unchanged (0..100 = full width), but y is
+// rescaled so 0 = goal line and 100 = halfway line (not 0..50 of the full
+// pitch) — every stored percent point covers half the physical distance of
+// the main pitch, giving finer effective precision for the same 0..100 range.
+// posToPx/pxToPos above need no changes: they only care about "percent of
+// container", so rendering into a half-height container just works.
+
+// One of our players placed on the board. Bound to a real roster player (so
+// it shows their actual name/number), unlike the free-text Opponent discs.
+export interface SetPieceToken {
+  id: string;
+  playerId: string;
+  positions: Record<SetPieceState, Pos>;
+}
+
+// Same free-text opposing marker as `Opponent`, but keyed by start/end
+// instead of attack/defense, and not capped at 11 — a set piece usually only
+// needs a handful of markers, added/removed one at a time.
+export interface SetPieceOpponent {
+  id: string;
+  label: string;
+  positions: Record<SetPieceState, Pos>;
+}
+
+export interface SetPiece {
+  id: string;
+  name: string;
+  type: SetPieceType;
+  ball: Record<SetPieceState, Pos>;
+  tokens: SetPieceToken[];
+  opponents: SetPieceOpponent[];
+  drawings?: Partial<Record<SetPieceState, Drawing[]>>;
 }
 
 // A project owns ONE shared player roster (+ its custom attribute columns),

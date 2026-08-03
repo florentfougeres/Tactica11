@@ -10,6 +10,8 @@ import {
   type Player,
   type Project,
   type ProjectFile,
+  type SetPiece,
+  type SetPieceType,
   type Slot,
   type ZoneRadii,
 } from "./types";
@@ -50,6 +52,7 @@ export function createDefaultLineup(): Lineup {
     name: "Ma compo",
     formation,
     slots,
+    setPieces: [],
   };
 }
 
@@ -62,6 +65,34 @@ export function createDefaultProject(): Project {
     attributeDefs: [],
     lineups: [lineup],
     currentLineupId: lineup.id,
+  };
+}
+
+const SET_PIECE_LABEL: Record<SetPieceType, string> = {
+  corner: "Corner",
+  "free-kick": "Coup franc",
+};
+
+// Default ball spot per type: a right corner arc, or just outside the box for
+// a free kick. Both states start identical — the user drags "Fin" apart.
+const SET_PIECE_DEFAULT_BALL: Record<SetPieceType, { x: number; y: number }> =
+  {
+    corner: { x: 98, y: 3 },
+    "free-kick": { x: 50, y: 25 },
+  };
+
+export function createSetPiece(
+  type: SetPieceType,
+  existingCount: number,
+): SetPiece {
+  const ball = SET_PIECE_DEFAULT_BALL[type];
+  return {
+    id: uid("sp"),
+    name: `${SET_PIECE_LABEL[type]} ${existingCount + 1}`,
+    type,
+    ball: { start: ball, end: ball },
+    tokens: [],
+    opponents: [],
   };
 }
 
@@ -98,6 +129,7 @@ export function migrateLineup(
     opponents: parsed.opponents ?? [],
     opponentColor: parsed.opponentColor,
     drawings: parsed.drawings,
+    setPieces: (parsed.setPieces ?? []).filter((sp) => sp && sp.id),
   };
 }
 
@@ -354,6 +386,21 @@ export function mergeImportedBundle(
       ...s,
       starterId: s.starterId ? (playerIdMap.get(s.starterId) ?? null) : null,
       subId: s.subId ? (playerIdMap.get(s.subId) ?? null) : null,
+    })),
+    // Set-piece tokens only ever reference starters/subs, which are exactly
+    // the players carried in the bundle — remap them the same way, minting
+    // fresh ids throughout so nothing collides with the target project.
+    setPieces: bundle.lineup.setPieces.map((sp) => ({
+      ...sp,
+      id: uid("sp"),
+      tokens: sp.tokens
+        .filter((t) => playerIdMap.has(t.playerId))
+        .map((t) => ({
+          ...t,
+          id: uid("spt"),
+          playerId: playerIdMap.get(t.playerId)!,
+        })),
+      opponents: sp.opponents.map((o) => ({ ...o, id: uid("spo") })),
     })),
   };
 

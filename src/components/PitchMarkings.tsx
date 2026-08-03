@@ -14,8 +14,13 @@ import type { Orient } from "../types";
 
 export default function PitchMarkings({
   orient = "portrait",
+  half = false,
 }: {
   orient?: Orient;
+  // Draw only the top half (opponent goal to halfway line) — used by the
+  // set-piece board, which only needs the attacking third/half for precision.
+  // Portrait only; the set-piece board doesn't offer a landscape toggle.
+  half?: boolean;
 }) {
   const line = "rgba(255,255,255,0.30)";
 
@@ -35,6 +40,39 @@ export default function PitchMarkings({
   const arcDx = Math.sqrt(r * r - (paDepth - spot) ** 2); // ≈ 7.3125
   const arcL = cx - arcDx;
   const arcR = cx + arcDx;
+
+  if (half) {
+    const H = L / 2; // 52.5 — crop at the halfway line
+    return (
+      <svg
+        className="pitch-svg"
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <g fill="none" stroke={line} strokeWidth="0.3">
+          {/* touchlines + goal line */}
+          <rect x="0" y="0" width={W} height={H} />
+          {/* halfway line + top of the centre circle */}
+          <line x1="0" y1={H} x2={W} y2={H} />
+          <path d={`M ${cx - r} ${H} A ${r} ${r} 0 0 1 ${cx + r} ${H}`} />
+          <circle cx={cx} cy={H} r="0.3" fill={line} stroke="none" />
+
+          {/* penalty area / goal area / spot / arc (opponent goal at y=0) */}
+          <rect x={cx - paHalf} y="0" width={paHalf * 2} height={paDepth} />
+          <rect x={cx - gaHalf} y="0" width={gaHalf * 2} height={gaDepth} />
+          <circle cx={cx} cy={spot} r="0.3" fill={line} stroke="none" />
+          <path
+            d={`M ${arcL} ${paDepth} A ${r} ${r} 0 0 0 ${arcR} ${paDepth}`}
+          />
+
+          {/* corner arcs (r = 1) */}
+          <path d="M 1 0 A 1 1 0 0 1 0 1" />
+          <path d={`M ${W - 1} 0 A 1 1 0 0 0 ${W} 1`} />
+        </g>
+      </svg>
+    );
+  }
 
   // Landscape: rotate the portrait drawing 90° clockwise into a W×L → L×W box.
   const land = orient === "landscape";
