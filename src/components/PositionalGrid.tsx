@@ -28,8 +28,7 @@ export default function PositionalGrid({
 }: {
   orient?: Orient;
 }) {
-  const line = "rgba(255,255,255,0.34)";
-  const faint = "rgba(255,255,255,0.16)";
+  const line = "rgba(255,255,255,0.16)";
   const tint = "rgba(33,208,122,0.11)";
   // Landscape: rotate the portrait drawing 90° clockwise into an L×W box.
   const land = orient === "landscape";
@@ -47,11 +46,11 @@ export default function PositionalGrid({
       <g fill="none">
         {/* horizontal zone lines → 6 bands top to bottom */}
         {rows.map((y) => (
-          <line key={`r${y}`} x1="0" y1={y} x2={W} y2={y} stroke={faint} strokeWidth="0.2" strokeDasharray="1.6 1.6" />
+          <line key={`r${y}`} x1="0" y1={y} x2={W} y2={y} stroke={line} strokeWidth="0.2" strokeDasharray="1.8 1.6" />
         ))}
         {/* 5 vertical corridors */}
         {bounds.map((x) => (
-          <line key={x} x1={x} y1={top} x2={x} y2={bot} stroke={line} strokeWidth="0.3" strokeDasharray="2 1.4" />
+          <line key={x} x1={x} y1={top} x2={x} y2={bot} stroke={line} strokeWidth="0.2" strokeDasharray="1.8 1.6" />
         ))}
       </g>
       </g>
