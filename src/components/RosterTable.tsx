@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { AttrType, AttributeDef, Player } from "../types";
 
 interface Props {
@@ -17,6 +17,88 @@ interface Props {
   onRenameColumn: (attrId: string, name: string) => void;
   onRemoveColumn: (attrId: string) => void;
   onImportCsv: () => void;
+}
+
+type SortKey = "number" | "name" | string; // string = attribute id
+type Sort = { key: SortKey; dir: "asc" | "desc" } | null;
+
+// A table cell that reads as plain text at rest and only turns into an
+// editable input once clicked — the "read, then edit on click" spreadsheet
+// feel, instead of every cell permanently looking like a form field.
+function EditableCell({
+  displayValue,
+  editValue,
+  inputType = "text",
+  align,
+  onCommit,
+  ariaLabel,
+  placeholder,
+}: {
+  displayValue: string;
+  editValue: string;
+  inputType?: "text" | "number";
+  align?: "center";
+  onCommit: (raw: string) => void;
+  ariaLabel: string;
+  placeholder?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(editValue);
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        className="roster-table__cell-input"
+        style={align === "center" ? { textAlign: "center" } : undefined}
+        type={inputType}
+        inputMode={inputType === "number" ? "numeric" : undefined}
+        value={draft}
+        placeholder={placeholder}
+        onChange={(e) => setDraft(e.target.value)}
+        onFocus={(e) => e.currentTarget.select()}
+        onBlur={() => {
+          setEditing(false);
+          onCommit(draft);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.currentTarget.blur();
+          if (e.key === "Escape") {
+            setDraft(editValue);
+            setEditing(false);
+          }
+        }}
+        aria-label={ariaLabel}
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="roster-table__cell"
+      style={align === "center" ? { textAlign: "center" } : undefined}
+      onClick={() => {
+        setDraft(editValue);
+        setEditing(true);
+      }}
+      aria-label={`${ariaLabel}, cliquer pour modifier`}
+    >
+      {displayValue || (
+        <span className="roster-table__cell-empty">
+          {placeholder ?? "—"}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function SortArrow({ dir }: { dir: "asc" | "desc" }) {
+  return (
+    <span className="roster-table__sort-arrow" aria-hidden="true">
+      {dir === "asc" ? "▲" : "▼"}
+    </span>
+  );
 }
 
 // A spreadsheet-like editor for a project's shared player roster: built-in
@@ -40,6 +122,7 @@ export default function RosterTable({
   const [addingCol, setAddingCol] = useState(false);
   const [colName, setColName] = useState("");
   const [colType, setColType] = useState<AttrType>("text");
+  const [sort, setSort] = useState<Sort>(null);
 
   function submitAdd() {
     const v = newName.trim();
@@ -60,6 +143,36 @@ export default function RosterTable({
     setAddingCol(false);
   }
 
+  function toggleSort(key: SortKey) {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return null;
+    });
+  }
+
+  const sortedPlayers = useMemo(() => {
+    if (!sort) return players;
+    const { key, dir } = sort;
+    const factor = dir === "asc" ? 1 : -1;
+    const value = (p: Player): string | number | null => {
+      if (key === "number") return p.number ?? null;
+      if (key === "name") return p.name;
+      return p.attributes?.[key] ?? null;
+    };
+    return [...players].sort((a, b) => {
+      const av = value(a);
+      const bv = value(b);
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (typeof av === "number" && typeof bv === "number") {
+        return (av - bv) * factor;
+      }
+      return String(av).localeCompare(String(bv), "fr", { numeric: true }) * factor;
+    });
+  }, [players, sort]);
+
   return (
     <section className="roster-page glass" aria-label="Base de joueurs">
       <header className="panel__header roster-page__header">
@@ -77,32 +190,66 @@ export default function RosterTable({
       <div className="roster-page__body">
         <p className="modal__hint">
           Cette base est partagée par toutes les compos du projet : modifier
-          un joueur ici l'actualise partout.
+          un joueur ici l'actualise partout. Cliquez sur une cellule pour la
+          modifier, sur un en-tête pour trier.
         </p>
 
         <div className="roster-table__scroll">
           <table className="roster-table">
             <thead>
               <tr>
-                <th className="roster-table__num">#</th>
-                <th>Nom</th>
+                <th className="roster-table__num">
+                  <button
+                    type="button"
+                    className="roster-table__sort-btn"
+                    onClick={() => toggleSort("number")}
+                  >
+                    #{sort?.key === "number" && <SortArrow dir={sort.dir} />}
+                  </button>
+                </th>
+                <th>
+                  <button
+                    type="button"
+                    className="roster-table__sort-btn"
+                    onClick={() => toggleSort("name")}
+                  >
+                    Nom{sort?.key === "name" && <SortArrow dir={sort.dir} />}
+                  </button>
+                </th>
                 {attributeDefs.map((attr) => (
                   <th key={attr.id} className="roster-table__attr">
-                    <input
-                      className="roster-table__colname"
-                      value={attr.name}
-                      onChange={(e) => onRenameColumn(attr.id, e.target.value)}
-                      aria-label={`Renommer la colonne ${attr.name}`}
-                    />
-                    <button
-                      type="button"
-                      className="roster-table__col-remove"
-                      onClick={() => onRemoveColumn(attr.id)}
-                      aria-label={`Supprimer la colonne ${attr.name}`}
-                      title="Supprimer la colonne"
-                    >
-                      ×
-                    </button>
+                    <div className="roster-table__attr-head">
+                      <input
+                        className="roster-table__colname"
+                        value={attr.name}
+                        onChange={(e) =>
+                          onRenameColumn(attr.id, e.target.value)
+                        }
+                        aria-label={`Renommer la colonne ${attr.name}`}
+                      />
+                      <button
+                        type="button"
+                        className="roster-table__col-sort"
+                        onClick={() => toggleSort(attr.id)}
+                        aria-label={`Trier par ${attr.name}`}
+                        title="Trier"
+                      >
+                        {sort?.key === attr.id ? (
+                          <SortArrow dir={sort.dir} />
+                        ) : (
+                          "⇅"
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        className="roster-table__col-remove"
+                        onClick={() => onRemoveColumn(attr.id)}
+                        aria-label={`Supprimer la colonne ${attr.name}`}
+                        title="Supprimer la colonne"
+                      >
+                        ×
+                      </button>
+                    </div>
                   </th>
                 ))}
                 <th className="roster-table__addcol">
@@ -152,53 +299,61 @@ export default function RosterTable({
               </tr>
             </thead>
             <tbody>
-              {players.map((p) => (
+              {sortedPlayers.map((p) => (
                 <tr key={p.id}>
                   <td>
-                    <input
-                      className="roster-table__num-input"
-                      value={p.number ?? ""}
-                      onChange={(e) => {
-                        const v = e.target.value.replace(/\D/g, "").slice(0, 2);
+                    <EditableCell
+                      displayValue={p.number != null ? String(p.number) : ""}
+                      editValue={p.number != null ? String(p.number) : ""}
+                      inputType="number"
+                      align="center"
+                      placeholder="—"
+                      ariaLabel={`Numéro de ${p.name}`}
+                      onCommit={(raw) => {
+                        const v = raw.replace(/\D/g, "").slice(0, 2);
                         const n = parseInt(v, 10);
                         onSetNumber(p.id, Number.isNaN(n) ? null : n);
                       }}
-                      inputMode="numeric"
-                      aria-label="Numéro"
                     />
                   </td>
                   <td>
-                    <input
-                      value={p.name}
-                      onChange={(e) => onRenamePlayer(p.id, e.target.value)}
-                      aria-label="Nom"
+                    <EditableCell
+                      displayValue={p.name}
+                      editValue={p.name}
+                      ariaLabel={`Nom de ${p.name}`}
+                      onCommit={(raw) => onRenamePlayer(p.id, raw)}
                     />
                   </td>
-                  {attributeDefs.map((attr) => (
-                    <td key={attr.id}>
-                      <input
-                        type={attr.type === "number" ? "number" : "text"}
-                        value={p.attributes?.[attr.id] ?? ""}
-                        onChange={(e) => {
-                          const raw = e.target.value;
-                          if (attr.type === "number") {
-                            onSetAttribute(
-                              p.id,
-                              attr.id,
-                              raw === "" ? null : Number(raw),
-                            );
-                          } else {
-                            onSetAttribute(
-                              p.id,
-                              attr.id,
-                              raw === "" ? null : raw,
-                            );
-                          }
-                        }}
-                        aria-label={attr.name}
-                      />
-                    </td>
-                  ))}
+                  {attributeDefs.map((attr) => {
+                    const raw = p.attributes?.[attr.id];
+                    const display = raw != null ? String(raw) : "";
+                    return (
+                      <td key={attr.id}>
+                        <EditableCell
+                          displayValue={display}
+                          editValue={display}
+                          inputType={attr.type === "number" ? "number" : "text"}
+                          align={attr.type === "number" ? "center" : undefined}
+                          ariaLabel={`${attr.name} de ${p.name}`}
+                          onCommit={(v) => {
+                            if (attr.type === "number") {
+                              onSetAttribute(
+                                p.id,
+                                attr.id,
+                                v.trim() === "" ? null : Number(v),
+                              );
+                            } else {
+                              onSetAttribute(
+                                p.id,
+                                attr.id,
+                                v.trim() === "" ? null : v,
+                              );
+                            }
+                          }}
+                        />
+                      </td>
+                    );
+                  })}
                   <td>
                     <button
                       type="button"
