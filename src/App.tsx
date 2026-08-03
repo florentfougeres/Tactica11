@@ -7,6 +7,7 @@ import type {
   Orient,
   Phase,
   Player,
+  SetPieceState,
   ZoneRadii,
 } from "./types";
 import {
@@ -36,6 +37,8 @@ import { useShareLink } from "./hooks/useShareLink";
 import { usePlayerRoster } from "./hooks/usePlayerRoster";
 import { useProjectStore } from "./hooks/useProjectStore";
 import { useProjectActions } from "./hooks/useProjectActions";
+import { useSetPieceActions } from "./hooks/useSetPieceActions";
+import SetPieceView from "./components/SetPieceView";
 
 type Point = { x: number; y: number };
 
@@ -96,6 +99,21 @@ export default function App() {
   const [drawMode, setDrawMode] = useState(false);
   const [drawTool, setDrawTool] = useState<DrawTool>("arrow");
   const [drawColor, setDrawColor] = useState<string>(DEFAULT_DRAW_COLOR);
+
+  // Set-piece editor: compo-scoped (see useSetPieceActions) — edits go through
+  // setLineup, so they ride the main undo/redo stack. Its own ephemeral view
+  // state (which state is being edited, the Début↔Fin scrub, opponent/draw
+  // modes, poste/numéro) mirrors the main pitch's phase/blend/opponentMode/
+  // drawMode/showNumbers, but kept separate since the two boards are independent.
+  const setPieceActions = useSetPieceActions(lineup, setLineup);
+  const [spState, setSpState] = useState<SetPieceState>("start");
+  const [spBlend, setSpBlend] = useState(0);
+  const [spScrubbing, setSpScrubbing] = useState(false);
+  const [spOpponentMode, setSpOpponentMode] = useState(false);
+  const [spShowNumbers, setSpShowNumbers] = useState(false);
+  const [spDrawMode, setSpDrawMode] = useState(false);
+  const [spDrawTool, setSpDrawTool] = useState<DrawTool>("arrow");
+  const [spDrawColor, setSpDrawColor] = useState<string>(DEFAULT_DRAW_COLOR);
 
   // Keep the scrub in sync when the phase is set from the toggle buttons.
   useEffect(() => {
@@ -761,6 +779,28 @@ export default function App() {
             onRenameColumn={renameColumn}
             onRemoveColumn={removeColumn}
             onImportCsv={() => setCsvOpen(true)}
+          />
+        ) : view === "setpiece" ? (
+          <SetPieceView
+            lineup={lineup}
+            playerById={playerById}
+            sp={setPieceActions}
+            state={spState}
+            onStateChange={setSpState}
+            blend={spBlend}
+            onBlend={setSpBlend}
+            scrubbing={spScrubbing}
+            onScrubbing={setSpScrubbing}
+            opponentMode={spOpponentMode}
+            onOpponentMode={setSpOpponentMode}
+            showNumbers={spShowNumbers}
+            onShowNumbers={setSpShowNumbers}
+            drawMode={spDrawMode}
+            onDrawMode={setSpDrawMode}
+            drawTool={spDrawTool}
+            onDrawTool={setSpDrawTool}
+            drawColor={spDrawColor}
+            onDrawColor={setSpDrawColor}
           />
         ) : (
           <>

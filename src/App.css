@@ -2054,6 +2054,350 @@
   color: var(--text-dim);
 }
 
+/* ---------- set-piece board (corners / coups francs) ---------- */
+.pitch--half {
+  /* Extra room at the top (vs. the plain 1.94%) so the goal can sit in the
+     grass margin, outside the field of play, without being clipped by this
+     element's overflow:hidden. --ar grows to match, so the field itself
+     keeps its proportions instead of being squeezed by the taller box. */
+  --ar: calc(68 / 54.6);
+  padding: 5% 1.5% 1.94% 1.5%;
+}
+.sp-pitch-col {
+  width: 100%;
+}
+/* The goal: positioned as a % of .pitch__field's own box (not the pitch-svg
+   viewBox), so its 7.32m-real-width proportions hold regardless of size.
+   Sits entirely above the field (negative top), in the margin reserved above. */
+.sp-goal {
+  position: absolute;
+  left: 50%;
+  top: -3.81%;
+  width: 10.76%;
+  height: 3.81%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.ball-token {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  cursor: grab;
+  touch-action: none;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.7));
+}
+
+.sp-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.sp-marker__disc {
+  position: relative;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 12px;
+  box-shadow: 0 5px 14px -5px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+.sp-marker--team .sp-marker__disc {
+  color: #06130c;
+  background: linear-gradient(150deg, #f4f7fb, #c7d2e0);
+}
+.sp-marker--opponent .sp-marker__disc {
+  color: rgba(15, 20, 28, 0.92);
+  background: #e0a0a0;
+}
+.sp-marker__label {
+  pointer-events: none;
+  letter-spacing: 0.3px;
+}
+.sp-marker__input {
+  width: 26px;
+  background: transparent;
+  border: none;
+  outline: none;
+  text-align: center;
+  font: inherit;
+  color: rgba(15, 20, 28, 0.92);
+  text-transform: uppercase;
+}
+.sp-marker__name {
+  /* The parent .sp-marker has a fixed height (MARKER_SIZE, sized for the
+     disc) that's shorter than disc + gap + name combined. Without this, the
+     default flex-shrink squeezes this text down to a sliver instead of
+     letting it overflow below the disc like it's meant to. */
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  max-width: 150px;
+  text-align: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(8, 12, 18, 0.8);
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.8);
+}
+.sp-marker__remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(224, 83, 58, 0.92);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+/* set-piece list panel (left column) */
+.sp-list__new {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 12px;
+}
+.sp-list__newbtn {
+  flex: 1;
+  border: 1px dashed var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 6px;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.sp-list__newbtn:hover {
+  border-color: rgba(33, 208, 122, 0.5);
+  color: var(--accent);
+  background: rgba(33, 208, 122, 0.06);
+}
+
+.sp-list__items {
+  flex: 0 1 auto;
+  overflow-y: auto;
+  padding: 4px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sp-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sp-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.sp-item.is-active {
+  border-color: rgba(33, 208, 122, 0.5);
+  background: rgba(33, 208, 122, 0.1);
+}
+.sp-item__type {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  color: #06130c;
+  background: rgba(255, 255, 255, 0.7);
+}
+.sp-item__type--corner {
+  background: #8fd0c8;
+}
+.sp-item__type--free-kick {
+  background: #e6c079;
+}
+.sp-item__name,
+.sp-item__name-input {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: transparent;
+  border: none;
+}
+.sp-item__name-input {
+  border-bottom: 1px solid var(--accent);
+  outline: none;
+}
+.sp-item__actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 4px;
+}
+.sp-item__action {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 13px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.sp-item__action:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+.sp-item__action--danger:hover {
+  background: rgba(224, 83, 58, 0.2);
+  color: #e0533a;
+}
+
+/* mini roster list, under the set-piece list */
+.sp-roster {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--panel-border);
+  padding-top: 10px;
+}
+.sp-roster__header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  padding: 0 16px 6px;
+}
+.sp-roster__list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sp-roster__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sp-roster__item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.sp-roster__item.is-placed {
+  border-color: rgba(33, 208, 122, 0.4);
+  background: rgba(33, 208, 122, 0.08);
+}
+.sp-roster__num {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+}
+.sp-roster__name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sp-roster__role {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+.sp-roster__mark {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* type switch (Corner / Coup franc), in the board's footer controls */
+.sp-type-switch {
+  display: flex;
+  gap: 8px;
+}
+.sp-type-switch__btn {
+  flex: 1;
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  padding: 8px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.sp-type-switch__btn.is-active {
+  border-color: var(--accent);
+  background: rgba(33, 208, 122, 0.18);
+  color: var(--accent);
+}
+
+.sp-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+  padding: 40px;
+}
+
 /* ---------- responsive (iPad portrait / narrow) ---------- */
 @media (max-width: 900px) {
   .layout,

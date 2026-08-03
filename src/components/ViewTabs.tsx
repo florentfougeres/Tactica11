@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
 
-export type View = "pitch" | "roster";
+export type View = "pitch" | "roster" | "setpiece";
 
 const LABELS: Record<View, string> = {
   pitch: "Terrain",
   roster: "Effectif",
+  setpiece: "Phase arrêtée",
 };
 
 export default function ViewTabs({
@@ -16,7 +17,7 @@ export default function ViewTabs({
 }) {
   return (
     <div className="view-tabs" role="tablist" aria-label="Vue">
-      {(["pitch", "roster"] as View[]).map((v) => (
+      {(["pitch", "roster", "setpiece"] as View[]).map((v) => (
         <button
           key={v}
           role="tab"
