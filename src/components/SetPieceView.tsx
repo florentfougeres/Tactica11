@@ -91,15 +91,32 @@ export default function SetPieceView({
     })
     .filter((p): p is OnPitchPlayer => p != null);
 
-  // The blend slider and the Début/Fin toggle always stay in sync: dragging
-  // is only enabled at the endpoints, and each endpoint edits its own state.
+  // The blend slider and the Début/Intermédiaire/Fin toggle always stay in
+  // sync: dragging is only enabled exactly on the three anchors, and each
+  // anchor edits its own state.
+  const STATE_BLEND: Record<SetPieceState, number> = {
+    start: 0,
+    mid: 0.5,
+    end: 1,
+  };
+  const nearestState = (v: number): SetPieceState =>
+    v <= 0.25 ? "start" : v >= 0.75 ? "end" : "mid";
   const handleBlend = (v: number) => {
     onBlend(v);
-    onStateChange(v === 0 ? "start" : "end");
+    onStateChange(nearestState(v));
   };
   const handleState = (s: SetPieceState) => {
     onStateChange(s);
-    onBlend(s === "start" ? 0 : 1);
+    onBlend(STATE_BLEND[s]);
+  };
+
+  // "Reprendre" copies the previous phase's positions into the one being
+  // edited — a starting point so the user adjusts from there instead of
+  // re-placing everyone. Only meaningful past "start", which has no previous
+  // phase.
+  const PREVIOUS_PHASE_LABEL: Partial<Record<SetPieceState, string>> = {
+    mid: "Début",
+    end: "Intermédiaire",
   };
 
   const footer = current && (
@@ -121,6 +138,16 @@ export default function SetPieceView({
       </div>
 
       <SetPieceStateToggle state={state} onState={handleState} />
+
+      {PREVIOUS_PHASE_LABEL[state] && (
+        <button
+          type="button"
+          className="pitch-ctl__btn"
+          onClick={() => sp.applyPreviousPhase(current.id, state)}
+        >
+          Reprendre « {PREVIOUS_PHASE_LABEL[state]} »
+        </button>
+      )}
 
       <div
         className="sp-type-switch"

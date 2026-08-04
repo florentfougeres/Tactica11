@@ -4,6 +4,7 @@ import { SET_PIECE_STATES } from "../types";
 
 const LABELS: Record<SetPieceState, string> = {
   start: "Début",
+  mid: "Intermédiaire",
   end: "Fin",
 };
 
@@ -15,7 +16,11 @@ export default function SetPieceStateToggle({
   onState: (state: SetPieceState) => void;
 }) {
   return (
-    <div className="phase-bar" role="tablist" aria-label="État de la phase arrêtée">
+    <div
+      className="phase-bar phase-bar--sp"
+      role="tablist"
+      aria-label="État de la phase arrêtée"
+    >
       {SET_PIECE_STATES.map((s) => (
         <button
           key={s}
