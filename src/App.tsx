@@ -32,6 +32,7 @@ import { presetsFor, presetRadii } from "./zonePresets";
 import { exportPitchPng } from "./exportImage";
 import { useUndoableLineup } from "./useUndoableLineup";
 import { useOnboarding } from "./hooks/useOnboarding";
+import { useTheme } from "./hooks/useTheme";
 import { usePresentation } from "./hooks/usePresentation";
 import { useShareLink } from "./hooks/useShareLink";
 import { usePlayerRoster } from "./hooks/usePlayerRoster";
@@ -79,6 +80,7 @@ export default function App() {
   const [benchDragging, setBenchDragging] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
   const { onboardOpen, openOnboarding, closeOnboarding } = useOnboarding();
+  const { theme, toggleTheme } = useTheme();
   const [influenceMode, setInfluenceMode] = useState<InfluenceMode>("none");
   const [orient, setOrient] = useState<Orient>("portrait");
   const [activePreset, setActivePreset] = useState<string | null>(null);
@@ -729,6 +731,8 @@ export default function App() {
         formation={lineup.formation}
         onPresent={enterPresent}
         onHelp={openOnboarding}
+        theme={theme}
+        onToggleTheme={toggleTheme}
         compos={project.lineups.map((l) => ({ id: l.id, name: l.name }))}
         currentId={lineup.id}
         projectName={project.name}

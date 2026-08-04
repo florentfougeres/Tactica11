@@ -10,11 +10,31 @@
   --accent-2: #16a766;
   --danger: #ff5d6c;
 
+  /* chrome-only overlay tints (app UI, not the pitch/tokens — those stay
+     fixed regardless of theme). --overlay-rgb lightens on dark, darkens on
+     light; --menu-bg-rgb backs floating dropdowns/popovers/sticky headers. */
+  --overlay-rgb: 255, 255, 255;
+  --menu-bg-rgb: 13, 18, 26;
+
   --radius: 16px;
   --radius-sm: 10px;
 
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg-0: #eef1f6;
+  --bg-1: #ffffff;
+  --panel: rgba(255, 255, 255, 0.72);
+  --panel-border: rgba(15, 23, 32, 0.1);
+  --text: #10151c;
+  --text-dim: #5b6675;
+
+  --overlay-rgb: 10, 14, 20;
+  --menu-bg-rgb: 255, 255, 255;
+
+  color-scheme: light;
 }
 
 * {
