@@ -5,45 +5,31 @@ import type { Player } from "../types";
 
 interface Props {
   players: Player[]; // bench players (not on pitch)
-  onAdd: (name: string, number?: number) => void;
   onRename: (playerId: string, name: string) => void;
   onSetNumber: (playerId: string, number: number | null) => void;
   onRemove: (playerId: string) => void;
   onDropToPitch: (playerId: string, point: { x: number; y: number }) => void;
   onDragStateChange?: (active: boolean) => void;
   canDrag: boolean; // roster drag only allowed in the "base" phase
-  onImportCsv: () => void;
   footer?: ReactNode; // pinned section at the bottom (e.g. influence controls)
 }
 
+// Adding players / CSV import live only in the Effectif tab (RosterTable) —
+// this panel is just the "who's still on the bench, drag them onto the
+// pitch" view for the Terrain tab.
 const Bench = forwardRef<HTMLElement, Props>(function Bench(
   {
     players,
-    onAdd,
     onRename,
     onSetNumber,
     onRemove,
     onDropToPitch,
     onDragStateChange,
     canDrag,
-    onImportCsv,
     footer,
   },
   ref,
 ) {
-  const [name, setName] = useState("");
-  const [num, setNum] = useState("");
-
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    const v = name.trim();
-    if (!v) return;
-    const n = parseInt(num.trim(), 10);
-    onAdd(v, Number.isNaN(n) ? undefined : n);
-    setName("");
-    setNum("");
-  }
-
   return (
     <aside className="bench glass" ref={ref}>
       <header className="panel__header">
@@ -51,36 +37,11 @@ const Bench = forwardRef<HTMLElement, Props>(function Bench(
         <span className="chip">{players.length}</span>
       </header>
 
-      <form className="bench__add" onSubmit={submit}>
-        <input
-          className="bench__num"
-          value={num}
-          onChange={(e) =>
-            setNum(e.target.value.replace(/\D/g, "").slice(0, 2))
-          }
-          inputMode="numeric"
-          placeholder="N°"
-          aria-label="Numéro (optionnel)"
-        />
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Ajouter un joueur…"
-          aria-label="Nom du joueur"
-        />
-        <button type="submit" aria-label="Ajouter">
-          +
-        </button>
-      </form>
-
-      <button className="bench__csv" onClick={onImportCsv}>
-        Importer une liste (CSV)
-      </button>
-
       <div className="bench__list">
         {players.length === 0 && (
           <p className="bench__empty">
-            Ajoute des joueurs, puis glisse-les sur le terrain.
+            Ajoute des joueurs dans l'onglet Effectif, puis glisse-les sur le
+            terrain.
           </p>
         )}
         {players.map((p) => (

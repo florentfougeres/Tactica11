@@ -8,6 +8,7 @@ import type {
   SetPiece,
   SetPieceState,
 } from "../types";
+import { DEFAULT_OPPONENT_COLOR } from "../types";
 import PitchMarkings from "./PitchMarkings";
 import BallToken from "./BallToken";
 import SetPieceMarker from "./SetPieceMarker";
@@ -162,6 +163,7 @@ export default function SetPiecePitch({
                   id={o.id}
                   variant="opponent"
                   label={o.label}
+                  color={setPiece.opponentColor ?? DEFAULT_OPPONENT_COLOR}
                   pos={lerpPos(o.positions.start, o.positions.end)}
                   size={size}
                   orient={ORIENT}

@@ -207,6 +207,7 @@ export interface SetPiece {
   ball: Record<SetPieceState, Pos>;
   tokens: SetPieceToken[];
   opponents: SetPieceOpponent[];
+  opponentColor?: string; // disc colour for the opposing team, same palette as the main pitch
   drawings?: Partial<Record<SetPieceState, Drawing[]>>;
 }
 

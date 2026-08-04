@@ -35,6 +35,7 @@ type Props =
   | (CommonProps & {
       variant: "opponent";
       label: string;
+      color: string; // disc colour for the opposing team, same palette as the main pitch
       onLabel: (id: string, label: string) => void;
       onRemove: (id: string) => void;
     });
@@ -127,7 +128,10 @@ export default function SetPieceMarker(props: Props) {
       }}
       onDragEnd={handleDragEnd}
     >
-      <div className="sp-marker__disc">
+      <div
+        className="sp-marker__disc"
+        style={props.variant === "opponent" ? { background: props.color } : undefined}
+      >
         {editing && props.variant === "opponent" ? (
           <input
             className="sp-marker__input"
