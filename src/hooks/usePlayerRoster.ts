@@ -34,18 +34,40 @@ export function usePlayerRoster(
       }),
     }));
 
+  // Extra CSV columns (beyond name/number) are matched to an existing
+  // roster attribute column by name, or create a new one on the fly.
   const addPlayers = (players: ImportedPlayer[]) =>
-    updateProject((p) => ({
-      ...p,
-      players: [
-        ...p.players,
-        ...players.map((pl) => ({
+    updateProject((p) => {
+      const attributeDefs = [...p.attributeDefs];
+      const attrIdForLabel = (label: string, type: AttrType): string => {
+        const existing = attributeDefs.find(
+          (d) => d.name.trim().toLowerCase() === label.trim().toLowerCase(),
+        );
+        if (existing) return existing.id;
+        const def = { id: uid("attr"), name: label, type };
+        attributeDefs.push(def);
+        return def.id;
+      };
+
+      const newPlayers = players.map((pl) => {
+        let attributes: Record<string, string | number> | undefined;
+        if (pl.attributes) {
+          attributes = {};
+          for (const [label, value] of Object.entries(pl.attributes)) {
+            const type: AttrType = typeof value === "number" ? "number" : "text";
+            attributes[attrIdForLabel(label, type)] = value;
+          }
+        }
+        return {
           id: uid("p"),
           name: pl.name,
           ...(pl.number != null ? { number: pl.number } : {}),
-        })),
-      ],
-    }));
+          ...(attributes ? { attributes } : {}),
+        };
+      });
+
+      return { ...p, attributeDefs, players: [...p.players, ...newPlayers] };
+    });
 
   const renamePlayer = (id: string, name: string) =>
     updateProject((p) => ({
