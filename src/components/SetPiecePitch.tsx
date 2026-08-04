@@ -81,17 +81,26 @@ export default function SetPiecePitch({
     return () => ro.disconnect();
   }, []);
 
-  // Mid-scrub (blend strictly between the two endpoints) is a read-only
+  // Mid-scrub (blend strictly between two adjacent anchors) is a read-only
   // preview, exactly like the main pitch's défense↔attaque transition.
-  const atEndpoint = blend === 0 || blend === 1;
+  // Editing is only allowed exactly on start(0) / mid(0.5) / end(1).
+  const atEndpoint = blend === 0 || blend === 0.5 || blend === 1;
   const frozen = !atEndpoint;
   const editable = !frozen;
 
   const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-  const lerpPos = (start: Pos, end: Pos): Pos => ({
-    x: lerp(start.x, end.x, blend),
-    y: lerp(start.y, end.y, blend),
-  });
+  // Three-point piecewise interpolation: 0→0.5 covers start→mid, 0.5→1
+  // covers mid→end, so the slider scrubs across both segments in one pass.
+  const lerpPos = (start: Pos, mid: Pos, end: Pos): Pos =>
+    blend <= 0.5
+      ? {
+          x: lerp(start.x, mid.x, blend / 0.5),
+          y: lerp(start.y, mid.y, blend / 0.5),
+        }
+      : {
+          x: lerp(mid.x, end.x, (blend - 0.5) / 0.5),
+          y: lerp(mid.y, end.y, (blend - 0.5) / 0.5),
+        };
 
   const drawings = setPiece.drawings?.[state] ?? [];
 
@@ -164,7 +173,7 @@ export default function SetPiecePitch({
                   variant="opponent"
                   label={o.label}
                   color={setPiece.opponentColor ?? DEFAULT_OPPONENT_COLOR}
-                  pos={lerpPos(o.positions.start, o.positions.end)}
+                  pos={lerpPos(o.positions.start, o.positions.mid, o.positions.end)}
                   size={size}
                   orient={ORIENT}
                   editable={editable}
@@ -184,7 +193,7 @@ export default function SetPiecePitch({
                   player={playerById(t.playerId)}
                   role={roleFor(t.playerId)}
                   showNumbers={showNumbers}
-                  pos={lerpPos(t.positions.start, t.positions.end)}
+                  pos={lerpPos(t.positions.start, t.positions.mid, t.positions.end)}
                   size={size}
                   orient={ORIENT}
                   editable={editable}
@@ -195,7 +204,7 @@ export default function SetPiecePitch({
 
             {size.w > 0 && (
               <BallToken
-                pos={lerpPos(setPiece.ball.start, setPiece.ball.end)}
+                pos={lerpPos(setPiece.ball.start, setPiece.ball.mid, setPiece.ball.end)}
                 size={size}
                 orient={ORIENT}
                 editable={editable}

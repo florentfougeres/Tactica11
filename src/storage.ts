@@ -8,9 +8,11 @@ import {
   type Opponent,
   type Phase,
   type Player,
+  type Pos,
   type Project,
   type ProjectFile,
   type SetPiece,
+  type SetPieceState,
   type SetPieceType,
   type Slot,
   type ZoneRadii,
@@ -90,9 +92,35 @@ export function createSetPiece(
     id: uid("sp"),
     name: `${SET_PIECE_LABEL[type]} ${existingCount + 1}`,
     type,
-    ball: { start: ball, end: ball },
+    ball: { start: ball, mid: ball, end: ball },
     tokens: [],
     opponents: [],
+  };
+}
+
+// Midpoint used to backfill the "mid" phase for set pieces saved before it
+// existed — keeps old files loadable without the intermediate stage
+// collapsing to (0,0).
+const midpoint = (a: { x: number; y: number }, b: { x: number; y: number }) => ({
+  x: (a.x + b.x) / 2,
+  y: (a.y + b.y) / 2,
+});
+
+function migrateSetPiece(sp: SetPiece): SetPiece {
+  const withMid = (
+    positions: Record<SetPieceState, Pos>,
+  ): Record<SetPieceState, Pos> => ({
+    ...positions,
+    mid: positions.mid ?? midpoint(positions.start, positions.end),
+  });
+  return {
+    ...sp,
+    ball: withMid(sp.ball),
+    tokens: sp.tokens.map((t) => ({ ...t, positions: withMid(t.positions) })),
+    opponents: sp.opponents.map((o) => ({
+      ...o,
+      positions: withMid(o.positions),
+    })),
   };
 }
 
@@ -129,7 +157,9 @@ export function migrateLineup(
     opponents: parsed.opponents ?? [],
     opponentColor: parsed.opponentColor,
     drawings: parsed.drawings,
-    setPieces: (parsed.setPieces ?? []).filter((sp) => sp && sp.id),
+    setPieces: (parsed.setPieces ?? [])
+      .filter((sp) => sp && sp.id)
+      .map(migrateSetPiece),
   };
 }
 

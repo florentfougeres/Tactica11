@@ -93,7 +93,11 @@ export function useSetPieceActions(lineup: Lineup, setLineup: LineupUpdater) {
         ...sp,
         tokens: [
           ...sp.tokens,
-          { id: uid("spt"), playerId, positions: { start: spot, end: spot } },
+          {
+            id: uid("spt"),
+            playerId,
+            positions: { start: spot, mid: spot, end: spot },
+          },
         ],
       };
     });
@@ -129,7 +133,7 @@ export function useSetPieceActions(lineup: Lineup, setLineup: LineupUpdater) {
           {
             id: uid("spo"),
             label: String(sp.opponents.length + 1),
-            positions: { start: spot, end: spot },
+            positions: { start: spot, mid: spot, end: spot },
           },
         ],
       };
@@ -161,6 +165,31 @@ export function useSetPieceActions(lineup: Lineup, setLineup: LineupUpdater) {
         o.id === oppId ? { ...o, label } : o,
       ),
     }));
+
+  // Lets the user carry a phase's positions forward as a starting point for
+  // the next one instead of re-placing everyone from scratch: "mid" copies
+  // from "start", "end" copies from "mid". No-op on "start" (nothing before it).
+  const PREVIOUS_STATE: Partial<Record<SetPieceState, SetPieceState>> = {
+    mid: "start",
+    end: "mid",
+  };
+
+  const applyPreviousPhase = (id: string, state: SetPieceState) => {
+    const prev = PREVIOUS_STATE[state];
+    if (!prev) return;
+    updateSetPiece(id, (sp) => ({
+      ...sp,
+      ball: { ...sp.ball, [state]: sp.ball[prev] },
+      tokens: sp.tokens.map((t) => ({
+        ...t,
+        positions: { ...t.positions, [state]: t.positions[prev] },
+      })),
+      opponents: sp.opponents.map((o) => ({
+        ...o,
+        positions: { ...o.positions, [state]: o.positions[prev] },
+      })),
+    }));
+  };
 
   const addDrawing = (id: string, state: SetPieceState, d: Drawing) =>
     updateSetPiece(id, (sp) => ({
@@ -202,6 +231,7 @@ export function useSetPieceActions(lineup: Lineup, setLineup: LineupUpdater) {
     removeOpponent,
     moveOpponent,
     labelOpponent,
+    applyPreviousPhase,
     addDrawing,
     undoDrawing,
     clearDrawings,

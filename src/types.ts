@@ -169,12 +169,13 @@ export interface Lineup {
 // Set pieces (corners / coups francs): compo-scoped combinations — a set
 // piece's players are drawn from that compo's own starting XI, so it's tied
 // to a Lineup rather than shared across the whole project. Each one is edited
-// on a half-pitch and has exactly two states — the positions right as the
-// kick is taken ("start") and where everyone/the ball ends up ("end") — so a
-// slider can scrub between them like the main pitch's défense↔attaque blend.
+// on a half-pitch and has three states — the positions right as the kick is
+// taken ("start"), an intermediate stage ("mid"), and where everyone/the
+// ball ends up ("end") — so a slider can scrub across them like the main
+// pitch's défense↔attaque blend.
 export type SetPieceType = "corner" | "free-kick";
-export type SetPieceState = "start" | "end";
-export const SET_PIECE_STATES: SetPieceState[] = ["start", "end"];
+export type SetPieceState = "start" | "mid" | "end";
+export const SET_PIECE_STATES: SetPieceState[] = ["start", "mid", "end"];
 
 // Half-pitch coordinates: x is unchanged (0..100 = full width), but y is
 // rescaled so 0 = goal line and 100 = halfway line (not 0..50 of the full
