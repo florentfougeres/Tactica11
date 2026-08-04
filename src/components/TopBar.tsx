@@ -32,6 +32,8 @@ interface Props {
   onImportProject: (file: File) => void;
   onPresent: () => void;
   onHelp: () => void;
+  theme: "dark" | "light";
+  onToggleTheme: () => void;
 }
 
 function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLElement | null>) {
@@ -82,6 +84,8 @@ export default function TopBar({
   onImportProject,
   onPresent,
   onHelp,
+  theme,
+  onToggleTheme,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const fmRef = useRef<HTMLDivElement>(null);
@@ -389,6 +393,33 @@ export default function TopBar({
             )}
           </div>
         )}
+        <button
+          className="btn btn--icon"
+          onClick={onToggleTheme}
+          title={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
+          aria-label={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
+        >
+          {theme === "dark" ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth="1.8" />
+              <path
+                d="M12 2.5v2.5M12 19v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2.5 12H5M19 12h2.5M4.2 19.8 6 18M18 6l1.8-1.8"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5 8.5 8.5 0 1 0 20.5 14.5Z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </button>
         <button
           className="btn btn--icon"
           onClick={onHelp}
