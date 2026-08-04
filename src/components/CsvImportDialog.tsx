@@ -1,5 +1,12 @@
 import { useMemo, useRef, useState } from "react";
-import { parseCsv, rowsToPlayers, type ImportedPlayer } from "../csv";
+import {
+  parseCsv,
+  rowsToPlayers,
+  guessHasHeader,
+  guessColumns,
+  detectExtraColumns,
+  type ImportedPlayer,
+} from "../csv";
 
 interface Props {
   onClose: () => void;
@@ -35,9 +42,14 @@ export default function CsvImportDialog({ onClose, onImport }: Props) {
     }
     setError(null);
     setRows(parsed);
-    setNameCol(0);
-    setNumberCol(-1);
-    setHasHeader(false);
+    const header = guessHasHeader(parsed);
+    const { nameCol: guessedName, numberCol: guessedNumber } = guessColumns(
+      parsed,
+      header,
+    );
+    setHasHeader(header);
+    setNameCol(guessedName);
+    setNumberCol(guessedNumber);
   }
 
   function onFile(file: File) {
@@ -47,10 +59,20 @@ export default function CsvImportDialog({ onClose, onImport }: Props) {
       .catch(() => setError("Impossible de lire ce fichier."));
   }
 
+  // Every other column is carried along automatically as a custom roster
+  // attribute (e.g. "vitesse"), so nothing beyond name/number gets dropped.
+  const extraCols = useMemo(
+    () =>
+      rows ? detectExtraColumns(rows, { hasHeader, nameCol, numberCol }) : [],
+    [rows, hasHeader, nameCol, numberCol],
+  );
+
   const players = useMemo(
     () =>
-      rows ? rowsToPlayers(rows, { hasHeader, nameCol, numberCol }) : [],
-    [rows, hasHeader, nameCol, numberCol],
+      rows
+        ? rowsToPlayers(rows, { hasHeader, nameCol, numberCol, extraCols })
+        : [],
+    [rows, hasHeader, nameCol, numberCol, extraCols],
   );
 
   function confirm() {
@@ -152,6 +174,15 @@ export default function CsvImportDialog({ onClose, onImport }: Props) {
                   </select>
                 </label>
               </div>
+            )}
+
+            {extraCols.length > 0 && (
+              <p className="modal__hint">
+                Colonne{extraCols.length > 1 ? "s" : ""} supplémentaire
+                {extraCols.length > 1 ? "s" : ""} ajoutée
+                {extraCols.length > 1 ? "s" : ""} à la base de joueurs :{" "}
+                {extraCols.map((c) => c.label).join(", ")}.
+              </p>
             )}
 
             <div className="modal__preview">
