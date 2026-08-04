@@ -724,6 +724,7 @@ export default function App() {
         </div>
       )}
       <TopBar
+        view={view}
         name={lineup.name}
         formation={lineup.formation}
         onPresent={enterPresent}
@@ -807,14 +808,12 @@ export default function App() {
             <Bench
               ref={benchRef}
               players={benchPlayers}
-              onAdd={addPlayer}
               onRename={renamePlayer}
               onSetNumber={setPlayerNumber}
               onRemove={removePlayer}
               onDropToPitch={handleBenchDrop}
               onDragStateChange={setBenchDragging}
               canDrag={phase === "base"}
-              onImportCsv={() => setCsvOpen(true)}
               footer={pitchControls}
             />
 

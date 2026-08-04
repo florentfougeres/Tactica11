@@ -6,7 +6,7 @@ import type {
   SetPieceState,
   SetPieceType,
 } from "../types";
-import { DRAW_COLORS } from "../types";
+import { DEFAULT_OPPONENT_COLOR, DRAW_COLORS, OPPONENT_COLORS } from "../types";
 import type { useSetPieceActions } from "../hooks/useSetPieceActions";
 import SetPieceList, { type OnPitchPlayer } from "./SetPieceList";
 import SetPiecePitch from "./SetPiecePitch";
@@ -174,6 +174,28 @@ export default function SetPieceView({
         >
           + Adversaire
         </button>
+      )}
+      {opponentMode && (
+        <div
+          className="opp-colors-row"
+          role="group"
+          aria-label="Couleur des adversaires"
+        >
+          {OPPONENT_COLORS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              className={`opp-swatch ${
+                c === (current.opponentColor ?? DEFAULT_OPPONENT_COLOR)
+                  ? "is-active"
+                  : ""
+              }`}
+              style={{ background: c }}
+              onClick={() => sp.setOpponentColor(current.id, c)}
+              aria-label={`Couleur ${c}`}
+            />
+          ))}
+        </div>
       )}
 
       <label className="pitch-ctl__row">

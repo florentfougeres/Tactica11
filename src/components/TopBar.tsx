@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { FORMATIONS } from "../formations";
+import type { View } from "./ViewTabs";
 
 interface Props {
+  view: View;
   name: string;
   formation: string;
   compos: { id: string; name: string }[];
@@ -51,6 +53,7 @@ function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLE
 }
 
 export default function TopBar({
+  view,
   name,
   formation,
   compos,
@@ -199,178 +202,193 @@ export default function TopBar({
         </div>
       </div>
 
-      <div className="topbar__field topbar__field--name">
-        <span className="topbar__label">Compo</span>
-        <div className="compo" ref={compoRef}>
-          <input
-            className="compo__name"
-            value={name}
-            onChange={(e) => onName(e.target.value)}
-            aria-label="Nom de la compo"
-          />
-          <button
-            type="button"
-            className="compo__toggle"
-            onClick={() => setCompoOpen((o) => !o)}
-            aria-haspopup="menu"
-            aria-expanded={compoOpen}
-            aria-label="Mes compos"
-          >
-            ▾
-          </button>
-          {compoOpen && (
-            <div className="compo-menu" role="menu">
-              <div className="compo-menu__list">
-                {compos.map((c) => (
-                  <button
-                    key={c.id}
-                    role="menuitemradio"
-                    aria-checked={c.id === currentId}
-                    className={c.id === currentId ? "is-active" : ""}
-                    onClick={() => {
-                      onOpenCompo(c.id);
-                      setCompoOpen(false);
-                    }}
-                  >
-                    {c.name || "Sans nom"}
-                  </button>
-                ))}
-              </div>
-              <div className="compo-menu__sep" />
-              <button
-                className="compo-menu__action"
-                onClick={() => {
-                  onNewCompo();
-                  setCompoOpen(false);
-                }}
-              >
-                Nouvelle compo
-              </button>
-              <button
-                className="compo-menu__action"
-                onClick={() => {
-                  onDuplicate();
-                  setCompoOpen(false);
-                }}
-              >
-                Dupliquer
-              </button>
-              <button
-                className="compo-menu__action compo-menu__danger"
-                onClick={() => {
-                  onDelete(currentId);
-                  setCompoOpen(false);
-                }}
-              >
-                Supprimer
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="topbar__field">
-        <span className="topbar__label">Système</span>
-        <div className="fmselect" ref={fmRef}>
-          <button
-            type="button"
-            className="fmselect__btn"
-            onClick={() => setFmOpen((o) => !o)}
-            aria-haspopup="listbox"
-            aria-expanded={fmOpen}
-          >
-            <span>{formation}</span>
-            <span className="fmselect__chevron" aria-hidden="true">
+      {view === "pitch" && (
+        <div className="topbar__field topbar__field--name">
+          <span className="topbar__label">Compo</span>
+          <div className="compo" ref={compoRef}>
+            <input
+              className="compo__name"
+              value={name}
+              onChange={(e) => onName(e.target.value)}
+              aria-label="Nom de la compo"
+            />
+            <button
+              type="button"
+              className="compo__toggle"
+              onClick={() => setCompoOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={compoOpen}
+              aria-label="Mes compos"
+            >
               ▾
-            </span>
-          </button>
-          {fmOpen && (
-            <ul className="fmselect__menu" role="listbox">
-              {FORMATIONS.map((f) => (
-                <li key={f}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={f === formation}
-                    className={f === formation ? "is-active" : ""}
-                    onClick={() => {
-                      onFormation(f);
-                      setFmOpen(false);
-                    }}
-                  >
-                    {f}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+            </button>
+            {compoOpen && (
+              <div className="compo-menu" role="menu">
+                <div className="compo-menu__list">
+                  {compos.map((c) => (
+                    <button
+                      key={c.id}
+                      role="menuitemradio"
+                      aria-checked={c.id === currentId}
+                      className={c.id === currentId ? "is-active" : ""}
+                      onClick={() => {
+                        onOpenCompo(c.id);
+                        setCompoOpen(false);
+                      }}
+                    >
+                      {c.name || "Sans nom"}
+                    </button>
+                  ))}
+                </div>
+                <div className="compo-menu__sep" />
+                <button
+                  className="compo-menu__action"
+                  onClick={() => {
+                    onNewCompo();
+                    setCompoOpen(false);
+                  }}
+                >
+                  Nouvelle compo
+                </button>
+                <button
+                  className="compo-menu__action"
+                  onClick={() => {
+                    onDuplicate();
+                    setCompoOpen(false);
+                  }}
+                >
+                  Dupliquer
+                </button>
+                <button
+                  className="compo-menu__action compo-menu__danger"
+                  onClick={() => {
+                    onDelete(currentId);
+                    setCompoOpen(false);
+                  }}
+                >
+                  Supprimer
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {view === "pitch" && (
+        <div className="topbar__field">
+          <span className="topbar__label">Système</span>
+          <div className="fmselect" ref={fmRef}>
+            <button
+              type="button"
+              className="fmselect__btn"
+              onClick={() => setFmOpen((o) => !o)}
+              aria-haspopup="listbox"
+              aria-expanded={fmOpen}
+            >
+              <span>{formation}</span>
+              <span className="fmselect__chevron" aria-hidden="true">
+                ▾
+              </span>
+            </button>
+            {fmOpen && (
+              <ul className="fmselect__menu" role="listbox">
+                {FORMATIONS.map((f) => (
+                  <li key={f}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={f === formation}
+                      className={f === formation ? "is-active" : ""}
+                      onClick={() => {
+                        onFormation(f);
+                        setFmOpen(false);
+                      }}
+                    >
+                      {f}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="topbar__actions">
-        <button
-          className="btn btn--icon"
-          onClick={onUndo}
-          disabled={!canUndo}
-          title="Annuler (Cmd/Ctrl+Z)"
-          aria-label="Annuler"
-        >
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <button
-          className="btn btn--icon"
-          onClick={onRedo}
-          disabled={!canRedo}
-          title="Rétablir (Cmd/Ctrl+Maj+Z)"
-          aria-label="Rétablir"
-        >
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="m15 14 5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+        {/* Undo/redo cover the active compo's whole edit history — pitch
+            positions/opponents/drawings AND its set pieces share one stack —
+            so they're relevant on both Terrain and Phase arrêtée. Effectif
+            (the shared roster) isn't part of that history, so hide them there
+            rather than show controls that would just do nothing. */}
+        {(view === "pitch" || view === "setpiece") && (
+          <>
+            <button
+              className="btn btn--icon"
+              onClick={onUndo}
+              disabled={!canUndo}
+              title="Annuler (Cmd/Ctrl+Z)"
+              aria-label="Annuler"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <button
+              className="btn btn--icon"
+              onClick={onRedo}
+              disabled={!canRedo}
+              title="Rétablir (Cmd/Ctrl+Maj+Z)"
+              aria-label="Rétablir"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="m15 14 5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </>
+        )}
 
-        <div className="export" ref={exportRef}>
-          <button
-            className="btn btn--primary"
-            onClick={() => setExportOpen((o) => !o)}
-            aria-haspopup="menu"
-            aria-expanded={exportOpen}
-          >
-            Partager <span className="export__chevron" aria-hidden="true">▾</span>
-          </button>
-          {exportOpen && (
-            <div className="export-menu" role="menu">
-              <button
-                role="menuitem"
-                onClick={() => {
-                  setExportOpen(false);
-                  onExportPng();
-                }}
-              >
-                <span>Image (vue actuelle)</span>
-                <span className="export-menu__ext">.png</span>
-              </button>
-              <button role="menuitem" onClick={copyLink}>
-                <span>{copied ? "Lien copié ✓" : "Copier le lien (cette compo)"}</span>
-                <span className="export-menu__ext">URL</span>
-              </button>
-            </div>
-          )}
-        </div>
+        {view === "pitch" && (
+          <div className="export" ref={exportRef}>
+            <button
+              className="btn btn--primary"
+              onClick={() => setExportOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={exportOpen}
+            >
+              Partager <span className="export__chevron" aria-hidden="true">▾</span>
+            </button>
+            {exportOpen && (
+              <div className="export-menu" role="menu">
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    setExportOpen(false);
+                    onExportPng();
+                  }}
+                >
+                  <span>Image (vue actuelle)</span>
+                  <span className="export-menu__ext">.png</span>
+                </button>
+                <button role="menuitem" onClick={copyLink}>
+                  <span>{copied ? "Lien copié ✓" : "Copier le lien (cette compo)"}</span>
+                  <span className="export-menu__ext">URL</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         <button
           className="btn btn--icon"
           onClick={onHelp}
@@ -379,22 +397,24 @@ export default function TopBar({
         >
           ?
         </button>
-        <button
-          className="btn btn--icon"
-          onClick={onPresent}
-          title="Présentation plein écran"
-          aria-label="Présentation plein écran"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+        {view === "pitch" && (
+          <button
+            className="btn btn--icon"
+            onClick={onPresent}
+            title="Présentation plein écran"
+            aria-label="Présentation plein écran"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        )}
         <input
           ref={fileRef}
           type="file"
