@@ -1,4 +1,5 @@
 import {
+  DEFAULT_STUDIO_SETTINGS,
   FILE_VERSION,
   OPPONENT_FORMATION,
   PROJECT_FILE_VERSION,
@@ -15,6 +16,7 @@ import {
   type SetPieceState,
   type SetPieceType,
   type Slot,
+  type StudioSettings,
   type ZoneRadii,
 } from "./types";
 import { buildSlots } from "./formations";
@@ -273,6 +275,30 @@ export function saveLibrary(lib: Library): void {
     localStorage.setItem(CURRENT_PROJECT_KEY, lib.currentProjectId);
   } catch {
     // storage full or unavailable — ignore, export still works
+  }
+}
+
+// --- Studio settings (kit colours / poster layout) — a visual-identity
+// preference, not tactical data, so it lives in its own key rather than on
+// Lineup/Project (see StudioSettings in types.ts for why).
+
+const STUDIO_SETTINGS_KEY = "tactica11.studio";
+
+export function loadStudioSettings(): StudioSettings {
+  try {
+    const raw = localStorage.getItem(STUDIO_SETTINGS_KEY);
+    if (raw) return { ...DEFAULT_STUDIO_SETTINGS, ...JSON.parse(raw) };
+  } catch {
+    // fall through to defaults
+  }
+  return DEFAULT_STUDIO_SETTINGS;
+}
+
+export function saveStudioSettings(settings: StudioSettings): void {
+  try {
+    localStorage.setItem(STUDIO_SETTINGS_KEY, JSON.stringify(settings));
+  } catch {
+    // storage full or unavailable — ignore
   }
 }
 

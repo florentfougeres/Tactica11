@@ -39,7 +39,9 @@ import { usePlayerRoster } from "./hooks/usePlayerRoster";
 import { useProjectStore } from "./hooks/useProjectStore";
 import { useProjectActions } from "./hooks/useProjectActions";
 import { useSetPieceActions } from "./hooks/useSetPieceActions";
+import { useStudio } from "./hooks/useStudio";
 import SetPieceView from "./components/SetPieceView";
+import StudioView from "./components/StudioView";
 
 type Point = { x: number; y: number };
 
@@ -143,6 +145,12 @@ export default function App() {
     enterPresent,
     exitPresent,
   } = usePresentation(() => setView("pitch"));
+
+  // Studio: a separate fullscreen mode for exporting a stylised, shareable
+  // poster of the base lineup — see useStudio.ts for why its settings live
+  // outside Lineup (keeps kit-colour tweaking out of the undo/redo history).
+  const { studioOpen, openStudio, closeStudio, studioSettings, patchStudioSettings } =
+    useStudio();
 
   // Forget the active preset whenever the selected player changes.
   useEffect(() => {
@@ -727,9 +735,11 @@ export default function App() {
       )}
       <TopBar
         view={view}
+        phase={phase}
         name={lineup.name}
         formation={lineup.formation}
         onPresent={enterPresent}
+        onStudio={openStudio}
         onHelp={openOnboarding}
         theme={theme}
         onToggleTheme={toggleTheme}
@@ -876,6 +886,17 @@ export default function App() {
       )}
 
       {onboardOpen && <Onboarding onClose={closeOnboarding} />}
+
+      {studioOpen && (
+        <StudioView
+          lineup={lineup}
+          project={project}
+          playerById={playerById}
+          settings={studioSettings}
+          onPatchSettings={patchStudioSettings}
+          onClose={closeStudio}
+        />
+      )}
     </div>
   );
 }

@@ -155,6 +155,68 @@ export const DRAW_COLORS = [
 ];
 export const DEFAULT_DRAW_COLOR = DRAW_COLORS[0];
 
+// ---------- Studio (shareable lineup poster) ----------
+// Settings for the "Studio" mode: a standalone, base-phase-only fullscreen
+// view that renders the starting XI as a stylised, exportable poster for
+// social media. Deliberately NOT part of Lineup — it's a visual-identity
+// preference (kit colours, layout), not tactical data, and keeping it out of
+// Lineup keeps it out of the undo/redo history too (see useUndoableLineup).
+export type StudioDiscStyle = "circle" | "jersey";
+// The pitch is always the poster's background — "2d" is the familiar flat
+// top-down view, "3d" tilts it into a broadcast-style perspective shot.
+export type StudioBackground = "2d" | "3d";
+
+export interface StudioSettings {
+  discStyle: StudioDiscStyle;
+  discColor: string;
+  numberColor: string;
+  labelColor: string; // role/name text under the disc, and title/subtitle
+  discSize: number; // token width, in % of the pitch field's own width
+  nameFontSize: number; // px, base size for the role/name labels
+  background: StudioBackground;
+  showRole: boolean;
+  showName: boolean;
+  showNumber: boolean;
+  showLines: boolean; // pitch markings
+  title: string; // empty → falls back to the project name at render time
+  subtitle: string; // empty → falls back to the formation at render time
+  // The canvas is always sized to the pitch's own true ratio (68:105 or its
+  // inverse) — no arbitrary social-media presets to letterbox against, so
+  // the pitch fills the poster edge to edge instead of floating in padding.
+  aspect: Orient;
+}
+
+export const STUDIO_DISC_COLORS = ["#eef1f2", "#101418", ...DRAW_COLORS];
+
+export const DEFAULT_STUDIO_SETTINGS: StudioSettings = {
+  discStyle: "circle",
+  discColor: STUDIO_DISC_COLORS[0],
+  numberColor: STUDIO_DISC_COLORS[1],
+  labelColor: "#ffffff",
+  discSize: 10,
+  nameFontSize: 14,
+  background: "2d",
+  showRole: true,
+  showName: true,
+  showNumber: true,
+  showLines: true,
+  title: "",
+  subtitle: "",
+  aspect: "portrait",
+};
+
+// Logical position (percent) → percent offsets for a statically positioned
+// element (left/top + translate(-50%,-50%)). Unlike posToPx above, this needs
+// no container measurement — Studio tokens don't drag, so pixels aren't
+// necessary, just the same portrait/landscape percent remap.
+export function posToPercent(
+  pos: Pos,
+  orient: Orient,
+): { left: number; top: number } {
+  if (orient === "landscape") return { left: 100 - pos.y, top: pos.x };
+  return { left: pos.x, top: pos.y };
+}
+
 export interface Lineup {
   id: string;
   name: string;

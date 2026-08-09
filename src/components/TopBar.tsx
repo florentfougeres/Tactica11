@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { FORMATIONS } from "../formations";
+import type { Phase } from "../types";
 import type { View } from "./ViewTabs";
 
 interface Props {
   view: View;
+  phase: Phase;
   name: string;
   formation: string;
   compos: { id: string; name: string }[];
@@ -31,6 +33,7 @@ interface Props {
   onSaveProject: () => void;
   onImportProject: (file: File) => void;
   onPresent: () => void;
+  onStudio: () => void;
   onHelp: () => void;
   theme: "dark" | "light";
   onToggleTheme: () => void;
@@ -56,6 +59,7 @@ function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLE
 
 export default function TopBar({
   view,
+  phase,
   name,
   formation,
   compos,
@@ -83,6 +87,7 @@ export default function TopBar({
   onSaveProject,
   onImportProject,
   onPresent,
+  onStudio,
   onHelp,
   theme,
   onToggleTheme,
@@ -438,6 +443,24 @@ export default function TopBar({
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        )}
+        {view === "pitch" && phase === "base" && (
+          <button
+            className="btn btn--icon"
+            onClick={onStudio}
+            title="Studio — visuel à partager"
+            aria-label="Studio — visuel à partager"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M8 3 L4 6 L6 9 L8 7 L8 20 L16 20 L16 7 L18 9 L20 6 L16 3 C14 5 10 5 8 3 Z"
                 stroke="currentColor"
                 strokeWidth="1.8"
                 strokeLinecap="round"
