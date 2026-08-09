@@ -134,8 +134,8 @@ export default function PitchToken({
   return (
     <motion.div
       className={`token ${empty ? "token--empty" : "token--filled"} ${
-        selected ? "token--selected" : ""
-      } role-${slot.role.toLowerCase()}`}
+        isBase ? "token--base" : ""
+      } ${selected ? "token--selected" : ""} role-${slot.role.toLowerCase()}`}
       style={{ x, y, width: TOKEN_SIZE, height: TOKEN_SIZE }}
       drag={canDrag}
       dragMomentum={false}
@@ -150,7 +150,9 @@ export default function PitchToken({
         if (moved.current || frozen) return;
         // Click selects (any phase) to reveal the influence heatmap; click the
         // selected token again to clear it. The roster popover stays base-only.
-        if (!empty) onSelect(selected ? null : slot.id);
+        // Empty slots are only selectable in base, where clicking one opens the
+        // quick "create a player" popover.
+        if (!empty || isBase) onSelect(selected ? null : slot.id);
       }}
       onDragStart={() => {
         dragging.current = true;

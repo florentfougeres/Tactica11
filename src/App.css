@@ -1496,6 +1496,11 @@
   cursor: default;
   pointer-events: none;
 }
+/* Base mode: empty slots become clickable (quick "create a player" popover). */
+.token--empty.token--base {
+  cursor: pointer;
+  pointer-events: auto;
+}
 .token__disc {
   position: relative;
   flex: 0 0 auto;
@@ -1756,6 +1761,28 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.slot-pop__name-input {
+  flex: 1;
+  min-width: 0;
+  width: 72px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--panel-border);
+  border-radius: 7px;
+  padding: 4px 6px;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.slot-pop__name-input:focus {
+  border-color: var(--accent);
+  background: rgba(33, 208, 122, 0.1);
+}
+.slot-pop__name-input::placeholder {
+  color: var(--text-dim);
+  font-weight: 600;
 }
 .slot-pop__btn {
   flex: 0 0 auto;
@@ -2776,7 +2803,8 @@
    the dark panel), but at the same alpha on a near-white panel it reads as
    a heavy mid-grey box. Lighter alpha, light theme only — dark is untouched. */
 :root[data-theme="light"] .influence-mode,
-:root[data-theme="light"] .slot-pop__num {
+:root[data-theme="light"] .slot-pop__num,
+:root[data-theme="light"] .slot-pop__name-input {
   background: rgba(0, 0, 0, 0.06);
 }
 :root[data-theme="light"] .bench__item input {

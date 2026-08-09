@@ -44,6 +44,8 @@ interface Props {
   onRemoveSub: (slotId: string) => void;
   onSwap: (slotId: string) => void;
   onSetNumber: (playerId: string, number: number | null) => void;
+  onRenamePlayer: (playerId: string, name: string) => void;
+  onCreatePlayer: (slotId: string, name: string, number?: number) => void;
   onInfluence: (slotId: string, radii: ZoneRadii) => void;
   blend: number; // Défense(0) ↔ Attaque(1) scrub, owned by App
   scrubbing: boolean; // user is dragging the scrub → follow it 1:1
@@ -86,6 +88,8 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     onRemoveSub,
     onSwap,
     onSetNumber,
+    onRenamePlayer,
+    onCreatePlayer,
     onInfluence,
     blend,
     scrubbing,
@@ -364,6 +368,19 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
             onRemoveSub={onRemoveSub}
             onSwap={onSwap}
             onSetNumber={onSetNumber}
+            onRename={onRenamePlayer}
+          />
+        )}
+
+        {selected && !selectedStarter && size.w > 0 && phase === "base" && (
+          <EmptySlotPopover
+            key={selected.id}
+            slot={selected}
+            size={size}
+            phase={phase}
+            orient={orient}
+            fieldRef={innerRef}
+            onCreate={(name, number) => onCreatePlayer(selected.id, name, number)}
           />
         )}
 
@@ -415,6 +432,7 @@ function SlotPopover({
   onRemoveSub,
   onSwap,
   onSetNumber,
+  onRename,
 }: {
   slot: Slot;
   starter: Player;
@@ -427,14 +445,20 @@ function SlotPopover({
   onRemoveSub: (slotId: string) => void;
   onSwap: (slotId: string) => void;
   onSetNumber: (playerId: string, number: number | null) => void;
+  onRename: (playerId: string, name: string) => void;
 }) {
   const [numVal, setNumVal] = useState(
     starter.number != null ? String(starter.number) : "",
   );
+  const [nameVal, setNameVal] = useState(starter.name);
 
   function commitNum() {
     const n = parseInt(numVal.trim(), 10);
     onSetNumber(starter.id, Number.isNaN(n) ? null : n);
+  }
+
+  function commitName() {
+    onRename(starter.id, nameVal.trim());
   }
 
   const c = posToPx(slot.positions[phase], size, orient);
@@ -467,7 +491,18 @@ function SlotPopover({
           <span className="slot-pop__tag slot-pop__tag--starter">
             Titulaire
           </span>
-          <span className="slot-pop__name">{starter.name}</span>
+          <input
+            className="slot-pop__name-input"
+            value={nameVal}
+            onChange={(e) => setNameVal(e.target.value)}
+            onBlur={commitName}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitName();
+            }}
+            placeholder="Nom"
+            title="Nom du titulaire"
+            aria-label="Nom du titulaire"
+          />
           <input
             className="slot-pop__num"
             value={numVal}
@@ -512,6 +547,101 @@ function SlotPopover({
             </button>
           </div>
         )}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+// Base-only: clicking an empty slot opens this instead of SlotPopover — lets
+// you spin up a new player (name and/or shirt number) without leaving the
+// pitch for the roster tab.
+function EmptySlotPopover({
+  slot,
+  size,
+  phase,
+  orient,
+  fieldRef,
+  onCreate,
+}: {
+  slot: Slot;
+  size: { w: number; h: number };
+  phase: Phase;
+  orient: Orient;
+  fieldRef: React.RefObject<HTMLDivElement | null>;
+  onCreate: (name: string, number?: number) => void;
+}) {
+  const [nameVal, setNameVal] = useState("");
+  const [numVal, setNumVal] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  function commit() {
+    const n = parseInt(numVal.trim(), 10);
+    onCreate(nameVal.trim(), Number.isNaN(n) ? undefined : n);
+  }
+
+  const c = posToPx(slot.positions[phase], size, orient);
+  const rect = fieldRef.current?.getBoundingClientRect();
+  if (!rect) return null;
+  const cx = rect.left + c.x;
+  const cyTop = rect.top + c.y;
+  const below = c.y < size.h - 150;
+  const top = below
+    ? cyTop + TOKEN_SIZE / 2 + 18
+    : cyTop - TOKEN_SIZE / 2 - 18;
+  const left = Math.min(Math.max(cx, 105), window.innerWidth - 105);
+
+  return createPortal(
+    <div
+      className="slot-pop-anchor"
+      style={{
+        position: "fixed",
+        left,
+        top,
+        transform: `translate(-50%, ${below ? "0" : "-100%"})`,
+      }}
+    >
+      <div className="slot-pop glass" onPointerDown={(e) => e.stopPropagation()}>
+        <div className="slot-pop__row">
+          <input
+            ref={inputRef}
+            className="slot-pop__name-input"
+            value={nameVal}
+            onChange={(e) => setNameVal(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commit();
+            }}
+            placeholder="Nom"
+            title="Nom du joueur (optionnel)"
+            aria-label="Nom du nouveau joueur"
+          />
+          <input
+            className="slot-pop__num"
+            value={numVal}
+            onChange={(e) =>
+              setNumVal(e.target.value.replace(/\D/g, "").slice(0, 2))
+            }
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commit();
+            }}
+            inputMode="numeric"
+            placeholder="N°"
+            title="Numéro du joueur (optionnel)"
+            aria-label="Numéro du nouveau joueur"
+          />
+          <button
+            className="slot-pop__btn"
+            onClick={commit}
+            title="Créer le joueur"
+            aria-label="Créer le joueur"
+          >
+            ✓
+          </button>
+        </div>
       </div>
     </div>,
     document.body,
