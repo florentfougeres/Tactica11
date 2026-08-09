@@ -20,6 +20,26 @@ export function usePlayerRoster(
       ],
     }));
 
+  // Quick-create from an empty pitch slot (base mode): mint a player with a
+  // name and/or shirt number and drop it straight into the slot as starter,
+  // skipping the roster tab.
+  const createPlayerInSlot = (slotId: string, name: string, number?: number) => {
+    const id = uid("p");
+    updateProject((p) => ({
+      ...p,
+      players: [
+        ...p.players,
+        { id, name, ...(number != null ? { number } : {}) },
+      ],
+    }));
+    setLineup((l) => ({
+      ...l,
+      slots: l.slots.map((s) =>
+        s.id === slotId ? { ...s, starterId: id } : s,
+      ),
+    }));
+  };
+
   // Set or clear a player's (optional) shirt number. Pass null to remove it.
   const setPlayerNumber = (id: string, number: number | null) =>
     updateProject((p) => ({
@@ -154,6 +174,7 @@ export function usePlayerRoster(
 
   return {
     addPlayer,
+    createPlayerInSlot,
     setPlayerNumber,
     addPlayers,
     renamePlayer,

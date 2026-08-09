@@ -233,6 +233,7 @@ export default function App() {
   // --- roster (shared across every compo in the current project) ---
   const {
     addPlayer,
+    createPlayerInSlot,
     setPlayerNumber,
     addPlayers,
     renamePlayer,
@@ -518,6 +519,17 @@ export default function App() {
           : s,
       ),
     }));
+
+  // Quick-create from an empty slot's popover: add the player to the shared
+  // roster and drop it straight in, then close the popover.
+  const handleCreatePlayerInSlot = (
+    slotId: string,
+    name: string,
+    number?: number,
+  ) => {
+    createPlayerInSlot(slotId, name, number);
+    setSelectedSlot(null);
+  };
 
   // Undo / redo keyboard shortcuts (ignored while typing in a field).
   useEffect(() => {
@@ -853,6 +865,8 @@ export default function App() {
               onRemoveSub={removeSub}
               onSwap={swapStarterSub}
               onSetNumber={setPlayerNumber}
+              onRenamePlayer={renamePlayer}
+              onCreatePlayer={handleCreatePlayerInSlot}
               onInfluence={setInfluenceManual}
               blend={blend}
               scrubbing={scrubbing}
