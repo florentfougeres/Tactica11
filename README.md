@@ -48,23 +48,30 @@ Fonctionne ensuite hors-ligne, tout est stocké localement sur l'appareil.
 - **Phases de jeu** : base, **attaque** et **défense**, chaque emplacement
   gardant ses propres positions par phase + un **slider** pour scruber la
   transition défense ↔ attaque.
-- **Placement libre** des joueurs sur le terrain, animé au ressort (Framer Motion).
+- **Placement libre** des joueurs sur le terrain, animé au ressort (Framer Motion),
+  avec création d'un joueur directement depuis un emplacement vide en mode base.
 - **Effectif en glisser-déposer** : vivier de joueurs, titulaires + remplaçants
-  par poste, numéros de maillot optionnels.
+  par poste, numéros de maillot optionnels, table triable et éditable en un clic.
 - **Zones d'influence** par joueur ou par équipe, avec presets de rôles
   (type EA FC) ajustables à la main.
 - **Calque de dessin** par phase : flèches (courses), flèches pointillées
   (passes), tracé à main levée et zones.
 - **Adversaires** : place les 11 disques adverses en attaque/défense, avec
   sélecteur de couleur.
+- **Phase arrêtée** : onglet dédié pour corners, coups francs, touches et
+  penaltys, avec état avant/après et transition intermédiaire scrubable.
+- **Studio** : génère un visuel de compo façon poster (fond 2D/3D, disques ou
+  maillots, portrait/paysage) à exporter en image pour les réseaux sociaux.
 - **Grille positionnelle** en surimpression.
+- **Thème clair / sombre** avec bascule dans la barre du haut.
 - **Mode présentation plein écran** avec tiroir d'outils repliable.
 - **Orientation** portrait / paysage du terrain.
 - **Annuler / rétablir** (boutons + `⌘/Ctrl + Z`, `⇧` pour rétablir).
 - **Plusieurs compos** sauvegardées en local (`localStorage`).
 - **Partage & export** : lien partageable (URL compressée), export / import
   `.json`, export du terrain en **image PNG**, import de joueurs depuis un
-  fichier **CSV**.
+  fichier **CSV** (détection automatique de l'en-tête et des colonnes,
+  colonnes additionnelles importées comme attributs).
 - **PWA** installable, utilisable hors-ligne.
 
 ## Lancer en développement
@@ -101,5 +108,6 @@ npm run lint     # oxlint
 Une compo = un nom, une formation, une liste de joueurs et 11 emplacements.
 Chaque emplacement garde **un jeu de positions par phase** (base, attaque,
 défense) et une zone d'influence optionnelle, que l'on peut ajuster librement.
-S'y ajoutent les adversaires, les dessins par phase et la couleur adverse.
+S'y ajoutent les adversaires, les dessins par phase, la couleur adverse, les
+situations de phase arrêtée et les réglages du Studio (poster).
 Voir `src/types.ts` et `src/formations.ts`.
