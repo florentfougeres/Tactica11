@@ -28,6 +28,8 @@ import ZonePresets from "./components/ZonePresets";
 import { presetsFor, presetRadii } from "./zonePresets";
 import { exportPitchPng } from "./exportImage";
 import { useUndoableLineup } from "./useUndoableLineup";
+import { useAutoplay } from "./hooks/useAutoplay";
+import AutoplayControl from "./components/AutoplayControl";
 import { useOnboarding } from "./hooks/useOnboarding";
 import { useTheme } from "./hooks/useTheme";
 import { usePresentation } from "./hooks/usePresentation";
@@ -119,7 +121,22 @@ export default function App() {
     else if (v === 1) setPhase("attack");
   };
 
+  // Hands-free walkthrough of the défense↔attaque slider (team-briefing mode).
+  // While playing, treat it like an active scrub so tokens track the blend
+  // 1:1 instead of chasing it with a spring (see PitchToken's `instant`).
+  const blendAutoplay = useAutoplay(blend, handleBlend);
+  useEffect(() => {
+    if (blendAutoplay.playing) setScrubbing(true);
+    else setScrubbing(false);
+  }, [blendAutoplay.playing]);
+  // Leaving the pitch tab shouldn't leave the loop running unattended.
+  useEffect(() => {
+    if (view !== "pitch") blendAutoplay.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
   const handlePhase = (p: Phase) => {
+    blendAutoplay.stop();
     setPhase(p);
     setSelectedSlot(null); // roster popover is base-only
   };
@@ -352,11 +369,21 @@ export default function App() {
             step={0.02}
             value={blend}
             aria-label="Transition Défense → Attaque"
-            onPointerDown={() => setScrubbing(true)}
+            onPointerDown={() => {
+              blendAutoplay.stop();
+              setScrubbing(true);
+            }}
             onPointerUp={() => setScrubbing(false)}
             onChange={(e) => handleBlend(Number(e.target.value))}
           />
           <span>Att</span>
+          <AutoplayControl
+            playing={blendAutoplay.playing}
+            onToggle={blendAutoplay.toggle}
+            speed={blendAutoplay.speed}
+            onCycleSpeed={blendAutoplay.cycleSpeed}
+            label="la transition défense-attaque"
+          />
         </div>
       )}
 

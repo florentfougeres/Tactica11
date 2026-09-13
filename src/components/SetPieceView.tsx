@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type {
   Drawing,
   DrawTool,
@@ -8,6 +9,8 @@ import type {
 } from "../types";
 import { DEFAULT_OPPONENT_COLOR, DRAW_COLORS, OPPONENT_COLORS } from "../types";
 import type { useSetPieceActions } from "../hooks/useSetPieceActions";
+import { useAutoplay } from "../hooks/useAutoplay";
+import AutoplayControl from "./AutoplayControl";
 import SetPieceList, { type OnPitchPlayer } from "./SetPieceList";
 import SetPiecePitch from "./SetPiecePitch";
 import SetPieceStateToggle from "./SetPieceStateToggle";
@@ -106,9 +109,26 @@ export default function SetPieceView({
     onStateChange(nearestState(v));
   };
   const handleState = (s: SetPieceState) => {
+    autoplay.stop();
     onStateChange(s);
     onBlend(STATE_BLEND[s]);
   };
+
+  // Hands-free walkthrough of the Début↔Fin slider (team-briefing mode),
+  // cycling through the three anchors. While playing, treat it like an
+  // active scrub so tokens track the blend 1:1 (see SetPiecePitch's
+  // `instant`) instead of chasing it with a spring.
+  const autoplay = useAutoplay(blend, handleBlend);
+  useEffect(() => {
+    onScrubbing(autoplay.playing);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoplay.playing]);
+  // Switching set pieces mid-playback would otherwise keep driving the new
+  // one's slider from wherever the old one left off.
+  useEffect(() => {
+    autoplay.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current?.id]);
 
   // "Reprendre" copies the previous phase's positions into the one being
   // edited — a starting point so the user adjusts from there instead of
@@ -130,11 +150,21 @@ export default function SetPieceView({
           step={0.02}
           value={blend}
           aria-label="Transition Début → Fin"
-          onPointerDown={() => onScrubbing(true)}
+          onPointerDown={() => {
+            autoplay.stop();
+            onScrubbing(true);
+          }}
           onPointerUp={() => onScrubbing(false)}
           onChange={(e) => handleBlend(Number(e.target.value))}
         />
         <span>Fin</span>
+        <AutoplayControl
+          playing={autoplay.playing}
+          onToggle={autoplay.toggle}
+          speed={autoplay.speed}
+          onCycleSpeed={autoplay.cycleSpeed}
+          label="la séquence début-fin"
+        />
       </div>
 
       <SetPieceStateToggle state={state} onState={handleState} />

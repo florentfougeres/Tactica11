@@ -1100,6 +1100,43 @@
   accent-color: var(--accent);
   cursor: pointer;
 }
+.autoplay-ctl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.autoplay-ctl__play,
+.autoplay-ctl__speed {
+  border: 1px solid var(--panel-border);
+  background: rgba(var(--overlay-rgb), 0.05);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.autoplay-ctl__play {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.autoplay-ctl__play.is-playing {
+  border-color: rgba(33, 208, 122, 0.5);
+  background: rgba(33, 208, 122, 0.12);
+  color: var(--accent);
+}
+.autoplay-ctl__speed {
+  padding: 4px 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.autoplay-ctl__play:hover,
+.autoplay-ctl__speed:hover {
+  background: rgba(var(--overlay-rgb), 0.1);
+}
 /* iOS-style toggle row: label on the left, switch on the right */
 .pitch-ctl__row {
   display: flex;
