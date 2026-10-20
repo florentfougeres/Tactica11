@@ -75,8 +75,12 @@ export interface Playhead {
 
 // `prefer`: step picked in the editor. Steps with no hold followed by steps
 // with no transition share the same instant; this says which one is meant.
-export function playheadAt(steps: SeqStep[], t: number, prefer?: number): Playhead {
-  const spans = stepSpans(steps);
+export function playheadAt(
+  steps: SeqStep[],
+  t: number,
+  prefer?: number,
+  spans: StepSpan[] = stepSpans(steps),
+): Playhead {
   if (!spans.length) return { index: 0, from: 0, p: 1, e: 1, segT: 0, holding: true };
   const last = spans[spans.length - 1];
   const tc = Math.min(Math.max(0, t), last.end);
@@ -181,8 +185,7 @@ export function annVisibleAt(
   return i >= Math.min(a, b) && i <= Math.max(a, b);
 }
 
-export function chaptersOf(steps: SeqStep[]) {
-  const spans = stepSpans(steps);
+export function chaptersOf(steps: SeqStep[], spans: StepSpan[] = stepSpans(steps)) {
   const out: { title: string; start: number; end: number; firstStep: number }[] = [];
   steps.forEach((s, i) => {
     if (s.chapter && s.chapter.trim()) {
@@ -218,8 +221,9 @@ function idleOffset(id: string, t: number, amp: number): Pos {
 // live=false (paused editor) freezes the idle micro-movement.
 export function frameAt(seq: Sequence, t: number, live = true, prefer?: number): FrameState {
   const steps = seq.steps;
-  const duration = totalDuration(steps);
-  const head = playheadAt(steps, t, prefer);
+  const spans = stepSpans(steps);
+  const duration = spans.length ? spans[spans.length - 1].end : 0;
+  const head = playheadAt(steps, t, prefer, spans);
   const to = steps[head.index];
   const from = steps[head.from];
 
@@ -293,9 +297,11 @@ export function frameAt(seq: Sequence, t: number, live = true, prefer?: number):
   });
 
   // Ghosts: where moved players stood on the previous step.
+  // Positions of the step before the current one (ghosts and trails).
+  const prevPos = head.index > 0 ? (head.from === head.index - 1 ? posFrom : positionsOf(seq, steps[head.index - 1])) : null;
   const ghosts: GhostFrame[] = [];
-  if (to.ghosts && head.index > 0) {
-    const prev = positionsOf(seq, steps[head.index - 1]);
+  if (to.ghosts && prevPos) {
+    const prev = prevPos;
     const opacity = head.holding ? 1 : Math.min(1, head.p * 3);
     seq.actors.forEach((a) => {
       const f = prev[a.id];
@@ -307,11 +313,11 @@ export function frameAt(seq: Sequence, t: number, live = true, prefer?: number):
 
   // Trails: drawn while moving, then fading out during the hold.
   const trails: TrailFrame[] = [];
-  if (head.index > 0) {
-    const prev = head.holding ? positionsOf(seq, steps[head.index - 1]) : posFrom;
+  if (prevPos) {
+    const prev = prevPos;
     let opacity = 1;
     if (head.holding) {
-      const since = Math.max(0, t - stepSpans(steps)[head.index].arrive);
+      const since = Math.max(0, t - spans[head.index].arrive);
       opacity = Math.max(0, 1 - since / TRAIL_FADE_MS);
     }
     if (opacity > 0.01)
@@ -361,7 +367,7 @@ export function frameAt(seq: Sequence, t: number, live = true, prefer?: number):
     };
   }
 
-  const chapters = chaptersOf(steps);
+  const chapters = chaptersOf(steps, spans);
   let chapterIndex = -1;
   chapters.forEach((c, i) => {
     if (c.firstStep <= head.index) chapterIndex = i;
