@@ -15,14 +15,25 @@ import type { Orient } from "../types";
 export default function PitchMarkings({
   orient = "portrait",
   half = false,
+  frame,
+  line: lineColor,
+  lineWidth = 0.3,
 }: {
   orient?: Orient;
+  // Embedded mode (sequence stage): drawn as a nested <svg> at this box inside
+  // a parent SVG, without the absolutely-positioned overlay class.
+  frame?: { x: number; y: number; w: number; h: number };
+  line?: string;
+  lineWidth?: number;
   // Draw only the top half (opponent goal to halfway line) — used by the
   // set-piece board, which only needs the attacking third/half for precision.
   // Portrait only; the set-piece board doesn't offer a landscape toggle.
   half?: boolean;
 }) {
-  const line = "rgba(255,255,255,0.30)";
+  const line = lineColor ?? "rgba(255,255,255,0.30)";
+  const box = frame
+    ? { x: frame.x, y: frame.y, width: frame.w, height: frame.h }
+    : { className: "pitch-svg" };
 
   const W = 68;
   const L = 105;
@@ -45,12 +56,12 @@ export default function PitchMarkings({
     const H = L / 2; // 52.5 — crop at the halfway line
     return (
       <svg
-        className="pitch-svg"
+        {...box}
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
         aria-hidden="true"
       >
-        <g fill="none" stroke={line} strokeWidth="0.3">
+        <g fill="none" stroke={line} strokeWidth={lineWidth}>
           {/* touchlines + goal line */}
           <rect x="0" y="0" width={W} height={H} />
           {/* halfway line + top of the centre circle */}
@@ -78,7 +89,7 @@ export default function PitchMarkings({
   const land = orient === "landscape";
   return (
     <svg
-      className="pitch-svg"
+      {...box}
       viewBox={land ? `0 0 ${L} ${W}` : `0 0 ${W} ${L}`}
       preserveAspectRatio="none"
       aria-hidden="true"
@@ -86,7 +97,7 @@ export default function PitchMarkings({
       <g
         fill="none"
         stroke={line}
-        strokeWidth="0.3"
+        strokeWidth={lineWidth}
         transform={land ? `translate(${L} 0) rotate(90)` : undefined}
       >
         {/* touchlines + goal lines */}

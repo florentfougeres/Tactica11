@@ -20,6 +20,7 @@ import {
   type ZoneRadii,
 } from "./types";
 import { buildSlots } from "./formations";
+import { migrateSequence } from "./sequence/create";
 
 // Influence used to be a single flat ZoneRadii (shared across phases). Convert
 // that to the per-phase shape, applying the old zone to both attack and defense.
@@ -141,6 +142,9 @@ export function migrateLineup(
     if (!old) return s;
     return {
       ...s,
+      // Keep the stored id: sequences reference slots by id across reloads.
+      id: old.id || s.id,
+      ...(old.roleLabels ? { roleLabels: old.roleLabels } : {}),
       starterId: old.starterId ?? old.playerId ?? null,
       subId: old.subId ?? null,
       influence: migrateInfluence(old.influence),
@@ -162,6 +166,9 @@ export function migrateLineup(
     setPieces: (parsed.setPieces ?? [])
       .filter((sp) => sp && sp.id)
       .map(migrateSetPiece),
+    ...(parsed.sequences?.length
+      ? { sequences: parsed.sequences.filter((q) => q && q.id && q.steps?.length).map(migrateSequence) }
+      : {}),
   };
 }
 
@@ -358,10 +365,14 @@ export function buildLineupFile(project: Project, lineup: Lineup): LineupFile {
   const attributeDefs = project.attributeDefs.filter((d) =>
     usedAttrIds.has(d.id),
   );
+  // Sequences stay out of compo files / share links (far too long for a URL);
+  // they travel with the whole-project .json instead.
+  const { sequences: _omit, ...shared } = lineup;
+  void _omit;
   return {
     app: "tactica11",
     version: FILE_VERSION,
-    lineup,
+    lineup: shared,
     players,
     attributeDefs,
   };

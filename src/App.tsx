@@ -42,6 +42,8 @@ import { useSetPieceActions } from "./hooks/useSetPieceActions";
 import { useStudio } from "./hooks/useStudio";
 import SetPieceView from "./components/SetPieceView";
 import StudioView from "./components/StudioView";
+import SequenceView from "./components/sequence/SequenceView";
+import { useSequenceActions } from "./hooks/useSequenceActions";
 
 // French phase labels, used to suffix exported PNG filenames.
 const PHASE_LABEL: Record<Phase, string> = {
@@ -108,6 +110,11 @@ export default function App() {
   const [spDrawMode, setSpDrawMode] = useState(false);
   const [spDrawTool, setSpDrawTool] = useState<DrawTool>("arrow");
   const [spDrawColor, setSpDrawColor] = useState<string>(DEFAULT_DRAW_COLOR);
+
+  // Séquence mode: animated multi-step sequences stored on the compo (so they
+  // share its undo/redo stack). Only the shown sequence id is view state.
+  const sequenceActions = useSequenceActions(lineup, setLineup);
+  const [seqId, setSeqId] = useState<string | null>(null);
 
   // Keep the scrub in sync when the phase is set from the toggle buttons.
   useEffect(() => {
@@ -591,7 +598,7 @@ export default function App() {
         </div>
       )}
 
-      <main className="layout">
+      <main className={`layout ${view === "sequence" ? "layout--seq" : ""}`}>
         {view === "roster" ? (
           <RosterTable
             players={project.players}
@@ -605,6 +612,14 @@ export default function App() {
             onRenameColumn={renameColumn}
             onRemoveColumn={removeColumn}
             onImportCsv={() => setCsvOpen(true)}
+          />
+        ) : view === "sequence" ? (
+          <SequenceView
+            lineup={lineup}
+            playerById={playerById}
+            actions={sequenceActions}
+            seqId={seqId}
+            onSeqId={setSeqId}
           />
         ) : view === "setpiece" ? (
           <SetPieceView

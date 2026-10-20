@@ -1,0 +1,818 @@
+// The one renderer of the Séquence mode: a pure SVG drawing of a FrameState.
+// No hooks, no animation library — every pixel is a function of the frame —
+// so the editor, the fullscreen preview and the video export (which renders
+// this component to static markup frame by frame) are guaranteed identical.
+import type { ReactNode, Ref } from "react";
+import type { Pos } from "../types";
+import PitchMarkings from "../components/PitchMarkings";
+import type { AnnFrame, FrameState } from "./engine";
+import { anchorPos } from "./engine";
+import type { FrameLayout } from "./layout";
+import { cameraTransform, toLocal } from "./layout";
+import type { SeqActor, Sequence } from "./types";
+import { isArrow } from "./types";
+
+export interface ActorInfo {
+  disc: string;
+  name: string;
+}
+
+export interface StageOverlay {
+  selectedActors?: Set<string>;
+  selectedAnn?: string | null;
+  draft?: AnnFrame | null; // annotation being drawn
+  marquee?: { a: Pos; b: Pos } | null; // pitch-percent selection rectangle
+  safeZones?: boolean;
+  editable?: boolean; // show handles
+}
+
+interface Props {
+  seq: Sequence;
+  frame: FrameState;
+  layout: FrameLayout;
+  info: Record<string, ActorInfo>;
+  background?: "normal" | "chroma";
+  idPrefix?: string;
+  overlay?: StageOverlay;
+  cameraRef?: Ref<SVGGElement>;
+  svgRef?: Ref<SVGSVGElement>;
+  className?: string;
+  pixelSize?: { w: number; h: number }; // rendered size (export); viewBox stays L.W×L.H
+  // Editor-only: pointer plumbing (the stage tags elements with data-* attrs).
+  onPointerDown?: (e: React.PointerEvent<SVGSVGElement>) => void;
+  onPointerMove?: (e: React.PointerEvent<SVGSVGElement>) => void;
+  onPointerUp?: (e: React.PointerEvent<SVGSVGElement>) => void;
+  onDoubleClick?: (e: React.MouseEvent<SVGSVGElement>) => void;
+  onWheel?: (e: React.WheelEvent<SVGSVGElement>) => void;
+}
+
+const FONT = "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif";
+
+// Text width estimate (no DOM measuring: the export renders to static markup).
+const textW = (s: string, fs: number, upper = false) =>
+  s.length * fs * (upper ? 0.66 : 0.58);
+
+type P = { x: number; y: number };
+const f = (n: number) => n.toFixed(1);
+
+// Sample an arrow as a polyline: straight or quadratic, trimmed at both ends
+// (so it starts/stops at a disc's edge) and cut at `progress` (draw-in).
+function arrowPoints(a: P, b: P, c: P | null, trimA: number, trimB: number, progress: number, wavy: number) {
+  const N = 40;
+  const at = (t: number): P => {
+    if (!c) return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+    const u = 1 - t;
+    return {
+      x: u * u * a.x + 2 * u * t * c.x + t * t * b.x,
+      y: u * u * a.y + 2 * u * t * c.y + t * t * b.y,
+    };
+  };
+  let len = 0;
+  let prev = at(0);
+  for (let i = 1; i <= N; i++) {
+    const p = at(i / N);
+    len += Math.hypot(p.x - prev.x, p.y - prev.y);
+    prev = p;
+  }
+  if (len < 1) return [];
+  const t0 = Math.min(0.45, trimA / len);
+  const t1 = Math.max(0.55, 1 - trimB / len);
+  const tEnd = t0 + (t1 - t0) * Math.max(0, Math.min(1, progress));
+  const pts: P[] = [];
+  const steps = Math.max(2, Math.round(N * (tEnd - t0)) + 1);
+  for (let i = 0; i <= steps; i++) {
+    const t = t0 + ((tEnd - t0) * i) / steps;
+    pts.push(at(t));
+  }
+  if (wavy > 0 && pts.length > 2) {
+    // Dribble: a sine wiggle along the path, fading out near the head.
+    const out: P[] = [];
+    let s = 0;
+    for (let i = 0; i < pts.length; i++) {
+      if (i > 0) s += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+      const j = Math.min(pts.length - 1, i + 1);
+      const k = Math.max(0, i - 1);
+      const dx = pts[j].x - pts[k].x;
+      const dy = pts[j].y - pts[k].y;
+      const dl = Math.hypot(dx, dy) || 1;
+      const fade = i > pts.length - 4 ? 0 : 1;
+      const off = Math.sin(s / (wavy * 2.2)) * wavy * fade;
+      out.push({ x: pts[i].x + (-dy / dl) * off, y: pts[i].y + (dx / dl) * off });
+    }
+    return out;
+  }
+  return pts;
+}
+
+function head(pts: P[], size: number) {
+  if (pts.length < 2) return null;
+  const b = pts[pts.length - 1];
+  const a = pts[Math.max(0, pts.length - 4)];
+  const ang = Math.atan2(b.y - a.y, b.x - a.x);
+  const sp = 0.5;
+  const p1 = { x: b.x - size * Math.cos(ang - sp), y: b.y - size * Math.sin(ang - sp) };
+  const p2 = { x: b.x - size * Math.cos(ang + sp), y: b.y - size * Math.sin(ang + sp) };
+  return `M${f(p1.x)},${f(p1.y)} L${f(b.x)},${f(b.y)} L${f(p2.x)},${f(p2.y)} Z`;
+}
+
+const poly = (pts: P[]) => pts.map((p) => `${f(p.x)},${f(p.y)}`).join(" ");
+
+export default function SequenceStage({
+  seq,
+  frame,
+  layout: L,
+  info,
+  background = "normal",
+  idPrefix = "seq",
+  overlay,
+  cameraRef,
+  svgRef,
+  className,
+  pixelSize,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onDoubleClick,
+  onWheel,
+}: Props) {
+  const cinema = seq.preset === "cinema";
+  const T = seq.theme;
+  const u = L.u;
+  const R = 3.2 * u; // disc radius
+  const pw = L.pitch.w;
+  const ph = L.pitch.h;
+  const loc = (p: Pos) => toLocal(L, p);
+  const pos = frame.positions;
+  const pid = (s: string) => `${idPrefix}-${s}`;
+
+  // ----- colours of the board -----
+  const bg =
+    background === "chroma" ? "#00b140" : cinema ? `url(#${pid("bg")})` : "#1f8f4a";
+  const grassA = cinema ? "#1b3a24" : "#35b964";
+  const grassB = cinema ? "#1f4229" : "#3cc46c";
+  const lineColor = cinema ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.9)";
+
+  // ----- grass stripes (pitch-local) -----
+  // Stripes cover the grass apron (pitch + 5% margin), clipped to its
+  // rounded corners.
+  const apron = { x: -pw * 0.05, y: -ph * 0.05, w: pw * 1.1, h: ph * 1.1 };
+  const stripes: ReactNode[] = [];
+  const nStripes = 12;
+  const portrait = L.orient === "portrait";
+  for (let i = 0; i < nStripes; i++) {
+    const s = (portrait ? apron.h : apron.w) / nStripes;
+    stripes.push(
+      <rect
+        key={i}
+        x={portrait ? apron.x : apron.x + i * s}
+        y={portrait ? apron.y + i * s : apron.y}
+        width={portrait ? apron.w : s + 0.5}
+        height={portrait ? s + 0.5 : apron.h}
+        fill={i % 2 ? grassA : grassB}
+      />,
+    );
+  }
+
+  // ----- goals (outside the goal lines, real 7.32 m) -----
+  const goalW = (7.32 / 68) * (L.orient === "portrait" ? pw : ph);
+  const goalD = (2.2 / 105) * (L.orient === "portrait" ? ph : pw);
+  const goals =
+    L.orient === "portrait"
+      ? [
+          { x: pw / 2 - goalW / 2, y: -goalD, w: goalW, h: goalD },
+          { x: pw / 2 - goalW / 2, y: ph, w: goalW, h: goalD },
+        ]
+      : [
+          { x: pw, y: ph / 2 - goalW / 2, w: goalD, h: goalW },
+          { x: -goalD, y: ph / 2 - goalW / 2, w: goalD, h: goalW },
+        ];
+
+  // ----- annotations -----
+  const annNode = (af: AnnFrame, draft = false): ReactNode => {
+    const { ann, visibility, progress } = af;
+    const sel = overlay?.selectedAnn === ann.id;
+    const op = visibility;
+    const color = ann.color;
+    const common = {
+      "data-ann": draft ? undefined : ann.id,
+      opacity: op,
+      style: overlay?.editable ? { cursor: "pointer" } : undefined,
+    };
+    const pts = ann.anchors
+      .map((a) => anchorPos(a, pos))
+      .filter((p): p is Pos => p != null)
+      .map(loc);
+
+    if (isArrow(ann.kind)) {
+      if (pts.length < 2) return null;
+      const [a, b] = pts;
+      const c = ann.control ? loc(ann.control) : null;
+      const trimA = "actorId" in ann.anchors[0] ? R * 1.15 : 0;
+      const trimB = ann.anchors[1] && "actorId" in ann.anchors[1] ? R * 1.25 : 0;
+      const k = ann.kind;
+      const w = (k === "deep" ? 0.95 : k === "pass" ? 0.55 : k === "press" ? 0.8 : 0.68) * u;
+      const line = arrowPoints(a, b, c, trimA, trimB, progress, k === "dribble" ? 0.75 * u : 0);
+      if (line.length < 2) return null;
+      const hd = head(line, w * 3.6);
+      return (
+        <g key={ann.id} {...common}>
+          {/* wide invisible hit area for selection */}
+          {overlay?.editable && (
+            <polyline points={poly(line)} fill="none" stroke="transparent" strokeWidth={R * 1.2} />
+          )}
+          {(k === "deep" || sel) && (
+            <polyline
+              points={poly(line)}
+              fill="none"
+              stroke={sel ? "#ffffff" : color}
+              strokeOpacity={sel ? 0.35 : 0.25}
+              strokeWidth={w * (sel ? 3.2 : 2.8)}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
+          <polyline
+            points={poly(line)}
+            fill="none"
+            stroke={color}
+            strokeWidth={w}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeDasharray={k === "pass" ? `${f(w * 2.4)} ${f(w * 2.2)}` : undefined}
+          />
+          {hd && <path d={hd} fill={color} stroke={color} strokeWidth={w * 0.6} strokeLinejoin="round" />}
+        </g>
+      );
+    }
+
+    if (ann.kind === "zone" || ann.kind === "space" || ann.kind === "playerZone") {
+      if (pts.length < 3) return null;
+      const hatch = ann.kind === "space";
+      return (
+        <g key={ann.id} {...common}>
+          {hatch && (
+            <defs>
+              <pattern
+                id={pid(`hatch-${ann.id}`)}
+                width={u * 1.6}
+                height={u * 1.6}
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(45)"
+              >
+                <rect width={u * 0.55} height={u * 1.6} fill={color} fillOpacity={0.45} />
+              </pattern>
+            </defs>
+          )}
+          <polygon
+            points={poly(pts)}
+            fill={hatch ? `url(#${pid(`hatch-${ann.id}`)})` : color}
+            fillOpacity={hatch ? 1 : ann.kind === "playerZone" ? 0.26 : 0.2}
+            stroke={sel ? "#ffffff" : color}
+            strokeWidth={0.38 * u}
+            strokeOpacity={0.95}
+            strokeLinejoin="round"
+            strokeDasharray={hatch ? `${f(u)} ${f(u * 0.8)}` : undefined}
+          />
+          {ann.text && <Pill x={centroid(pts).x} y={centroid(pts).y} text={ann.text} fs={2.1 * u} bg={color} fg="#0b0f14" />}
+        </g>
+      );
+    }
+
+    if (ann.kind === "playerLine" || ann.kind === "marking") {
+      if (pts.length < 2) return null;
+      const w = (ann.kind === "marking" ? 0.36 : 0.62) * u;
+      return (
+        <g key={ann.id} {...common}>
+          {overlay?.editable && (
+            <polyline points={poly(pts)} fill="none" stroke="transparent" strokeWidth={R} />
+          )}
+          <polyline
+            points={poly(pts)}
+            fill="none"
+            stroke={sel ? "#ffffff" : color}
+            strokeWidth={w}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeDasharray={ann.kind === "marking" ? `${f(u * 1.1)} ${f(u * 0.9)}` : undefined}
+          />
+          {ann.text && (
+            <Pill x={(pts[0].x + pts[pts.length - 1].x) / 2} y={(pts[0].y + pts[pts.length - 1].y) / 2} text={ann.text} fs={2 * u} bg={color} fg="#0b0f14" />
+          )}
+        </g>
+      );
+    }
+
+    if (ann.kind === "circle") {
+      if (!pts.length) return null;
+      const r = R * 1.55 * (ann.size ?? 1);
+      return (
+        <g key={ann.id} {...common}>
+          <circle cx={pts[0].x} cy={pts[0].y} r={r} fill={color} fillOpacity={0.12} stroke={sel ? "#ffffff" : color} strokeWidth={0.5 * u} />
+          {ann.text && <Pill x={pts[0].x} y={pts[0].y + r + 2.2 * u} text={ann.text} fs={2 * u} bg={color} fg="#0b0f14" />}
+        </g>
+      );
+    }
+
+    if (ann.kind === "line") {
+      if (pts.length < 2) return null;
+      const [a, b] = pts;
+      return (
+        <g key={ann.id} {...common}>
+          {overlay?.editable && <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="transparent" strokeWidth={R} />}
+          <line
+            x1={a.x}
+            y1={a.y}
+            x2={b.x}
+            y2={b.y}
+            stroke={sel ? "#ffffff" : color}
+            strokeWidth={0.4 * u}
+            strokeDasharray={`${f(u * 1.4)} ${f(u * 1)}`}
+            strokeLinecap="round"
+          />
+          {ann.text && (
+            <Pill x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 - 2.2 * u} text={ann.text} fs={1.9 * u} bg="rgba(8,12,18,0.85)" fg={color} />
+          )}
+        </g>
+      );
+    }
+
+    if (ann.kind === "label") {
+      if (!pts.length) return null;
+      const onActor = "actorId" in ann.anchors[0];
+      const x = pts[0].x;
+      const y = onActor ? pts[0].y - R * 2.9 : pts[0].y;
+      const scale = ann.size ?? 1;
+      return (
+        <g key={ann.id} {...common}>
+          <Pill
+            x={x}
+            y={y}
+            text={(ann.text || "Texte").toUpperCase()}
+            fs={2.3 * u * scale}
+            bg={color}
+            fg={isDark(color) ? "#ffffff" : "#0b0f14"}
+            upper
+            outline={sel ? "#ffffff" : undefined}
+          />
+        </g>
+      );
+    }
+    return null;
+  };
+
+  // ----- actors -----
+  const actorNode = (a: SeqActor) => {
+    const p = pos[a.id];
+    if (!p) return null;
+    const c = loc(p);
+    const focus = frame.focus[a.id] ?? 0;
+    const opacity = 1 - 0.72 * frame.dim * (1 - focus);
+    const home = a.team === "home";
+    const fill = a.gk ? (home ? T.homeGk : T.awayGk) : home ? T.homeColor : T.awayColor;
+    const textColor = a.gk ? "#0b0f14" : home ? T.homeText : T.awayText;
+    const inf = info[a.id] ?? { disc: "", name: "" };
+    const sel = overlay?.selectedActors?.has(a.id);
+    const discFill = focus > 0.5 && cinema ? T.accent : fill;
+    const discText = focus > 0.5 && cinema ? "#0b0f14" : textColor;
+    const fs = inf.disc.length > 2 ? R * 0.72 : R * 0.92;
+    const showName = seq.showNames && inf.name;
+    return (
+      <g key={a.id} data-actor={a.id} opacity={opacity} style={overlay?.editable ? { cursor: "grab" } : undefined}>
+        {focus > 0 && (
+          <>
+            <circle cx={c.x} cy={c.y} r={R * 1.75} fill={T.accent} fillOpacity={0.22 * focus} />
+            <circle cx={c.x} cy={c.y} r={R * 1.38} fill="none" stroke={T.accent} strokeWidth={0.45 * u} strokeOpacity={focus} />
+          </>
+        )}
+        <circle cx={c.x} cy={c.y + R * 0.16} r={R} fill="#000" fillOpacity={0.35} />
+        <circle
+          cx={c.x}
+          cy={c.y}
+          r={R}
+          fill={discFill}
+          stroke={home ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.35)"}
+          strokeWidth={0.28 * u}
+        />
+        {sel && <circle cx={c.x} cy={c.y} r={R + 0.75 * u} fill="none" stroke="#21d07a" strokeWidth={0.55 * u} />}
+        {seq.showNumbers && inf.disc && (
+          <text
+            x={c.x}
+            y={c.y}
+            dy="0.35em"
+            textAnchor="middle"
+            fontFamily={FONT}
+            fontWeight={800}
+            fontSize={fs}
+            fill={discText}
+          >
+            {inf.disc}
+          </text>
+        )}
+        {showName && (
+          <Pill
+            x={c.x}
+            y={c.y - R - 1.9 * u}
+            text={cinema ? inf.name.toUpperCase() : inf.name.toUpperCase()}
+            fs={1.65 * u}
+            bg={focus > 0.5 && cinema ? T.accent : "rgba(8,12,18,0.82)"}
+            fg={focus > 0.5 && cinema ? "#0b0f14" : "#ffffff"}
+            upper
+          />
+        )}
+      </g>
+    );
+  };
+
+  // Draw order: away first (under), then home; focused actors on top.
+  const actorsSorted = [...seq.actors].sort((a, b) => {
+    const fa = frame.focus[a.id] ?? 0;
+    const fb = frame.focus[b.id] ?? 0;
+    if (fa !== fb) return fa - fb;
+    return a.team === b.team ? 0 : a.team === "away" ? -1 : 1;
+  });
+
+  const ballC = loc(frame.ball);
+  const marquee = overlay?.marquee;
+
+  return (
+    <svg
+      ref={svgRef}
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      viewBox={`0 0 ${L.W} ${L.H}`}
+      width={pixelSize?.w ?? L.W}
+      height={pixelSize?.h ?? L.H}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onDoubleClick={onDoubleClick}
+      onWheel={onWheel}
+      style={{ touchAction: "none", userSelect: "none" }}
+    >
+      <defs>
+        <radialGradient id={pid("bg")} cx="50%" cy="38%" r="75%">
+          <stop offset="0%" stopColor="#173823" />
+          <stop offset="65%" stopColor="#0b1d12" />
+          <stop offset="100%" stopColor="#050c08" />
+        </radialGradient>
+        <linearGradient id={pid("top")} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#000" stopOpacity={cinema ? 0.75 : 0.35} />
+          <stop offset="100%" stopColor="#000" stopOpacity={0} />
+        </linearGradient>
+        <linearGradient id={pid("bottom")} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor="#000" stopOpacity={cinema ? 0.7 : 0.3} />
+          <stop offset="100%" stopColor="#000" stopOpacity={0} />
+        </linearGradient>
+        <radialGradient id={pid("flash")} cx="50%" cy="50%" r="72%">
+          <stop offset="45%" stopColor={frame.effect?.color ?? "#ff2d3a"} stopOpacity={0} />
+          <stop offset="100%" stopColor={frame.effect?.color ?? "#ff2d3a"} stopOpacity={0.9} />
+        </radialGradient>
+      </defs>
+
+      <rect data-bg="1" x={0} y={0} width={L.W} height={L.H} fill={bg} />
+
+      {/* ---------- camera: everything that lives on the pitch ---------- */}
+      <g ref={cameraRef} transform={cameraTransform(L, frame.camera)}>
+        <clipPath id={pid("apron")}>
+          <rect x={apron.x} y={apron.y} width={apron.w} height={apron.h} rx={u * 2} />
+        </clipPath>
+        <g data-bg="1" clipPath={`url(#${pid("apron")})`}>{stripes}</g>
+        <PitchMarkings orient={L.orient} frame={{ x: 0, y: 0, w: pw, h: ph }} line={lineColor} lineWidth={cinema ? 0.28 : 0.4} />
+        {goals.map((g, i) => (
+          <rect
+            key={i}
+            x={g.x}
+            y={g.y}
+            width={g.w}
+            height={g.h}
+            fill="rgba(255,255,255,0.18)"
+            stroke={cinema ? "rgba(255,255,255,0.8)" : "#ffffff"}
+            strokeWidth={0.4 * u}
+          />
+        ))}
+
+        {/* zones under everything else */}
+        {frame.annotations
+          .filter((af) => ["zone", "space", "playerZone"].includes(af.ann.kind))
+          .map((af) => annNode(af))}
+
+        {/* ghosts: where moved players came from */}
+        {frame.ghosts.map((g) => {
+          const a = loc(g.from);
+          const b = loc(g.to);
+          const line = arrowPoints(a, b, null, R * 1.05, R * 1.25, 1, 0);
+          const hd = head(line, u * 1.8);
+          return (
+            <g key={`ghost-${g.actorId}`} opacity={g.opacity * 0.85}>
+              <circle cx={a.x} cy={a.y} r={R} fill="none" stroke="#ffffff" strokeOpacity={0.7} strokeWidth={0.3 * u} strokeDasharray={`${f(u * 0.8)} ${f(u * 0.7)}`} />
+              {line.length > 1 && (
+                <>
+                  <polyline points={poly(line)} fill="none" stroke={T.accent} strokeWidth={0.4 * u} strokeDasharray={`${f(u * 1)} ${f(u * 0.9)}`} strokeLinecap="round" />
+                  {hd && <path d={hd} fill={T.accent} />}
+                </>
+              )}
+            </g>
+          );
+        })}
+
+        {frame.annotations
+          .filter((af) => !["zone", "space", "playerZone", "label"].includes(af.ann.kind))
+          .map((af) => annNode(af))}
+
+        {actorsSorted.map(actorNode)}
+
+        {/* ball */}
+        <g data-ball="1" style={overlay?.editable ? { cursor: "grab" } : undefined}>
+          <circle cx={ballC.x} cy={ballC.y + R * 0.1} r={R * 0.46} fill="#000" fillOpacity={0.35} />
+          <circle cx={ballC.x} cy={ballC.y} r={R * 0.44} fill="#ffffff" stroke="#0b0f14" strokeWidth={0.22 * u} />
+          <circle cx={ballC.x} cy={ballC.y} r={R * 0.15} fill="#0b0f14" />
+        </g>
+
+        {/* labels on top of the players */}
+        {frame.annotations.filter((af) => af.ann.kind === "label").map((af) => annNode(af))}
+
+        {overlay?.draft && annNode(overlay.draft, true)}
+
+        {/* editor handles */}
+        {overlay?.editable && overlay.selectedAnn && (() => {
+          const ann = seq.annotations.find((x) => x.id === overlay.selectedAnn);
+          if (!ann) return null;
+          const hs: ReactNode[] = [];
+          ann.anchors.forEach((an, i) => {
+            if ("pos" in an) {
+              const c = loc(an.pos);
+              hs.push(<circle key={`h${i}`} data-handle={`a${i}`} cx={c.x} cy={c.y} r={1.25 * u} fill="#ffffff" stroke="#21d07a" strokeWidth={0.4 * u} style={{ cursor: "move" }} />);
+            }
+          });
+          if (isArrow(ann.kind) && ann.anchors.length === 2) {
+            const a = anchorPos(ann.anchors[0], pos);
+            const b = anchorPos(ann.anchors[1], pos);
+            if (a && b) {
+              const cp = ann.control ?? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+              const c = loc(cp);
+              hs.push(<rect key="ctl" data-handle="ctl" x={c.x - 1.1 * u} y={c.y - 1.1 * u} width={2.2 * u} height={2.2 * u} transform={`rotate(45 ${f(c.x)} ${f(c.y)})`} fill="#21d07a" stroke="#ffffff" strokeWidth={0.3 * u} style={{ cursor: "move" }} />);
+            }
+          }
+          return <g>{hs}</g>;
+        })()}
+
+        {marquee && (() => {
+          const a = loc(marquee.a);
+          const b = loc(marquee.b);
+          return (
+            <rect
+              x={Math.min(a.x, b.x)}
+              y={Math.min(a.y, b.y)}
+              width={Math.abs(a.x - b.x)}
+              height={Math.abs(a.y - b.y)}
+              fill="rgba(33,208,122,0.12)"
+              stroke="#21d07a"
+              strokeWidth={0.3 * u}
+              strokeDasharray={`${f(u)} ${f(u * 0.7)}`}
+            />
+          );
+        })()}
+      </g>
+
+      {/* ---------- screen-space overlays ---------- */}
+      <rect x={0} y={0} width={L.W} height={L.pitch.y + u * 4} fill={`url(#${pid("top")})`} pointerEvents="none" />
+      <rect x={0} y={L.pitch.y + L.pitch.h - u * 6} width={L.W} height={L.H - (L.pitch.y + L.pitch.h - u * 6)} fill={`url(#${pid("bottom")})`} pointerEvents="none" />
+
+      <Header seq={seq} frame={frame} L={L} />
+      <Caption seq={seq} frame={frame} L={L} />
+
+      {frame.effect?.kind === "flash" && frame.effect.strength > 0 && (
+        <rect x={0} y={0} width={L.W} height={L.H} fill={`url(#${pid("flash")})`} opacity={frame.effect.strength} pointerEvents="none" />
+      )}
+      {frame.effect?.kind === "bigText" && frame.effect.strength > 0 && (
+        <text
+          x={L.W / 2}
+          y={L.pitch.y + L.pitch.h * 0.12}
+          textAnchor="middle"
+          dy="0.35em"
+          fontFamily={FONT}
+          fontWeight={900}
+          fontSize={L.W * 0.12 * (0.85 + 0.15 * frame.effect.strength)}
+          fill={frame.effect.color}
+          stroke="#0b0f14"
+          strokeWidth={L.W * 0.006}
+          paintOrder="stroke"
+          opacity={frame.effect.strength}
+          letterSpacing={L.W * 0.004}
+          pointerEvents="none"
+        >
+          {frame.effect.text.toUpperCase()}
+        </text>
+      )}
+
+      {overlay?.safeZones && <SafeZones L={L} format={seq.format} />}
+    </svg>
+  );
+}
+
+function centroid(pts: P[]): P {
+  const s = pts.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
+  return { x: s.x / pts.length, y: s.y / pts.length };
+}
+
+function isDark(hex: string) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return false;
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return 0.299 * r + 0.587 * g + 0.114 * b < 110;
+}
+
+function Pill({
+  x,
+  y,
+  text,
+  fs,
+  bg,
+  fg,
+  upper = false,
+  outline,
+}: {
+  x: number;
+  y: number;
+  text: string;
+  fs: number;
+  bg: string;
+  fg: string;
+  upper?: boolean;
+  outline?: string;
+}) {
+  const w = textW(text, fs, upper) + fs * 1.1;
+  const h = fs * 1.55;
+  return (
+    <g pointerEvents="none">
+      <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={fs * 0.32} fill={bg} stroke={outline} strokeWidth={outline ? fs * 0.12 : undefined} />
+      <text
+        x={x}
+        y={y}
+        dy="0.36em"
+        textAnchor="middle"
+        fontFamily={FONT}
+        fontWeight={800}
+        fontSize={fs}
+        fill={fg}
+        letterSpacing={upper ? fs * 0.04 : undefined}
+      >
+        {text}
+      </text>
+    </g>
+  );
+}
+
+function Header({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameLayout }) {
+  const cinema = seq.preset === "cinema";
+  const T = seq.theme;
+  const pad = L.W * 0.055;
+  const base = Math.min(L.W, L.H) * 0.028; // font unit
+  const title = seq.title.trim();
+  const sub = seq.subtitle.trim();
+
+  if (!cinema) {
+    if (!title && !sub) return null;
+    return (
+      <g pointerEvents="none">
+        {title && (
+          <text x={pad} y={pad + base * 1.6} fontFamily={FONT} fontWeight={900} fontSize={base * 1.9} fill="#ffffff" stroke="#0b0f14" strokeWidth={base * 0.18} paintOrder="stroke">
+            {title.toUpperCase()}
+          </text>
+        )}
+        {sub && (
+          <text x={pad} y={pad + base * 3.3} fontFamily={FONT} fontWeight={700} fontSize={base * 1.05} fill={T.accent} stroke="#0b0f14" strokeWidth={base * 0.12} paintOrder="stroke">
+            {sub}
+          </text>
+        )}
+      </g>
+    );
+  }
+
+  // Cinema: brand line, segmented progress bar (one segment per chapter, or
+  // a single bar), current chapter label.
+  const barY = pad + base * 2.4;
+  const barW = L.W - 2 * pad;
+  const gap = base * 0.35;
+  const chapters = frame.chapters.length
+    ? frame.chapters
+    : [{ title: "", start: 0, end: frame.duration }];
+  const n = chapters.length;
+  const segW = (barW - gap * (n - 1)) / n;
+  const chapterTitle =
+    frame.chapterIndex >= 0 ? frame.chapters[frame.chapterIndex].title : sub;
+  return (
+    <g pointerEvents="none">
+      {title && (
+        <text x={pad} y={pad + base * 1.1} fontFamily={FONT} fontWeight={900} fontSize={base * 1.05} fill="#ffffff" letterSpacing={base * 0.08}>
+          <tspan>{title.toUpperCase()}</tspan>
+        </text>
+      )}
+      {chapters.map((c, i) => {
+        const len = Math.max(1, c.end - c.start);
+        const fill = Math.min(1, Math.max(0, (frame.time - c.start) / len));
+        const x = pad + i * (segW + gap);
+        return (
+          <g key={i}>
+            <rect x={x} y={barY} width={segW} height={base * 0.24} rx={base * 0.12} fill="#ffffff" fillOpacity={0.18} />
+            {fill > 0 && <rect x={x} y={barY} width={segW * fill} height={base * 0.24} rx={base * 0.12} fill={T.accent} />}
+          </g>
+        );
+      })}
+      {chapterTitle && (
+        <g>
+          <rect x={pad} y={barY + base * 1.05} width={base * 0.5} height={base * 0.5} fill={T.accent} />
+          <text x={pad + base * 0.85} y={barY + base * 1.52} fontFamily={FONT} fontWeight={800} fontSize={base * 0.78} fill={T.accent} letterSpacing={base * 0.08}>
+            {chapterTitle.toUpperCase()}
+          </text>
+        </g>
+      )}
+    </g>
+  );
+}
+
+// Wrap words into lines that fit `maxW`.
+function wrap(words: string[], fs: number, maxW: number, upper: boolean) {
+  const lines: number[][] = [[]];
+  let w = 0;
+  const space = fs * 0.32;
+  words.forEach((word, i) => {
+    const ww = textW(word, fs, upper) + fs * 0.5;
+    if (w > 0 && w + ww > maxW) {
+      lines.push([]);
+      w = 0;
+    }
+    lines[lines.length - 1].push(i);
+    w += ww + space;
+  });
+  return lines;
+}
+
+function Caption({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameLayout }) {
+  const cap = frame.caption;
+  if (!cap) return null;
+  const cinema = seq.preset === "cinema";
+  const T = seq.theme;
+  const upper = !cinema;
+  const words = cap.text.split(/\s+/).filter(Boolean).map((w) => (upper ? w.toUpperCase() : w));
+  const fs = Math.min(L.W, L.H) * (cinema ? 0.042 : 0.048);
+  const lines = wrap(words, fs, L.W * 0.86, upper);
+  const lineH = fs * 1.35;
+  // Vertical formats: keep the captions above the TikTok/Reels bottom UI,
+  // over the lower part of the pitch; elsewhere centre them in the bottom margin.
+  const bottom =
+    seq.format === "9:16" ? L.H * 0.765 : L.H - (L.H - (L.pitch.y + L.pitch.h)) * 0.5;
+  const y0 = bottom - (lines.length - 1) * lineH;
+  // Karaoke: the highlight sweeps across the words over ~85% of the step.
+  const current = cap.karaoke ? Math.floor(Math.min(0.999, cap.t / 0.85) * words.length) : -1;
+
+  // One <text> per line with a <tspan> per word, so the browser does the
+  // spacing (no width guessing); karaoke recolours the spoken words.
+  return (
+    <g opacity={cap.opacity} pointerEvents="none">
+      {lines.map((li, k) => (
+        <text
+          key={k}
+          x={L.W / 2}
+          y={y0 + k * lineH}
+          dy="0.32em"
+          textAnchor="middle"
+          fontFamily={FONT}
+          fontWeight={cinema ? 800 : 900}
+          fontSize={fs}
+          fill="#ffffff"
+          stroke="#05080b"
+          strokeOpacity={cinema ? 0.7 : 1}
+          strokeWidth={fs * (cinema ? 0.12 : 0.16)}
+          strokeLinejoin="round"
+          paintOrder="stroke"
+        >
+          {li.map((i, n) => {
+            const spoken = cap.karaoke && i < current;
+            const isCur = cap.karaoke && i === current;
+            return (
+              <tspan key={i} fill={isCur ? T.accent : spoken && cinema ? T.accent : "#ffffff"} fillOpacity={spoken && cinema ? 0.85 : 1}>
+                {(n ? " " : "") + words[i]}
+              </tspan>
+            );
+          })}
+        </text>
+      ))}
+    </g>
+  );
+}
+
+// Areas hidden by the TikTok / Reels UI (approximate), shown in the editor only.
+function SafeZones({ L, format }: { L: FrameLayout; format: Sequence["format"] }) {
+  if (format !== "9:16") return null;
+  return (
+    <g pointerEvents="none" fill="rgba(255,60,60,0.12)" stroke="rgba(255,60,60,0.6)" strokeDasharray="10 8" strokeWidth={3}>
+      <rect x={0} y={0} width={L.W} height={L.H * 0.075} />
+      <rect x={0} y={L.H * 0.8} width={L.W} height={L.H * 0.2} />
+      <rect x={L.W * 0.86} y={L.H * 0.35} width={L.W * 0.14} height={L.H * 0.45} />
+    </g>
+  );
+}

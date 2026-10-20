@@ -329,7 +329,7 @@ export default function TopBar({
             so they're relevant on both Terrain and Phase arrêtée. Effectif
             (the shared roster) isn't part of that history, so hide them there
             rather than show controls that would just do nothing. */}
-        {(view === "pitch" || view === "setpiece") && (
+        {(view === "pitch" || view === "setpiece" || view === "sequence") && (
           <>
             <button
               className="btn btn--icon"

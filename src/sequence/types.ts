@@ -1,0 +1,213 @@
+// Data model for the "Séquence" mode: a tactical action told as N successive
+// steps (keyframes) that the player interpolates, with arrows, zones, labels,
+// captions and a camera — rendered by one SVG stage that drives the editor,
+// the fullscreen preview and the video export alike.
+//
+// Positions use the same logical pitch percent as the rest of the app
+// (see types.ts: y=0 opponent goal, y=100 our goal).
+import type { Pos } from "../types";
+
+// Output frame of the composition. 9:16 is the TikTok / Reels / Shorts default.
+export type SeqFormat = "9:16" | "16:9" | "1:1";
+
+// "sober" = flat, bright, tactical board; "cinema" = dark premium look with
+// gold accent, chapters + progress bar, karaoke captions and camera moves.
+export type SeqPreset = "sober" | "cinema";
+
+export type Team = "home" | "away";
+
+// One disc on the board. Home actors created from the compo keep a `slotId`
+// so they show the real player's name / number; extra ones are free-text.
+export interface SeqActor {
+  id: string;
+  team: Team;
+  slotId?: string;
+  label?: string; // text inside the disc (overrides number/role)
+  name?: string; // label under the disc (overrides the roster name)
+  gk?: boolean;
+}
+
+// Where the ball is at a given step: a free spot, or at a player's feet (it
+// then follows that player, and a change of carrier between two steps is a
+// pass that flies from one to the other during the transition).
+export type BallState = { pos: Pos } | { carrierId: string };
+
+// Camera framing of the pitch: centre in pitch percent + zoom (1 = whole pitch).
+export interface Camera {
+  x: number;
+  y: number;
+  zoom: number;
+}
+
+export const DEFAULT_CAMERA: Camera = { x: 50, y: 50, zoom: 1 };
+
+export type Easing = "linear" | "easeInOut";
+
+export type StepEffect = "none" | "flash" | "bigText";
+
+export interface SeqStep {
+  id: string;
+  name?: string;
+  positions: Record<string, Pos>; // keyed by SeqActor.id
+  ball: BallState;
+  camera: Camera;
+  caption?: string; // subtitle shown during this step
+  karaoke?: boolean; // highlight the caption word by word
+  chapter?: string; // starts a new chapter at this step (cinema header)
+  focusIds?: string[]; // highlighted actors (halo)
+  dimOthers?: boolean; // fade every non-focused actor
+  ghosts?: boolean; // show where moved players came from (previous step)
+  effect?: StepEffect;
+  effectText?: string;
+  effectColor?: string;
+  // Time to travel INTO this step from the previous one (ignored for the
+  // first step), then time spent standing still on it.
+  transitionMs: number;
+  holdMs: number;
+  easing: Easing;
+}
+
+// Arrows (movements & passes) — each kind has its own default look.
+export type ArrowKind = "pass" | "run" | "dribble" | "deep" | "press";
+export const ARROW_KINDS: ArrowKind[] = ["pass", "run", "dribble", "deep", "press"];
+
+export type AnnKind =
+  | ArrowKind
+  | "zone" // free polygon, translucent fill
+  | "space" // free polygon, hatched (space to attack / free space)
+  | "playerZone" // polygon whose corners are players (follows them)
+  | "playerLine" // polyline through players (e.g. back four)
+  | "marking" // thin link player ↔ player
+  | "circle" // highlight ring around a player or a spot
+  | "line" // straight separation / height line, optional label
+  | "label"; // text bubble attached to a player or a spot
+
+export type Anchor = { pos: Pos } | { actorId: string };
+
+export interface SeqAnnotation {
+  id: string;
+  kind: AnnKind;
+  anchors: Anchor[];
+  control?: Pos; // curve control point (arrows only)
+  text?: string;
+  color: string;
+  size?: number; // circle radius / label scale, 1 = default
+  // Visible from step `fromStep` to step `toStep` (inclusive, by id).
+  fromStep: string;
+  toStep: string;
+}
+
+export interface SeqTheme {
+  homeColor: string;
+  homeText: string;
+  homeGk: string;
+  awayColor: string;
+  awayText: string;
+  awayGk: string;
+  accent: string;
+}
+
+export interface Sequence {
+  id: string;
+  name: string;
+  format: SeqFormat;
+  squareOrient: "portrait" | "landscape"; // pitch orientation in 1:1
+  preset: SeqPreset;
+  title: string; // header line (brand / topic)
+  subtitle: string;
+  showNames: boolean;
+  showNumbers: boolean;
+  theme: SeqTheme;
+  actors: SeqActor[];
+  steps: SeqStep[];
+  annotations: SeqAnnotation[];
+}
+
+export const PRESET_THEMES: Record<SeqPreset, SeqTheme> = {
+  // Style "L'Instant Football": white vs black discs, gold accent.
+  cinema: {
+    homeColor: "#f2f2ee",
+    homeText: "#0b0f14",
+    homeGk: "#9fd8ff",
+    awayColor: "#1b2129",
+    awayText: "#f2f2ee",
+    awayGk: "#5b6675",
+    accent: "#f4c531",
+  },
+  // Style "Kick Off": bright board, blue vs red discs, yellow accent.
+  sober: {
+    homeColor: "#6fb6f0",
+    homeText: "#ffffff",
+    homeGk: "#f4a72b",
+    awayColor: "#e8383d",
+    awayText: "#ffffff",
+    awayGk: "#3ee06a",
+    accent: "#ffe94a",
+  },
+};
+
+export const ARROW_LABEL: Record<ArrowKind, string> = {
+  pass: "Passe",
+  run: "Course",
+  dribble: "Conduite",
+  deep: "Appel",
+  press: "Pressing",
+};
+
+export const ANN_LABEL: Record<AnnKind, string> = {
+  ...ARROW_LABEL,
+  zone: "Zone",
+  space: "Espace",
+  playerZone: "Zone joueurs",
+  playerLine: "Ligne joueurs",
+  marking: "Marquage",
+  circle: "Cercle",
+  line: "Ligne",
+  label: "Texte",
+};
+
+// Default colour of each annotation kind (per preset accent where relevant).
+export function defaultAnnColor(kind: AnnKind, theme: SeqTheme): string {
+  switch (kind) {
+    case "pass":
+      return "#ffffff";
+    case "run":
+      return theme.accent;
+    case "dribble":
+      return "#ffffff";
+    case "deep":
+      return theme.accent;
+    case "press":
+      return "#ff4d4f";
+    case "zone":
+      return theme.accent;
+    case "space":
+      return "#3ee06a";
+    case "playerZone":
+      return theme.accent;
+    case "playerLine":
+      return "#ff4d4f";
+    case "marking":
+      return "#ff4d4f";
+    case "circle":
+      return "#ff4d4f";
+    case "line":
+      return "#ffffff";
+    case "label":
+      return theme.accent;
+  }
+}
+
+export const SEQ_COLORS = [
+  "#f4c531",
+  "#ffffff",
+  "#ff4d4f",
+  "#3ee06a",
+  "#3f8fe0",
+  "#ff8a3d",
+  "#b388ff",
+  "#0b0f14",
+];
+
+export const isArrow = (k: AnnKind): k is ArrowKind =>
+  (ARROW_KINDS as string[]).includes(k);

@@ -1,3 +1,5 @@
+import type { Sequence } from "./sequence/types";
+
 // Core data model for Tactica11.
 // The pitch is vertical: y=0 is the opponent goal (top, where we attack),
 // y=100 is our own goal (bottom). x=0 left, x=100 right. All in percent.
@@ -226,6 +228,7 @@ export interface Lineup {
   opponentColor?: string; // disc colour for the opposing team
   drawings?: Partial<Record<Phase, Drawing[]>>; // optional annotations per phase
   setPieces: SetPiece[]; // corners / coups francs belonging to this compo
+  sequences?: Sequence[]; // animated tactical sequences (mode Séquence)
 }
 
 // Set pieces (corners / coups francs): compo-scoped combinations — a set

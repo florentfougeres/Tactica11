@@ -60,6 +60,11 @@ Fonctionne ensuite hors-ligne, tout est stocké localement sur l'appareil.
   sélecteur de couleur.
 - **Phase arrêtée** : onglet dédié pour corners, coups francs, touches et
   penaltys, avec état avant/après et transition intermédiaire scrubable.
+- **Séquence** : raconte une action en plusieurs étapes animées (deux équipes,
+  ballon et passes, flèches typées droites ou courbes, zones liées aux joueurs,
+  bulles de texte, mise en avant, caméra, chapitres et sous-titres karaoké),
+  avec timeline, lecture, aperçu plein écran et **export vidéo MP4** (9:16,
+  16:9 ou 1:1) pour TikTok, Reels et YouTube.
 - **Studio** : génère un visuel de compo façon poster (fond 2D/3D, disques ou
   maillots, portrait/paysage) à exporter en image pour les réseaux sociaux.
 - **Grille positionnelle** en surimpression.
