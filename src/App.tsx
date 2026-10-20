@@ -616,6 +616,7 @@ export default function App() {
         ) : view === "sequence" ? (
           <SequenceView
             lineup={lineup}
+            players={project.players}
             playerById={playerById}
             actions={sequenceActions}
             seqId={seqId}

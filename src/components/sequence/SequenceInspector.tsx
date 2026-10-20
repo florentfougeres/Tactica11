@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Lineup, Phase } from "../../types";
+import type { Lineup, Phase, Player } from "../../types";
 import type { SequenceActions } from "../../hooks/useSequenceActions";
 import type {
   AnnKind,
@@ -19,6 +19,8 @@ interface Props {
   seq: Sequence;
   sequences: Sequence[];
   lineup: Lineup;
+  players: Player[]; // project roster
+  playerById: (id: string | null) => Player | null;
   step: SeqStep;
   stepIndex: number;
   editable: boolean;
@@ -364,6 +366,7 @@ function SelectionTab(props: Props) {
       </div>
       {single && (
         <>
+          {single.team === "home" && <PlayerPicker {...props} actorId={single.id} />}
           <div className="seq-field-row">
             <label className="seq-field">
               <span>Disque</span>
@@ -372,7 +375,7 @@ function SelectionTab(props: Props) {
                 value={single.label ?? ""}
                 placeholder={info[single.id]?.disc || "n°"}
                 maxLength={3}
-                onChange={(e) => actions.patchActor(seq.id, single.id, { label: e.target.value === "" && single.slotId ? undefined : e.target.value })}
+                onChange={(e) => actions.patchActor(seq.id, single.id, { label: e.target.value === "" && (single.slotId || single.playerId) ? undefined : e.target.value })}
               />
             </label>
             <label className="seq-field seq-field--grow">
@@ -381,7 +384,7 @@ function SelectionTab(props: Props) {
                 className="seq-input"
                 value={single.name ?? ""}
                 placeholder={info[single.id]?.name || "Nom"}
-                onChange={(e) => actions.patchActor(seq.id, single.id, { name: e.target.value === "" && single.slotId ? undefined : e.target.value })}
+                onChange={(e) => actions.patchActor(seq.id, single.id, { name: e.target.value === "" && (single.slotId || single.playerId) ? undefined : e.target.value })}
               />
             </label>
           </div>
@@ -432,7 +435,7 @@ function SelectionTab(props: Props) {
   );
 }
 
-function AnnotationForm({ seq, ann, actions, focusLabel, onSelectAnn }: Props & { ann: SeqAnnotation }) {
+function AnnotationForm({ seq, ann, actions, focusLabel, onSelectAnn, info }: Props & { ann: SeqAnnotation }) {
   const id = seq.id;
   const patch = (p: Partial<SeqAnnotation>) => actions.patchAnnotation(id, ann.id, p);
   const textRef = useRef<HTMLInputElement>(null);
@@ -445,9 +448,44 @@ function AnnotationForm({ seq, ann, actions, focusLabel, onSelectAnn }: Props & 
   const fromIdx = seq.steps.findIndex((s) => s.id === ann.fromStep);
   const toIdx = seq.steps.findIndex((s) => s.id === ann.toStep);
   const hasText = ["label", "line", "zone", "space", "playerZone", "playerLine", "circle", "marking"].includes(ann.kind);
+  const minAnchors = ann.kind === "playerZone" ? 3 : 2;
+  const actorAnchors = ann.anchors
+    .map((an, i) => ("actorId" in an ? { i, id: an.actorId } : null))
+    .filter((x): x is { i: number; id: string } => x != null);
+  const listPlayers = ["playerZone", "playerLine", "marking"].includes(ann.kind) || (isArrow(ann.kind) && actorAnchors.length > 0);
+  const label = (id: string) => info[id]?.name || info[id]?.disc || "?";
   return (
     <div className="seq-form">
-      <div className="seq-form__title">{ANN_LABEL[ann.kind]}</div>
+      <div className="seq-form__title">
+        <span className="seq-swatch-dot" style={{ background: ann.color }} />
+        {ANN_LABEL[ann.kind]}
+      </div>
+      {listPlayers && (
+        <div className="seq-field">
+          <span>{isArrow(ann.kind) ? "Reliée à" : "Joueurs (dans l'ordre)"}</span>
+          <div className="seq-chips">
+            {actorAnchors.map(({ i, id: aid }, n) => (
+              <span key={i} className="seq-chip">
+                {!isArrow(ann.kind) && <b>{n + 1}</b>}
+                {isArrow(ann.kind) && <b>{i === 0 ? "De" : "Vers"}</b>}
+                {label(aid)}
+                {!isArrow(ann.kind) && ann.anchors.length > minAnchors && (
+                  <button
+                    type="button"
+                    aria-label={`Retirer ${label(aid)}`}
+                    onClick={() => patch({ anchors: ann.anchors.filter((_, k) => k !== i) })}
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+          {!isArrow(ann.kind) && (
+            <span className="seq-muted">Les joueurs reliés sont entourés en vert sur le terrain.</span>
+          )}
+        </div>
+      )}
       {isArrow(ann.kind) && (
         <>
           <div className="seq-kinds">
@@ -564,7 +602,12 @@ function SettingsTab({ seq, actions, safeZones, onSafeZones }: Props) {
         <span>Format</span>
         <div className="seg">
           {(["9:16", "16:9", "1:1"] as Sequence["format"][]).map((fm) => (
-            <button key={fm} type="button" className={`seg__btn ${seq.format === fm ? "is-active" : ""}`} onClick={() => patch({ format: fm })}>
+            <button key={fm} type="button" className={`seg__btn ${seq.format === fm ? "is-active" : ""}`} onClick={() =>
+                patch({
+                  format: fm,
+                  ...(fm === "9:16" ? { orient: "portrait" as const } : fm === "16:9" ? { orient: "landscape" as const } : {}),
+                })
+              }>
               {fm}
             </button>
           ))}
@@ -573,15 +616,16 @@ function SettingsTab({ seq, actions, safeZones, onSafeZones }: Props) {
           {seq.format === "9:16" ? "TikTok, Reels, Shorts" : seq.format === "16:9" ? "YouTube" : "Publication carrée"}
         </span>
       </div>
-      {seq.format === "1:1" && (
+      <div className="seq-field">
+        <span>Terrain</span>
         <div className="seg">
           {(["portrait", "landscape"] as const).map((o) => (
-            <button key={o} type="button" className={`seg__btn ${seq.squareOrient === o ? "is-active" : ""}`} onClick={() => patch({ squareOrient: o })}>
-              {o === "portrait" ? "Terrain vertical" : "Terrain horizontal"}
+            <button key={o} type="button" className={`seg__btn ${seq.orient === o ? "is-active" : ""}`} onClick={() => patch({ orient: o })}>
+              {o === "portrait" ? "Vertical" : "Paysage"}
             </button>
           ))}
         </div>
-      )}
+      </div>
       {seq.format === "9:16" && <Switch label="Zones masquées par TikTok/Reels" checked={safeZones} onChange={onSafeZones} />}
 
       <div className="seq-field">
@@ -604,7 +648,16 @@ function SettingsTab({ seq, actions, safeZones, onSafeZones }: Props) {
         <input className="seq-input" value={seq.subtitle} onChange={(e) => patch({ subtitle: e.target.value })} placeholder="ex. 4-3-3" />
       </label>
       <Switch label="Noms des joueurs" checked={seq.showNames} onChange={(v) => patch({ showNames: v })} />
-      <Switch label="Numéros / postes" checked={seq.showNumbers} onChange={(v) => patch({ showNumbers: v })} />
+      <Switch label="Texte dans les disques" checked={seq.showNumbers} onChange={(v) => patch({ showNumbers: v })} />
+      {seq.showNumbers && (
+        <div className="seg">
+          {(["number", "role"] as const).map((m) => (
+            <button key={m} type="button" className={`seg__btn ${(seq.discMode ?? "number") === m ? "is-active" : ""}`} onClick={() => patch({ discMode: m })}>
+              {m === "number" ? "Numéro" : "Poste"}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="seq-form__title">Couleurs</div>
       <div className="seq-field">
@@ -640,5 +693,45 @@ function SettingsTab({ seq, actions, safeZones, onSafeZones }: Props) {
         <Swatches value={seq.theme.accent} onPick={(c) => theme("accent", c)} />
       </div>
     </div>
+  );
+}
+
+// Bind one of our discs to a roster player (name + number follow the roster).
+function PlayerPicker({ seq, lineup, players, actions, actorId }: Props & { actorId: string }) {
+  const actor = seq.actors.find((a) => a.id === actorId);
+  if (!actor) return null;
+  const starterIds = new Set(lineup.slots.map((s) => s.starterId).filter(Boolean) as string[]);
+  const starters = players.filter((p) => starterIds.has(p.id));
+  const others = players.filter((p) => !starterIds.has(p.id));
+  const slot = actor.slotId ? lineup.slots.find((s) => s.id === actor.slotId) : null;
+  const opt = (p: Player) => (
+    <option key={p.id} value={p.id}>
+      {p.number != null ? `${p.number} · ` : ""}
+      {p.name}
+    </option>
+  );
+  return (
+    <label className="seq-field">
+      <span>Joueur de l'effectif</span>
+      <select
+        className="seq-input"
+        value={actor.playerId ?? ""}
+        onChange={(e) =>
+          actions.patchActor(seq.id, actor.id, {
+            playerId: e.target.value || undefined,
+            // Let the roster drive name / number once a player is picked.
+            name: undefined,
+            label: undefined,
+          })
+        }
+      >
+        <option value="">{slot ? `Titulaire du poste (${slot.role})` : "Aucun (texte libre)"}</option>
+        {starters.length > 0 && <optgroup label="Titulaires de la compo">{starters.map(opt)}</optgroup>}
+        {others.length > 0 && <optgroup label="Reste de l'effectif">{others.map(opt)}</optgroup>}
+      </select>
+      {players.length === 0 && (
+        <span className="seq-muted">Ajoute des joueurs dans l'onglet Effectif pour afficher leurs noms.</span>
+      )}
+    </label>
   );
 }

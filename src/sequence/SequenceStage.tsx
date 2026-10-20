@@ -220,13 +220,14 @@ export default function SequenceStage({
           {overlay?.editable && (
             <polyline points={poly(line)} fill="none" stroke="transparent" strokeWidth={R * 1.2} />
           )}
-          {(k === "deep" || sel) && (
+          {sel && <polyline points={poly(line)} {...SEL_GLOW} strokeWidth={w + 1.6 * u} />}
+          {k === "deep" && (
             <polyline
               points={poly(line)}
               fill="none"
-              stroke={sel ? "#ffffff" : color}
-              strokeOpacity={sel ? 0.35 : 0.25}
-              strokeWidth={w * (sel ? 3.2 : 2.8)}
+              stroke={color}
+              strokeOpacity={0.25}
+              strokeWidth={w * 2.8}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -263,11 +264,12 @@ export default function SequenceStage({
               </pattern>
             </defs>
           )}
+          {sel && <polygon points={poly(pts)} {...SEL_GLOW} strokeWidth={1.6 * u} />}
           <polygon
             points={poly(pts)}
             fill={hatch ? `url(#${pid(`hatch-${ann.id}`)})` : color}
             fillOpacity={hatch ? 1 : ann.kind === "playerZone" ? 0.26 : 0.2}
-            stroke={sel ? "#ffffff" : color}
+            stroke={color}
             strokeWidth={0.38 * u}
             strokeOpacity={0.95}
             strokeLinejoin="round"
@@ -286,10 +288,11 @@ export default function SequenceStage({
           {overlay?.editable && (
             <polyline points={poly(pts)} fill="none" stroke="transparent" strokeWidth={R} />
           )}
+          {sel && <polyline points={poly(pts)} {...SEL_GLOW} strokeWidth={w + 1.6 * u} />}
           <polyline
             points={poly(pts)}
             fill="none"
-            stroke={sel ? "#ffffff" : color}
+            stroke={color}
             strokeWidth={w}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -307,7 +310,8 @@ export default function SequenceStage({
       const r = R * 1.55 * (ann.size ?? 1);
       return (
         <g key={ann.id} {...common}>
-          <circle cx={pts[0].x} cy={pts[0].y} r={r} fill={color} fillOpacity={0.12} stroke={sel ? "#ffffff" : color} strokeWidth={0.5 * u} />
+          {sel && <circle cx={pts[0].x} cy={pts[0].y} r={r} {...SEL_GLOW} strokeWidth={1.8 * u} />}
+          <circle cx={pts[0].x} cy={pts[0].y} r={r} fill={color} fillOpacity={0.12} stroke={color} strokeWidth={0.5 * u} />
           {ann.text && <Pill x={pts[0].x} y={pts[0].y + r + 2.2 * u} text={ann.text} fs={2 * u} bg={color} fg="#0b0f14" />}
         </g>
       );
@@ -319,12 +323,13 @@ export default function SequenceStage({
       return (
         <g key={ann.id} {...common}>
           {overlay?.editable && <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="transparent" strokeWidth={R} />}
+          {sel && <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} {...SEL_GLOW} strokeWidth={1.8 * u} />}
           <line
             x1={a.x}
             y1={a.y}
             x2={b.x}
             y2={b.y}
-            stroke={sel ? "#ffffff" : color}
+            stroke={color}
             strokeWidth={0.4 * u}
             strokeDasharray={`${f(u * 1.4)} ${f(u * 1)}`}
             strokeLinecap="round"
@@ -352,7 +357,7 @@ export default function SequenceStage({
             bg={color}
             fg={isDark(color) ? "#ffffff" : "#0b0f14"}
             upper
-            outline={sel ? "#ffffff" : undefined}
+            outline={sel ? "#21d07a" : undefined}
           />
         </g>
       );
@@ -522,11 +527,7 @@ export default function SequenceStage({
         {actorsSorted.map(actorNode)}
 
         {/* ball */}
-        <g data-ball="1" style={overlay?.editable ? { cursor: "grab" } : undefined}>
-          <circle cx={ballC.x} cy={ballC.y + R * 0.1} r={R * 0.46} fill="#000" fillOpacity={0.35} />
-          <circle cx={ballC.x} cy={ballC.y} r={R * 0.44} fill="#ffffff" stroke="#0b0f14" strokeWidth={0.22 * u} />
-          <circle cx={ballC.x} cy={ballC.y} r={R * 0.15} fill="#0b0f14" />
-        </g>
+        <Ball x={ballC.x} y={ballC.y} r={R * 0.5} u={u} id={pid("ball")} editable={overlay?.editable} />
 
         {/* labels on top of the players */}
         {frame.annotations.filter((af) => af.ann.kind === "label").map((af) => annNode(af))}
@@ -538,7 +539,28 @@ export default function SequenceStage({
           const ann = seq.annotations.find((x) => x.id === overlay.selectedAnn);
           if (!ann) return null;
           const hs: ReactNode[] = [];
+          const numbered = ann.kind === "playerLine" || ann.kind === "playerZone";
+          let n = 0;
           ann.anchors.forEach((an, i) => {
+            if ("actorId" in an) {
+              const p = pos[an.actorId];
+              if (!p) return;
+              const c = loc(p);
+              n += 1;
+              hs.push(
+                <g key={`r${i}`} pointerEvents="none">
+                  <circle cx={c.x} cy={c.y} r={R + 1.1 * u} fill="none" stroke="#21d07a" strokeWidth={0.55 * u} strokeDasharray={`${f(u * 1.1)} ${f(u * 0.7)}`} />
+                  {numbered && (
+                    <>
+                      <circle cx={c.x + R * 0.95} cy={c.y - R * 0.95} r={1.3 * u} fill="#21d07a" />
+                      <text x={c.x + R * 0.95} y={c.y - R * 0.95} dy="0.35em" textAnchor="middle" fontFamily={FONT} fontWeight={800} fontSize={1.5 * u} fill="#06130c">
+                        {n}
+                      </text>
+                    </>
+                  )}
+                </g>,
+              );
+            }
             if ("pos" in an) {
               const c = loc(an.pos);
               hs.push(<circle key={`h${i}`} data-handle={`a${i}`} cx={c.x} cy={c.y} r={1.25 * u} fill="#ffffff" stroke="#21d07a" strokeWidth={0.4 * u} style={{ cursor: "move" }} />);
@@ -607,6 +629,67 @@ export default function SequenceStage({
 
       {overlay?.safeZones && <SafeZones L={L} format={seq.format} />}
     </svg>
+  );
+}
+
+// Selection glow, drawn *under* the shape so its own colour stays visible.
+const SEL_GLOW = {
+  fill: "none",
+  stroke: "#21d07a",
+  strokeOpacity: 0.6,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  pointerEvents: "none" as const,
+};
+
+// Classic black-and-white football: central pentagon, five clipped side
+// patches and seams, with a soft shading and drop shadow.
+function Ball({ x, y, r, u, id, editable }: { x: number; y: number; r: number; u: number; id: string; editable?: boolean }) {
+  const pent = (cx: number, cy: number, rad: number, rot: number) =>
+    Array.from({ length: 5 }, (_, k) => {
+      const a = ((rot + k * 72 - 90) * Math.PI) / 180;
+      return `${f(cx + rad * Math.cos(a))},${f(cy + rad * Math.sin(a))}`;
+    }).join(" ");
+  const core = r * 0.36;
+  const patches = Array.from({ length: 5 }, (_, k) => {
+    const a = ((k * 72 - 90 + 36) * Math.PI) / 180;
+    return { cx: x + r * 0.98 * Math.cos(a), cy: y + r * 0.98 * Math.sin(a), rot: k * 72 + 36 };
+  });
+  const seams = Array.from({ length: 5 }, (_, k) => {
+    const a = ((k * 72 - 90) * Math.PI) / 180;
+    return {
+      x1: x + core * Math.cos(a),
+      y1: y + core * Math.sin(a),
+      x2: x + r * 0.78 * Math.cos(a),
+      y2: y + r * 0.78 * Math.sin(a),
+    };
+  });
+  return (
+    <g data-ball="1" style={editable ? { cursor: "grab" } : undefined}>
+      <defs>
+        <radialGradient id={`${id}-shade`} cx="38%" cy="32%" r="75%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="70%" stopColor="#e9ecef" />
+          <stop offset="100%" stopColor="#b9c0c8" />
+        </radialGradient>
+        <clipPath id={`${id}-clip`}>
+          <circle cx={x} cy={y} r={r} />
+        </clipPath>
+      </defs>
+      <ellipse cx={x + r * 0.15} cy={y + r * 0.95} rx={r * 0.9} ry={r * 0.32} fill="#000" fillOpacity={0.35} />
+      <circle cx={x} cy={y} r={r} fill={`url(#${id}-shade)`} />
+      <g clipPath={`url(#${id}-clip)`} fill="#14181d">
+        <polygon points={pent(x, y, core, 0)} />
+        {patches.map((p, k) => (
+          <polygon key={k} points={pent(p.cx, p.cy, core * 0.95, p.rot)} />
+        ))}
+        {seams.map((sm, k) => (
+          <line key={k} x1={sm.x1} y1={sm.y1} x2={sm.x2} y2={sm.y2} stroke="#14181d" strokeWidth={0.12 * u} />
+        ))}
+      </g>
+      <circle cx={x} cy={y} r={r} fill="none" stroke="#0b0f14" strokeWidth={0.16 * u} />
+      <ellipse cx={x - r * 0.35} cy={y - r * 0.42} rx={r * 0.22} ry={r * 0.13} fill="#ffffff" fillOpacity={0.55} transform={`rotate(-30 ${f(x - r * 0.35)} ${f(y - r * 0.42)})`} />
+    </g>
   );
 }
 

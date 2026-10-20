@@ -22,6 +22,7 @@ export interface SeqActor {
   id: string;
   team: Team;
   slotId?: string;
+  playerId?: string; // roster player shown on this disc (overrides the slot's starter)
   label?: string; // text inside the disc (overrides number/role)
   name?: string; // label under the disc (overrides the roster name)
   gk?: boolean;
@@ -111,7 +112,8 @@ export interface Sequence {
   id: string;
   name: string;
   format: SeqFormat;
-  squareOrient: "portrait" | "landscape"; // pitch orientation in 1:1
+  orient: "portrait" | "landscape"; // pitch orientation (vertical / horizontal)
+  discMode?: "number" | "role"; // what our discs show: shirt number or position
   preset: SeqPreset;
   title: string; // header line (brand / topic)
   subtitle: string;

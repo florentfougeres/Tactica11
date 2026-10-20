@@ -26,10 +26,9 @@ const MARGINS: Record<SeqFormat, { t: number; b: number; s: number }> = {
   "1:1": { t: 150, b: 170, s: 50 },
 };
 
-export function frameLayout(seq: Pick<Sequence, "format" | "squareOrient">): FrameLayout {
+export function frameLayout(seq: Pick<Sequence, "format" | "orient">): FrameLayout {
   const { W, H } = FORMAT_SIZE[seq.format];
-  const orient: Orient =
-    seq.format === "9:16" ? "portrait" : seq.format === "16:9" ? "landscape" : seq.squareOrient;
+  const orient: Orient = seq.orient;
   const m = MARGINS[seq.format];
   const availW = W - 2 * m.s;
   const availH = H - m.t - m.b;

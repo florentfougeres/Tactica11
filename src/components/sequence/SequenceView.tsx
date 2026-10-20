@@ -29,6 +29,7 @@ export type SeqTool = "select" | AnnKind | "camera";
 
 interface Props {
   lineup: Lineup;
+  players: Player[];
   playerById: (id: string | null) => Player | null;
   actions: SequenceActions;
   seqId: string | null;
@@ -74,9 +75,11 @@ type Drag =
   | { type: "camera"; f0: { x: number; y: number }; cam0: Camera }
   | { type: "pan"; c0: { x: number; y: number }; pan0: { x: number; y: number } };
 
+const CARRY_KEY = "tactica11.seqCarryGraphics";
+
 const clampPct = (v: number) => Math.min(104, Math.max(-4, v));
 
-export default function SequenceView({ lineup, playerById, actions, seqId, onSeqId }: Props) {
+export default function SequenceView({ lineup, players, playerById, actions, seqId, onSeqId }: Props) {
   const sequences = lineup.sequences ?? [];
   const seq: Sequence | null = sequences.find((q) => q.id === seqId) ?? sequences[0] ?? null;
 
@@ -86,6 +89,7 @@ export default function SequenceView({ lineup, playerById, actions, seqId, onSeq
       key={seq.id}
       seq={seq}
       lineup={lineup}
+      players={players}
       playerById={playerById}
       actions={actions}
       onSeqId={onSeqId}
@@ -133,12 +137,14 @@ function SequenceEmpty({ actions, onSeqId }: { actions: SequenceActions; onSeqId
 function SequenceEditor({
   seq,
   lineup,
+  players,
   playerById,
   actions,
   onSeqId,
 }: {
   seq: Sequence;
   lineup: Lineup;
+  players: Player[];
   playerById: (id: string | null) => Player | null;
   actions: SequenceActions;
   onSeqId: (id: string | null) => void;
@@ -163,6 +169,22 @@ function SequenceEditor({
   const [preview, setPreview] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [focusLabel, setFocusLabel] = useState(0); // bump to focus the label text field
+  // "Garder les éléments graphiques" when creating a step — remembered per browser.
+  const [carry, setCarryRaw] = useState(() => {
+    try {
+      return localStorage.getItem(CARRY_KEY) !== "0";
+    } catch {
+      return true;
+    }
+  });
+  const setCarry = (v: boolean) => {
+    setCarryRaw(v);
+    try {
+      localStorage.setItem(CARRY_KEY, v ? "1" : "0");
+    } catch {
+      // storage unavailable — keep it for this session only
+    }
+  };
 
   const svgRef = useRef<SVGSVGElement>(null);
   const camRef = useRef<SVGGElement>(null);
@@ -173,19 +195,25 @@ function SequenceEditor({
   // ----- actor labels (disc text + name) -----
   const info = useMemo(() => {
     const m: Record<string, ActorInfo> = {};
+    const roleMode = seq.discMode === "role";
     seq.actors.forEach((a) => {
-      if (a.team === "home" && a.slotId) {
-        const slot = lineup.slots.find((s) => s.id === a.slotId);
-        const player = slot ? playerById(slot.starterId) : null;
-        const fallback = player?.number != null ? String(player.number) : (slot?.role ?? "");
-        m[a.id] = {
-          disc: a.label ?? fallback,
-          name: a.name ?? player?.name ?? "",
-        };
-      } else m[a.id] = { disc: a.label ?? "", name: a.name ?? "" };
+      if (a.team !== "home" || (!a.slotId && !a.playerId)) {
+        m[a.id] = { disc: a.label ?? "", name: a.name ?? "" };
+        return;
+      }
+      // A disc shows its bound roster player, else the slot's starter.
+      const slot = a.slotId ? lineup.slots.find((s) => s.id === a.slotId) : null;
+      const player = a.playerId ? playerById(a.playerId) : slot ? playerById(slot.starterId) : null;
+      const role = slot?.role ?? "";
+      const number = player?.number != null ? String(player.number) : "";
+      const fallback = roleMode ? role || number : number || role;
+      m[a.id] = {
+        disc: a.label ?? fallback,
+        name: a.name ?? player?.name ?? "",
+      };
     });
     return m;
-  }, [seq.actors, lineup.slots, playerById]);
+  }, [seq.actors, seq.discMode, lineup.slots, playerById]);
 
   const frame = useMemo(() => frameAt(seq, pb.time), [seq, pb.time]);
 
@@ -214,7 +242,7 @@ function SequenceEditor({
 
   const addStep = () => {
     pb.pause();
-    pendingStep.current = actions.addStep(seq.id, stepIndex);
+    pendingStep.current = actions.addStep(seq.id, stepIndex, carry);
   };
 
   // Drop selections pointing at things that no longer exist.
@@ -758,6 +786,8 @@ function SequenceEditor({
         seq={seq}
         sequences={lineup.sequences ?? []}
         lineup={lineup}
+        players={players}
+        playerById={playerById}
         step={step}
         stepIndex={stepIndex}
         editable={editable}
@@ -895,6 +925,8 @@ function SequenceEditor({
           }}
           onSelectStep={goToStep}
           onAddStep={addStep}
+          carry={carry}
+          onCarry={setCarry}
           onMoveStep={(from, to) => {
             pendingStep.current = seq.steps[from]?.id ?? null;
             actions.moveStep(seq.id, from, to);

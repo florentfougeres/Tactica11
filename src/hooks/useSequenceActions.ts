@@ -62,15 +62,19 @@ export function useSequenceActions(lineup: Lineup, setLineup: SetLineup) {
 
   // --- steps ---
   // Insert a copy of step `index` right after it (the "next step" gesture).
-  // Returns the new step's id so the editor can jump to it.
-  const addStep = (id: string, index: number): string => {
+  // Returns the new step's id so the editor can jump to it. With
+  // `carryGraphics`, everything drawn on the source step (arrows, zones,
+  // labels…) stays visible on the new one instead of ending there.
+  const addStep = (id: string, index: number, carryGraphics = false): string => {
     const newId = sid("step");
     update(id, (q) => {
       const src = q.steps[index] ?? q.steps[q.steps.length - 1];
       const steps = [...q.steps];
       steps.splice(index + 1, 0, { ...duplicateStep(src), id: newId });
-      // Annotations that end on the source step stay on it; nothing to remap.
-      return { ...q, steps };
+      const annotations = carryGraphics
+        ? q.annotations.map((a) => (a.toStep === src.id ? { ...a, toStep: newId } : a))
+        : q.annotations;
+      return { ...q, steps, annotations };
     });
     return newId;
   };

@@ -21,6 +21,8 @@ interface Props {
   onSeek: (t: number) => void;
   onSelectStep: (i: number) => void;
   onAddStep: () => void;
+  carry: boolean;
+  onCarry: (v: boolean) => void;
   onMoveStep: (from: number, to: number) => void;
   onHold: (i: number, ms: number) => void;
 }
@@ -53,6 +55,8 @@ export default function SequenceTimeline({
   onSeek,
   onSelectStep,
   onAddStep,
+  carry,
+  onCarry,
   onMoveStep,
   onHold,
 }: Props) {
@@ -122,6 +126,10 @@ export default function SequenceTimeline({
         <span className="seq-timeline__state">
           {playing ? "Lecture" : holding ? `Étape ${current + 1} / ${steps.length}` : `Transition → étape ${current + 1}`}
         </span>
+        <label className="seq-carry" title="La nouvelle étape garde les flèches, zones et textes de l'étape courante">
+          <input type="checkbox" checked={carry} onChange={(e) => onCarry(e.target.checked)} />
+          Garder les éléments graphiques
+        </label>
         <button type="button" className="seq-tbtn seq-tbtn--add" onClick={onAddStep} title="Nouvelle étape : duplique l'étape courante (N)">
           + Étape
         </button>

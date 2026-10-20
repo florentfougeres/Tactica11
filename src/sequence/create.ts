@@ -99,7 +99,7 @@ export function createSequence(
     id: sid("seq"),
     name,
     format: "9:16",
-    squareOrient: "portrait",
+    orient: "portrait",
     preset,
     title: lineup.name,
     subtitle: lineup.formation,
@@ -151,7 +151,14 @@ export function migrateSequence(q: Sequence): Sequence {
   return {
     ...q,
     format: q.format === "16:9" || q.format === "1:1" ? q.format : "9:16",
-    squareOrient: q.squareOrient === "landscape" ? "landscape" : "portrait",
+    // Older sequences: 9:16 was always vertical, 16:9 always horizontal,
+    // 1:1 carried its own `squareOrient`.
+    orient:
+      q.orient === "landscape" || q.orient === "portrait"
+        ? q.orient
+        : q.format === "16:9" || (q as { squareOrient?: string }).squareOrient === "landscape"
+          ? "landscape"
+          : "portrait",
     preset,
     title: q.title ?? "",
     subtitle: q.subtitle ?? "",
