@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { AttrType, AttributeDef, Player } from "../types";
 
 interface Props {
@@ -119,6 +119,7 @@ export default function RosterTable({
 }: Props) {
   const [newName, setNewName] = useState("");
   const [newNum, setNewNum] = useState("");
+  const newNameRef = useRef<HTMLInputElement>(null);
   const [addingCol, setAddingCol] = useState(false);
   const [colName, setColName] = useState("");
   const [colType, setColType] = useState<AttrType>("text");
@@ -174,24 +175,32 @@ export default function RosterTable({
   }, [players, sort]);
 
   return (
-    <section className="roster-page glass" aria-label="Base de joueurs">
+    <section className="roster-page glass" aria-label="Effectif">
       <header className="panel__header roster-page__header">
-        <h2>Base de joueurs</h2>
+        {/* Same name as the tab that leads here. */}
+        <h2>Effectif</h2>
         <span className="chip">{players.length}</span>
-        <button
-          type="button"
-          className="roster-page__csv-btn"
-          onClick={onImportCsv}
-        >
-          Importer CSV
-        </button>
+        <div className="roster-page__actions">
+          <button type="button" className="btn" onClick={onImportCsv}>
+            Importer un CSV
+          </button>
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={() => {
+              newNameRef.current?.scrollIntoView({ block: "nearest" });
+              newNameRef.current?.focus();
+            }}
+          >
+            Ajouter un joueur
+          </button>
+        </div>
       </header>
 
       <div className="roster-page__body">
         <p className="modal__hint">
-          Cette base est partagée par toutes les compos du projet : modifier
-          un joueur ici l'actualise partout. Clique sur une cellule pour la
-          modifier, sur un en-tête pour trier.
+          Partagé par toutes les compos du projet. Clique sur une cellule
+          pour la modifier, sur un en-tête pour trier.
         </p>
 
         <div className="roster-table__scroll">
@@ -393,6 +402,7 @@ export default function RosterTable({
                 </td>
                 <td>
                   <input
+                    ref={newNameRef}
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && submitAdd()}

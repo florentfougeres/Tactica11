@@ -20,7 +20,6 @@ export default function SettingsTab({ seq, actions }: Props) {
         <input className="seq-input" value={seq.subtitle} onChange={(e) => patch({ subtitle: e.target.value })} placeholder="ex. 4-3-3" />
       </label>
       <Switch label="Noms des joueurs" checked={seq.showNames} onChange={(v) => patch({ showNames: v })} />
-      <Switch label="Grille positionnelle" checked={!!seq.showGrid} onChange={(v) => patch({ showGrid: v })} />
       <div className="seq-field">
         <span>Joueurs vivants (micro-mouvements en lecture et à l'export)</span>
         <FmSelect

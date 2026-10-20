@@ -3,6 +3,7 @@ import type {
   StepEffect,
 } from "../../../sequence/types";
 import FmSelect from "../../FmSelect";
+import PopMenu from "../../PopMenu";
 
 import { Switch, Swatches, sec, type Props } from "./shared";
 
@@ -23,15 +24,31 @@ export default function StepTab({
   const patch = (p: Partial<SeqStep>) => actions.patchStep(id, stepIndex, p);
   return (
     <div className="seq-form">
-      <div className="seq-form__title seq-stepnav">
-        <button type="button" className="seq-stepnav__btn" disabled={stepIndex === 0} onClick={() => onGoToStep(stepIndex - 1)} title="Étape précédente (←)" aria-label="Étape précédente">
-          ‹
-        </button>
-        <span>Étape {stepIndex + 1} / {seq.steps.length}</span>
-        <button type="button" className="seq-stepnav__btn" disabled={stepIndex >= seq.steps.length - 1} onClick={() => onGoToStep(stepIndex + 1)} title="Étape suivante (→)" aria-label="Étape suivante">
-          ›
-        </button>
+      {/* Step-to-step navigation lives in the timeline; here only what
+          acts on this step as a whole, in its menu. */}
+      <div className="seq-stephead">
+        <span className="seq-stephead__title">Étape {stepIndex + 1} / {seq.steps.length}</span>
         {!editable && <span className="seq-badge">lecture seule</span>}
+        <PopMenu button="⋯" title="Actions sur l'étape" className="seq-tbtn" chevron={false} align="right">
+          <button type="button" className="seq-menu__item" disabled={stepIndex === 0} onClick={() => { actions.moveStep(seq.id, stepIndex, stepIndex - 1); onGoToStep(stepIndex - 1); }}>
+            Déplacer plus tôt
+          </button>
+          <button type="button" className="seq-menu__item" disabled={stepIndex === seq.steps.length - 1} onClick={() => { actions.moveStep(seq.id, stepIndex, stepIndex + 1); onGoToStep(stepIndex + 1); }}>
+            Déplacer plus tard
+          </button>
+          <div className="seq-menu__sep" />
+          <button
+            type="button"
+            className="seq-menu__item seq-danger"
+            disabled={seq.steps.length <= 1}
+            onClick={() => {
+              actions.deleteStep(seq.id, stepIndex);
+              onGoToStep(Math.max(0, stepIndex - 1));
+            }}
+          >
+            Supprimer l'étape
+          </button>
+        </PopMenu>
       </div>
       <label className="seq-field">
         <span>Nom</span>
@@ -56,103 +73,92 @@ export default function StepTab({
           <input className="seq-input" type="number" min={0} max={30} step={0.1} value={sec(step.holdMs)} onChange={(e) => patch({ holdMs: Math.max(0, Number(e.target.value) * 1000) })} />
         </label>
       </div>
-      <div className="seq-field">
-        <span>Mouvement</span>
-        <FmSelect<SeqStep["easing"]>
-          value={step.easing}
-          options={[
-            { value: "easeInOut", label: "Fluide (accélère / ralentit)" },
-            { value: "linear", label: "Linéaire" },
-          ]}
-          onChange={(v) => patch({ easing: v })}
-          ariaLabel="Mouvement"
-        />
-      </div>
-      <Switch label="Fantômes (positions précédentes)" checked={!!step.ghosts} onChange={(v) => patch({ ghosts: v })} />
-
-      <div className="seq-form__title">Mise en avant</div>
-      <div className="seq-btn-row">
-        <button type="button" className="pitch-ctl__btn" disabled={!selActors.size} onClick={() => patch({ focusIds: [...selActors] })}>
-          Mettre en avant la sélection
-        </button>
-        <button type="button" className="pitch-ctl__btn" disabled={!step.focusIds?.length} onClick={() => patch({ focusIds: [] })}>
-          Tout retirer
-        </button>
-      </div>
-      <Switch label="Atténuer les autres joueurs" checked={!!step.dimOthers} onChange={(v) => patch({ dimOthers: v })} />
-      <div className="seq-field">
-        <span>Effet</span>
-        <FmSelect<StepEffect>
-          value={step.effect ?? "none"}
-          options={[
-            { value: "none", label: "Aucun" },
-            { value: "flash", label: "Flash de couleur (danger)" },
-            { value: "bigText", label: "Mot géant" },
-          ]}
-          onChange={(v) => patch({ effect: v })}
-          ariaLabel="Effet"
-        />
-      </div>
-      {step.effect === "bigText" && (
+      {/* Sections, folded unless this step already uses them: the step
+          tab used to be one long scroll of every setting. */}
+      <details className="seq-collapse" open>
+        <summary className="seq-form__title">Positions</summary>
+        <span className="seq-muted">Replacer mon équipe selon la compo :</span>
+        <div className="seq-btn-row">
+          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "base")} title="Replace nos joueurs selon la formation de base de la compo">
+            Base
+          </button>
+          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "attack")}>
+            Attaque
+          </button>
+          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "defense")}>
+            Défense
+          </button>
+          <button type="button" className="pitch-ctl__btn" onClick={() => actions.mirrorStep(seq.id, stepIndex)} title="Inverser gauche / droite">
+            ⇄ Miroir
+          </button>
+        </div>
+        <Switch label="Propager aux étapes suivantes" checked={propagate} onChange={onPropagate} />
+      </details>
+      <details className="seq-collapse" open={!!(step.focusIds?.length || step.dimOthers || (step.effect && step.effect !== "none")) || undefined}>
+        <summary className="seq-form__title">Mise en avant et effet</summary>
+        <div className="seq-btn-row">
+          <button type="button" className="pitch-ctl__btn" disabled={!selActors.size} onClick={() => patch({ focusIds: [...selActors] })}>
+            Mettre en avant la sélection
+          </button>
+          <button type="button" className="pitch-ctl__btn" disabled={!step.focusIds?.length} onClick={() => patch({ focusIds: [] })}>
+            Tout retirer
+          </button>
+        </div>
+        <Switch label="Atténuer les autres joueurs" checked={!!step.dimOthers} onChange={(v) => patch({ dimOthers: v })} />
+        <div className="seq-field">
+          <span>Effet</span>
+          <FmSelect<StepEffect>
+            value={step.effect ?? "none"}
+            options={[
+              { value: "none", label: "Aucun" },
+              { value: "flash", label: "Flash de couleur (danger)" },
+              { value: "bigText", label: "Mot géant" },
+            ]}
+            onChange={(v) => patch({ effect: v })}
+            ariaLabel="Effet"
+          />
+        </div>
+        {step.effect === "bigText" && (
+          <label className="seq-field">
+            <span>Texte</span>
+            <input className="seq-input" value={step.effectText ?? ""} placeholder="GÉNIE" onChange={(e) => patch({ effectText: e.target.value })} />
+          </label>
+        )}
+        {step.effect && step.effect !== "none" && (
+          <Swatches value={step.effectColor || (step.effect === "flash" ? "#ff2d3a" : seq.theme.accent)} onPick={(c) => patch({ effectColor: c })} />
+        )}
+      </details>
+      <details className="seq-collapse" open={step.camera.zoom !== 1 || undefined}>
+        <summary className="seq-form__title">Caméra</summary>
         <label className="seq-field">
-          <span>Texte</span>
-          <input className="seq-input" value={step.effectText ?? ""} placeholder="GÉNIE" onChange={(e) => patch({ effectText: e.target.value })} />
+          <span>Zoom ×{step.camera.zoom.toFixed(2)}</span>
+          <input type="range" min={0.6} max={4} step={0.05} value={step.camera.zoom} onChange={(e) => patch({ camera: { ...step.camera, zoom: Number(e.target.value) } })} />
         </label>
-      )}
-      {step.effect && step.effect !== "none" && (
-        <Swatches value={step.effectColor || (step.effect === "flash" ? "#ff2d3a" : seq.theme.accent)} onPick={(c) => patch({ effectColor: c })} />
-      )}
-
-      <div className="seq-form__title">Caméra</div>
-      <label className="seq-field">
-        <span>Zoom ×{step.camera.zoom.toFixed(2)}</span>
-        <input type="range" min={0.6} max={4} step={0.05} value={step.camera.zoom} onChange={(e) => patch({ camera: { ...step.camera, zoom: Number(e.target.value) } })} />
-      </label>
-      <div className="seq-btn-row">
-        <button type="button" className="pitch-ctl__btn" onClick={onFrameSelection} title="Cadre sur les joueurs sélectionnés (ou tous)">
-          Cadrer {selActors.size ? "la sélection" : "tout"}
-        </button>
-        <button type="button" className="pitch-ctl__btn" onClick={onResetCamera}>
-          Terrain entier
-        </button>
-      </div>
-
-      <div className="seq-form__title">Positions</div>
-      <div className="seq-btn-row">
-        <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "base")} title="Replace nos joueurs selon la formation de base de la compo">
-          Base
-        </button>
-        <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "attack")}>
-          Attaque
-        </button>
-        <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "defense")}>
-          Défense
-        </button>
-        <button type="button" className="pitch-ctl__btn" onClick={() => actions.mirrorStep(seq.id, stepIndex)} title="Inverser gauche / droite">
-          ⇄
-        </button>
-      </div>
-      <Switch label="Propager aux étapes suivantes" checked={propagate} onChange={onPropagate} />
-
-      <div className="seq-btn-row seq-btn-row--end">
-        <button type="button" className="pitch-ctl__btn" disabled={stepIndex === 0} onClick={() => { actions.moveStep(seq.id, stepIndex, stepIndex - 1); onGoToStep(stepIndex - 1); }}>
-          ← Avancer
-        </button>
-        <button type="button" className="pitch-ctl__btn" disabled={stepIndex === seq.steps.length - 1} onClick={() => { actions.moveStep(seq.id, stepIndex, stepIndex + 1); onGoToStep(stepIndex + 1); }}>
-          Reculer →
-        </button>
-        <button
-          type="button"
-          className="pitch-ctl__btn seq-danger"
-          disabled={seq.steps.length <= 1}
-          onClick={() => {
-            actions.deleteStep(seq.id, stepIndex);
-            onGoToStep(Math.max(0, stepIndex - 1));
-          }}
-        >
-          Supprimer l'étape
-        </button>
-      </div>
+        <div className="seq-btn-row">
+          <button type="button" className="pitch-ctl__btn" onClick={onFrameSelection} title="Cadre sur les joueurs sélectionnés (ou tous)">
+            Cadrer {selActors.size ? "la sélection" : "tout"}
+          </button>
+          <button type="button" className="pitch-ctl__btn" onClick={onResetCamera}>
+            Terrain entier
+          </button>
+        </div>
+      </details>
+      <details className="seq-collapse" open={!!step.ghosts || step.easing === "linear" || undefined}>
+        <summary className="seq-form__title">Mouvement</summary>
+        <div className="seq-field">
+          <span>Vitesse du déplacement</span>
+          <FmSelect<SeqStep["easing"]>
+            value={step.easing}
+            options={[
+              { value: "easeInOut", label: "Fluide (accélère / ralentit)" },
+              { value: "linear", label: "Linéaire" },
+            ]}
+            onChange={(v) => patch({ easing: v })}
+            ariaLabel="Mouvement"
+          />
+        </div>
+        <Switch label="Fantômes (positions précédentes)" checked={!!step.ghosts} onChange={(v) => patch({ ghosts: v })} />
+      </details>
       <details className="seq-collapse" open={!!(step.caption || step.chapter) || undefined}>
         <summary className="seq-form__title">Sous-titre et chapitre</summary>
         <label className="seq-field" title="Visible à l'aperçu et à l'export">

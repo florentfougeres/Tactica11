@@ -28,3 +28,48 @@
     max-width: none;
   }
 }
+
+/* ---------- touch screens (iPad) ----------
+   Fingers need bigger targets than a mouse: swatches, the roster's remove
+   button, the timeline checkbox and the small toolbar buttons were 13–24px. */
+@media (pointer: coarse) {
+  .opp-swatch,
+  .studio-swatch,
+  .draw-bar__swatch {
+    width: 30px;
+    height: 30px;
+  }
+  .seq-color {
+    width: 36px;
+    height: 30px;
+  }
+  .roster-table__remove {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+  .seq-carry input {
+    width: 22px;
+    height: 22px;
+  }
+  .btn--icon {
+    width: 44px;
+    height: 44px;
+  }
+  .seq-tbtn,
+  .seq-tool {
+    min-height: 40px;
+    min-width: 40px;
+  }
+  .pitch-ctl__btn,
+  .seg__btn,
+  .influence-mode__btn {
+    min-height: 40px;
+  }
+  .seq-menu__item,
+  .export-menu button,
+  .compo-menu button,
+  .fmselect__menu button {
+    min-height: 44px;
+  }
+}

@@ -2,7 +2,7 @@
 // labels / shortcuts / hints, icons, and the compact dropdown fallback.
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { useDismiss } from "../../hooks/useDismiss";
+import PopMenu from "../PopMenu";
 import type { AnnKind } from "../../sequence/types";
 import { ANN_LABEL, ARROW_KINDS } from "../../sequence/types";
 
@@ -176,51 +176,11 @@ export default function SeqTopTools(p: TopToolsProps) {
   );
 }
 
-// Toolbar button opening a small floating menu (portalled, fixed, so the top
-// bar can't clip it). Clicking an item closes it, except inside [data-keep].
 function ToolMenu({ button, title, active, children }: { button: ReactNode; title: string; active?: boolean; children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    if (!open || !btnRef.current) return;
-    const r = btnRef.current.getBoundingClientRect();
-    setPos({ left: Math.max(8, Math.min(r.left, window.innerWidth - 220)), top: r.bottom + 6 });
-  }, [open]);
-  useDismiss(open, () => setOpen(false), [btnRef, menuRef], { floating: true });
   return (
-    <>
-      <button
-        ref={btnRef}
-        type="button"
-        className={`seq-tool seq-tool--menu ${active ? "is-active" : ""}`}
-        onClick={() => setOpen((o) => !o)}
-        title={title}
-        aria-label={title}
-        aria-haspopup="menu"
-        aria-expanded={open}
-      >
-        {button}
-        <i className="seq-tool__chev" aria-hidden="true">▾</i>
-      </button>
-      {open &&
-        pos &&
-        createPortal(
-          <div
-            ref={menuRef}
-            className="seq-menu"
-            role="menu"
-            style={{ left: pos.left, top: pos.top }}
-            onClick={(e) => {
-              if (!(e.target as HTMLElement).closest("[data-keep]")) setOpen(false);
-            }}
-          >
-            {children}
-          </div>,
-          document.body,
-        )}
-    </>
+    <PopMenu button={button} title={title} active={active} className="seq-tool seq-tool--menu">
+      {children}
+    </PopMenu>
   );
 }
 
