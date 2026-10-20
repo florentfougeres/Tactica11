@@ -159,7 +159,6 @@ function SequenceEditor({
   const [cursor, setCursor] = useState<Pos | null>(null);
   const [marquee, setMarquee] = useState<{ a: Pos; b: Pos } | null>(null);
   const [propagate, setPropagate] = useState(false);
-  const [safeZones, setSafeZones] = useState(false);
   const [preview, setPreview] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [focusLabel, setFocusLabel] = useState(0); // bump to focus the label text field
@@ -796,14 +795,12 @@ function SequenceEditor({
         selActors={selActors}
         selAnn={selAnn}
         propagate={propagate}
-        safeZones={safeZones}
         focusLabel={focusLabel}
         actions={actions}
         onSeqId={onSeqId}
         onSelectActors={setSelActors}
         onSelectAnn={setSelAnn}
         onPropagate={setPropagate}
-        onSafeZones={setSafeZones}
         onGoToStep={goToStep}
         onFrameSelection={frameSelection}
         onResetCamera={() => actions.patchStep(seq.id, stepIndex, { camera: { ...DEFAULT_CAMERA } })}
@@ -839,6 +836,17 @@ function SequenceEditor({
           <div className="seq-toolbar__group">
             <button
               type="button"
+              className="seq-tool"
+              onClick={() => actions.patchSeq(seq.id, { orient: seq.orient === "portrait" ? "landscape" : "portrait" })}
+              title={seq.orient === "portrait" ? "Passer le terrain en paysage" : "Passer le terrain en vertical"}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                {seq.orient === "portrait" ? <rect x="7" y="3" width="10" height="18" rx="2" /> : <rect x="3" y="7" width="18" height="10" rx="2" />}
+              </svg>
+              <span>{seq.orient === "portrait" ? "Vertical" : "Paysage"}</span>
+            </button>
+            <button
+              type="button"
               className={`seq-tool ${seq.showGrid ? "is-active" : ""}`}
               onClick={() => actions.patchSeq(seq.id, { showGrid: !seq.showGrid })}
               title="Afficher la grille positionnelle (couloirs et zones, comme sur l'onglet Compo) — visible aussi dans la vidéo"
@@ -864,7 +872,7 @@ function SequenceEditor({
             <button type="button" className="seq-tool seq-tool--cta" onClick={() => { pb.pause(); setPreview(true); }} title="Aperçu plein écran, sans l'interface">
               ▶ Aperçu
             </button>
-            <button type="button" className="seq-tool" onClick={exportPng} title="Exporter l'image de l'instant affiché (PNG)">
+            <button type="button" className="seq-tool" onClick={exportPng} title={`Exporter l'image de l'instant affiché (PNG, format ${seq.format})`}>
               PNG
             </button>
             {canExportVideo() && (
@@ -950,8 +958,8 @@ function SequenceEditor({
         />
       </div>
 
-      {preview && <SequencePreview seq={seq} info={info} look={look} safeZones={safeZones} onClose={() => setPreview(false)} />}
-      {exportOpen && <SequenceExportDialog seq={seq} info={info} look={look} onClose={() => setExportOpen(false)} />}
+      {preview && <SequencePreview seq={seq} info={info} look={look} onFormat={(format) => actions.patchSeq(seq.id, { format })} onClose={() => setPreview(false)} />}
+      {exportOpen && <SequenceExportDialog seq={seq} info={info} look={look} time={pb.time} onFormat={(format) => actions.patchSeq(seq.id, { format })} onClose={() => setExportOpen(false)} />}
     </>
   );
 }

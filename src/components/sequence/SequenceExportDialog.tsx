@@ -1,5 +1,9 @@
-import { useEffect, useRef, useState } from "react";
-import type { Sequence } from "../../sequence/types";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { SeqFormat, Sequence } from "../../sequence/types";
+import SequenceStage from "../../sequence/SequenceStage";
+import { frameAt } from "../../sequence/engine";
+import { frameLayout } from "../../sequence/layout";
+import FormatPicker from "./FormatPicker";
 import type { ActorInfo, SeqLook } from "../../sequence/SequenceStage";
 import { ExportCancelled, ExportUnsupported, exportVideo } from "../../sequence/exportVideo";
 import { totalDuration } from "../../sequence/engine";
@@ -11,13 +15,21 @@ export default function SequenceExportDialog({
   seq,
   info,
   look,
+  time,
+  onFormat,
   onClose,
 }: {
   seq: Sequence;
   info: Record<string, ActorInfo>;
   look: SeqLook;
+  time: number; // editor playhead, for the thumbnail
+  onFormat: (f: SeqFormat) => void;
   onClose: () => void;
 }) {
+  const L = useMemo(() => frameLayout(seq), [seq]);
+  const thumb = frameAt(seq, time);
+  const thumbH = 220;
+  const thumbW = (L.W / L.H) * thumbH;
   const [scale, setScale] = useState(1);
   const [fps, setFps] = useState(30);
   const [background, setBackground] = useState<"normal" | "chroma">("normal");
@@ -70,10 +82,21 @@ export default function SequenceExportDialog({
       <div className="modal glass seq-export" role="dialog" aria-label="Exporter en vidéo" onClick={(e) => e.stopPropagation()}>
         <h2>Exporter en vidéo</h2>
         <p className="seq-muted">
-          MP4 au format {seq.format}, {seconds.toFixed(1)} s. Chaque image est calculée une par une :
+          MP4, {seconds.toFixed(1)} s. Chaque image est calculée une par une :
           l'export prend un peu de temps mais la vidéo est parfaitement fluide. Rendu{" "}
           {look === "dark" ? "cinéma sombre" : "cinéma clair"}, comme le thème actuel de l'app.
         </p>
+
+        <div className="seq-field">
+          <span>Format</span>
+          <FormatPicker value={seq.format} onChange={onFormat} disabled={running} compact />
+          <span className="seq-muted">
+            {seq.format === "9:16" ? "TikTok, Reels, Shorts" : seq.format === "16:9" ? "YouTube" : "Publication carrée"}
+          </span>
+        </div>
+        <div className="seq-export__thumb" style={{ width: thumbW, height: thumbH }}>
+          <SequenceStage seq={seq} frame={thumb} layout={L} info={info} look={look} idPrefix="th" className="seq-preview__svg" />
+        </div>
 
         <div className="seq-field">
           <span>Résolution</span>

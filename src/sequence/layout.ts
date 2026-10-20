@@ -54,6 +54,7 @@ function fit(availW: number, availH: number, ratio: number) {
 // are reserved around the pitch. Without it (the editor) the pitch alone
 // fills the frame, so there's maximum room to work.
 export function frameLayout(seq: LayoutInput, chrome = true): FrameLayout {
+  if (!chrome) return editorLayout(seq.orient);
   const { W, H } = FORMAT_SIZE[seq.format];
   const orient: Orient = seq.orient;
   const short = Math.min(W, H);
@@ -117,6 +118,30 @@ export function frameLayout(seq: LayoutInput, chrome = true): FrameLayout {
     captionFs,
     header,
     caption,
+  };
+}
+
+// Editing view: no output format at all — just the pitch (vertical or
+// horizontal, like the Compo tab) with its grass apron and a thin margin.
+// Same pitch-relative coordinates and camera as the export, so what you
+// build here lands identically in any format.
+function editorLayout(orient: Orient): FrameLayout {
+  const long = 1545;
+  const short = 1000;
+  const w = orient === "portrait" ? short : long;
+  const h = orient === "portrait" ? long : short;
+  const pad = 30;
+  return {
+    W: Math.round(w * APRON + 2 * pad),
+    H: Math.round(h * APRON + 2 * pad),
+    orient,
+    pitch: { x: pad + w * 0.05, y: pad + h * 0.05, w, h },
+    u: short / 100,
+    pad,
+    base: 28,
+    captionFs: 42,
+    header: null,
+    caption: null,
   };
 }
 

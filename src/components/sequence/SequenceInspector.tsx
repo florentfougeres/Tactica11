@@ -28,14 +28,12 @@ interface Props {
   selActors: Set<string>;
   selAnn: string | null;
   propagate: boolean;
-  safeZones: boolean;
   focusLabel: number;
   actions: SequenceActions;
   onSeqId: (id: string | null) => void;
   onSelectActors: (s: Set<string>) => void;
   onSelectAnn: (id: string | null) => void;
   onPropagate: (v: boolean) => void;
-  onSafeZones: (v: boolean) => void;
   onGoToStep: (i: number) => void;
   onFrameSelection: () => void;
   onResetCamera: () => void;
@@ -612,7 +610,7 @@ function AnnotationForm({ seq, ann, actions, focusLabel, onSelectAnn, info }: Pr
   );
 }
 
-function SettingsTab({ seq, actions, safeZones, onSafeZones }: Props) {
+function SettingsTab({ seq, actions }: Props) {
   const id = seq.id;
   const patch = (p: Partial<Sequence>) => actions.patchSeq(id, p);
   const theme = (k: keyof Sequence["theme"], v: string) => patch({ theme: { ...seq.theme, [k]: v } });
@@ -624,24 +622,6 @@ function SettingsTab({ seq, actions, safeZones, onSafeZones }: Props) {
       </label>
 
       <div className="seq-field">
-        <span>Format</span>
-        <div className="seg">
-          {(["9:16", "16:9", "1:1"] as Sequence["format"][]).map((fm) => (
-            <button key={fm} type="button" className={`seg__btn ${seq.format === fm ? "is-active" : ""}`} onClick={() =>
-                patch({
-                  format: fm,
-                  ...(fm === "9:16" ? { orient: "portrait" as const } : fm === "16:9" ? { orient: "landscape" as const } : {}),
-                })
-              }>
-              {fm}
-            </button>
-          ))}
-        </div>
-        <span className="seq-muted">
-          {seq.format === "9:16" ? "TikTok, Reels, Shorts" : seq.format === "16:9" ? "YouTube" : "Publication carrée"}
-        </span>
-      </div>
-      <div className="seq-field">
         <span>Terrain</span>
         <div className="seg">
           {(["portrait", "landscape"] as const).map((o) => (
@@ -651,12 +631,11 @@ function SettingsTab({ seq, actions, safeZones, onSafeZones }: Props) {
           ))}
         </div>
       </div>
-      {seq.format === "9:16" && <Switch label="Zones TikTok/Reels dans l'aperçu" checked={safeZones} onChange={onSafeZones} />}
 
       <p className="seq-muted">
         Le rendu suit le thème de l'app : cinéma sombre en mode sombre, cinéma clair en mode clair.
-        Le titre, les chapitres et les sous-titres n'apparaissent que dans l'aperçu et l'export,
-        autour du terrain.
+        Le format (9:16, 16:9, 1:1) se choisit à l'aperçu et à l'export ; le titre, les chapitres
+        et les sous-titres n'apparaissent qu'à ce moment-là, autour du terrain.
       </p>
 
       <label className="seq-field">

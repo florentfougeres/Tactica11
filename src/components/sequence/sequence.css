@@ -544,6 +544,7 @@ select.seq-input {
 /* ----- export dialog ----- */
 .seq-export {
   width: min(460px, 92vw);
+  overflow-x: hidden;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -668,4 +669,18 @@ select.seq-input {
   font-style: normal;
   font-weight: 500;
   opacity: 0.75;
+}
+
+.seq-export__thumb {
+  align-self: center;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--panel-border);
+}
+.seq-preview__bar {
+  width: min(900px, 96vw);
+}
+.seq-preview__bar .seg {
+  flex: 0 0 auto;
 }

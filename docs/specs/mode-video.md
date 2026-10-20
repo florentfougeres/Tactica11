@@ -410,7 +410,9 @@ Livré :
   sous-titres avec karaoké.
 - Caméra par étape (outil caméra, zoom, « cadrer la sélection »), zoom / déplacement de la vue
   d'édition (molette, ±, Espace+glisser).
-- Formats 9:16 / 16:9 / 1:1 (terrain vertical ou paysage), zones masquées TikTok/Reels.
+- En création : terrain vertical ou paysage, comme l'onglet Compo. Le format 9:16 / 16:9 / 1:1
+  n'est qu'une option de l'aperçu et de l'export (miniature dans la fenêtre d'export, zones
+  TikTok/Reels dans l'aperçu).
 - Style cinéma unique qui suit le thème de l'app : cinéma sombre / cinéma clair (le style
   « tactique sobre » a été retiré, jugé inutile).
 - Lecture (début, préc., suiv., vitesse, boucle, scrub), aperçu plein écran sans interface.

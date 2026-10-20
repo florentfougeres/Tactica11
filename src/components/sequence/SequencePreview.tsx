@@ -4,6 +4,8 @@ import { frameAt, totalDuration } from "../../sequence/engine";
 import { frameLayout } from "../../sequence/layout";
 import SequenceStage, { type ActorInfo, type SeqLook } from "../../sequence/SequenceStage";
 import { useSequencePlayback } from "../../hooks/useSequencePlayback";
+import type { SeqFormat } from "../../sequence/types";
+import FormatPicker from "./FormatPicker";
 
 // Fullscreen preview: exactly what the audience will see — the stage alone,
 // no handles or panels — played from the start.
@@ -11,15 +13,16 @@ export default function SequencePreview({
   seq,
   info,
   look,
-  safeZones = false,
+  onFormat,
   onClose,
 }: {
   seq: Sequence;
   info: Record<string, ActorInfo>;
   look: SeqLook;
-  safeZones?: boolean;
+  onFormat: (f: SeqFormat) => void;
   onClose: () => void;
 }) {
+  const [safeZones, setSafeZones] = useState(false);
   const L = useMemo(() => frameLayout(seq), [seq]);
   const duration = totalDuration(seq.steps);
   const pb = useSequencePlayback(duration);
@@ -49,7 +52,7 @@ export default function SequencePreview({
     };
   }, [onClose, pb]);
 
-  const scale = Math.min(size.w / L.W, (size.h - 56) / L.H);
+  const scale = Math.min(size.w / L.W, (size.h - 64) / L.H);
   const frame = frameAt(seq, pb.time);
 
   return (
@@ -76,6 +79,13 @@ export default function SequencePreview({
           }}
           aria-label="Position"
         />
+        <FormatPicker value={seq.format} onChange={onFormat} compact />
+        {seq.format === "9:16" && (
+          <label className="seq-carry" title="Zones recouvertes par l'interface TikTok / Reels">
+            <input type="checkbox" checked={safeZones} onChange={(e) => setSafeZones(e.target.checked)} />
+            Zones TikTok
+          </label>
+        )}
         <button type="button" className="seq-tbtn" onClick={onClose}>
           ✕ Fermer
         </button>
