@@ -823,85 +823,23 @@ function SequenceEditor({
       />
 
       <div className="seq-main">
-        {topSlot && createPortal(
-        <div className="seq-toolbar seq-toolbar--tabs" role="toolbar" aria-label="Outils">
-          {TOOL_GROUPS.slice(0, -1).map((g, gi) => (
-            <div key={gi} className="seq-toolbar__group">
-              {g.label && <span className="seq-toolbar__label">{g.label}</span>}
-              {g.tools.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  className={`seq-tool seq-tool--${t} ${tool === t ? "is-active" : ""}`}
-                  onClick={() => setTool(t)}
-                  title={`${TOOL_LABEL[t]}${TOOL_KEY[t] ? ` (${TOOL_KEY[t]})` : ""} — ${TOOL_HINT[t]}`}
-                  aria-pressed={tool === t}
-                >
-                  <ToolIcon tool={t} />
-                  <span>{TOOL_LABEL[t]}</span>
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
-        , topSlot)}
-        {topSlot && createPortal(
-        <div className="seq-toolbar seq-toolbar--top" role="toolbar" aria-label="Vue et export">
-          <div className="seq-toolbar__group">
-            {(["camera"] as SeqTool[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                className={`seq-tool seq-tool--${t} ${tool === t ? "is-active" : ""}`}
-                onClick={() => setTool(t)}
-                title={`${TOOL_LABEL[t]}${TOOL_KEY[t] ? ` (${TOOL_KEY[t]})` : ""} — ${TOOL_HINT[t]}`}
-                aria-pressed={tool === t}
-              >
-                <ToolIcon tool={t} />
-                <span>{TOOL_LABEL[t]}</span>
-              </button>
-            ))}
-          </div>
-          <div className="seq-toolbar__group">
-            <button
-              type="button"
-              className={`seq-tool ${seq.showGrid ? "is-active" : ""}`}
-              onClick={() => actions.patchSeq(seq.id, { showGrid: !seq.showGrid })}
-              title="Afficher la grille positionnelle (couloirs et zones, comme sur l'onglet Compo) — visible aussi dans la vidéo"
-              aria-pressed={!!seq.showGrid}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M9 3v18M15 3v18M3 9h18M3 15h18" strokeDasharray="2 2" />
-              </svg>
-              <span>Grille</span>
-            </button>
-            <button type="button" className="seq-tool" onClick={() => zoomViewAt(1 / 1.25)} title="Dézoomer la vue" aria-label="Dézoomer">
-              −
-            </button>
-            <button type="button" className="seq-tool seq-tool--pct" onClick={resetView} title="Ajuster la vue">
-              {Math.round(viewZoom * 100)}%
-            </button>
-            <button type="button" className="seq-tool" onClick={() => zoomViewAt(1.25)} title="Zoomer la vue" aria-label="Zoomer">
-              +
-            </button>
-          </div>
-          <div className="seq-toolbar__group">
-            <button type="button" className="seq-tool seq-tool--cta" onClick={() => { pb.pause(); setPreview(true); }} title="Aperçu plein écran, sans l'interface">
-              ▶ Aperçu
-            </button>
-            <button type="button" className="seq-tool" onClick={exportPng} title={`Exporter l'image de l'instant affiché (PNG, format ${seq.format})`}>
-              PNG
-            </button>
-            {canExportVideo() && (
-              <button type="button" className="seq-tool" onClick={() => { pb.pause(); setExportOpen(true); }} title="Exporter la séquence en vidéo MP4">
-                Vidéo
-              </button>
-            )}
-          </div>
-        </div>
-
-        , topSlot)}
+        {topSlot && (
+          <SeqTopTools
+            slot={topSlot}
+            tool={tool}
+            onTool={setTool}
+            showGrid={!!seq.showGrid}
+            onGrid={() => actions.patchSeq(seq.id, { showGrid: !seq.showGrid })}
+            zoomPct={Math.round(viewZoom * 100)}
+            onZoomOut={() => zoomViewAt(1 / 1.25)}
+            onZoomFit={resetView}
+            onZoomIn={() => zoomViewAt(1.25)}
+            onPreview={() => { pb.pause(); setPreview(true); }}
+            onPng={exportPng}
+            pngTitle={`Exporter l'image de l'instant affiché (PNG, format ${seq.format})`}
+            onVideo={canExportVideo() ? () => { pb.pause(); setExportOpen(true); } : null}
+          />
+        )}
 
         <div className="seq-hint">
           {pb.playing
@@ -983,6 +921,210 @@ function SequenceEditor({
 
       {preview && <SequencePreview seq={seq} info={info} look={look} onFormat={(format) => actions.patchSeq(seq.id, { format })} onClose={() => setPreview(false)} />}
       {exportOpen && <SequenceExportDialog seq={seq} info={info} look={look} time={pb.time} onFormat={(format) => actions.patchSeq(seq.id, { format })} onOrient={(orient) => actions.patchSeq(seq.id, { orient })} onClose={() => setExportOpen(false)} />}
+    </>
+  );
+}
+
+const toolTitle = (t: SeqTool) => `${TOOL_LABEL[t]}${TOOL_KEY[t] ? ` (${TOOL_KEY[t]})` : ""} — ${TOOL_HINT[t]}`;
+
+const GRID_ICON = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <path d="M9 3v18M15 3v18M3 9h18M3 15h18" strokeDasharray="2 2" />
+  </svg>
+);
+
+interface TopToolsProps {
+  slot: HTMLElement;
+  tool: SeqTool;
+  onTool: (t: SeqTool) => void;
+  showGrid: boolean;
+  onGrid: () => void;
+  zoomPct: number;
+  onZoomOut: () => void;
+  onZoomFit: () => void;
+  onZoomIn: () => void;
+  onPreview: () => void;
+  onPng: () => void;
+  pngTitle: string;
+  onVideo: (() => void) | null;
+}
+
+// Séquence tools, portalled into the app's top bar. When they don't fit, the
+// arrow/shape groups collapse into dropdowns and view/export go into a "⋯"
+// menu (Aperçu stays visible); they expand again once there's room.
+function SeqTopTools(p: TopToolsProps) {
+  const [compact, setCompact] = useState(false);
+  const fullW = useRef(0);
+  useLayoutEffect(() => {
+    const el = p.slot;
+    const check = () => {
+      if (!compact) {
+        if (el.scrollWidth > el.clientWidth + 1) {
+          fullW.current = el.scrollWidth;
+          setCompact(true);
+        }
+      } else if (el.clientWidth >= fullW.current) setCompact(false);
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [p.slot, compact]);
+
+  const toolBtn = (t: SeqTool, inMenu = false) => (
+    <button
+      key={t}
+      type="button"
+      className={`${inMenu ? "seq-menu__item" : "seq-tool"} seq-tool--${t} ${p.tool === t ? "is-active" : ""}`}
+      onClick={() => p.onTool(t)}
+      title={toolTitle(t)}
+      aria-pressed={p.tool === t}
+    >
+      <ToolIcon tool={t} />
+      <span>{TOOL_LABEL[t]}</span>
+    </button>
+  );
+  const groups = TOOL_GROUPS.slice(0, -1);
+  const gridBtn = (cls: string) => (
+    <button type="button" className={`${cls} ${p.showGrid ? "is-active" : ""}`} onClick={p.onGrid} aria-pressed={p.showGrid}
+      title="Afficher la grille positionnelle (couloirs et zones, comme sur l'onglet Compo) — visible aussi dans la vidéo">
+      {GRID_ICON}
+      <span>Grille</span>
+    </button>
+  );
+  const zoom = (
+    <>
+      <button type="button" className="seq-tool" onClick={p.onZoomOut} title="Dézoomer la vue" aria-label="Dézoomer">−</button>
+      <button type="button" className="seq-tool seq-tool--pct" onClick={p.onZoomFit} title="Ajuster la vue">{p.zoomPct}%</button>
+      <button type="button" className="seq-tool" onClick={p.onZoomIn} title="Zoomer la vue" aria-label="Zoomer">+</button>
+    </>
+  );
+  const preview = (
+    <button type="button" className="seq-tool seq-tool--cta" onClick={p.onPreview} title="Aperçu plein écran, sans l'interface">
+      ▶ Aperçu
+    </button>
+  );
+
+  return createPortal(
+    compact ? (
+      <div className="seq-toolbar seq-toolbar--top" role="toolbar" aria-label="Outils">
+        <div className="seq-toolbar__group">
+          {groups.map((g, gi) => {
+            if (g.tools.length === 1) return toolBtn(g.tools[0]);
+            const cur = g.tools.includes(p.tool) ? p.tool : null;
+            return (
+              <ToolMenu key={gi} active={!!cur} title={g.label} button={<ToolIcon tool={cur ?? g.tools[0]} />}>
+                {g.tools.map((t) => toolBtn(t, true))}
+              </ToolMenu>
+            );
+          })}
+          {toolBtn("camera")}
+        </div>
+        <div className="seq-toolbar__group">
+          {preview}
+          <ToolMenu title="Vue et export" button={<span className="seq-tool__more">⋯</span>}>
+            {gridBtn("seq-menu__item")}
+            <div className="seq-menu__row" data-keep>{zoom}</div>
+            <button type="button" className="seq-menu__item" onClick={p.onPng} title={p.pngTitle}>
+              <span>Exporter en PNG</span>
+            </button>
+            {p.onVideo && (
+              <button type="button" className="seq-menu__item" onClick={p.onVideo} title="Exporter la séquence en vidéo MP4">
+                <span>Exporter en vidéo</span>
+              </button>
+            )}
+          </ToolMenu>
+        </div>
+      </div>
+    ) : (
+      <div className="seq-toolbar seq-toolbar--top" role="toolbar" aria-label="Outils">
+        {groups.map((g, gi) => (
+          <div key={gi} className="seq-toolbar__group">
+            {g.label && <span className="seq-toolbar__label">{g.label}</span>}
+            {g.tools.map((t) => toolBtn(t))}
+          </div>
+        ))}
+        <div className="seq-toolbar__group">{toolBtn("camera")}</div>
+        <div className="seq-toolbar__group">
+          {gridBtn("seq-tool")}
+          {zoom}
+        </div>
+        <div className="seq-toolbar__group">
+          {preview}
+          <button type="button" className="seq-tool" onClick={p.onPng} title={p.pngTitle}>PNG</button>
+          {p.onVideo && (
+            <button type="button" className="seq-tool" onClick={p.onVideo} title="Exporter la séquence en vidéo MP4">Vidéo</button>
+          )}
+        </div>
+      </div>
+    ),
+    p.slot,
+  );
+}
+
+// Toolbar button opening a small floating menu (portalled, fixed, so the top
+// bar can't clip it). Clicking an item closes it, except inside [data-keep].
+function ToolMenu({ button, title, active, children }: { button: React.ReactNode; title: string; active?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (!open || !btnRef.current) return;
+    const r = btnRef.current.getBoundingClientRect();
+    setPos({ left: Math.max(8, Math.min(r.left, window.innerWidth - 220)), top: r.bottom + 6 });
+  }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (!btnRef.current?.contains(t) && !menuRef.current?.contains(t)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    const close = () => setOpen(false);
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", close);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", close);
+    };
+  }, [open]);
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        className={`seq-tool seq-tool--menu ${active ? "is-active" : ""}`}
+        onClick={() => setOpen((o) => !o)}
+        title={title}
+        aria-label={title}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        {button}
+        <i className="seq-tool__chev" aria-hidden="true">▾</i>
+      </button>
+      {open &&
+        pos &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="seq-menu"
+            role="menu"
+            style={{ left: pos.left, top: pos.top }}
+            onClick={(e) => {
+              if (!(e.target as HTMLElement).closest("[data-keep]")) setOpen(false);
+            }}
+          >
+            {children}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
