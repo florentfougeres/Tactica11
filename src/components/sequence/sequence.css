@@ -838,3 +838,6 @@ select.seq-input {
   opacity: 0.35;
   cursor: default;
 }
+.seq-stepnav {
+  justify-content: center;
+}
