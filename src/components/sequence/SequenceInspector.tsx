@@ -240,7 +240,8 @@ function StepTab({
             max={20}
             step={0.1}
             disabled={stepIndex === 0}
-            value={stepIndex === 0 ? 0 : sec(step.transitionMs)}
+            title={stepIndex === 0 ? "Rien ne précède la première étape : sa transition est gardée mais pas jouée (elle resservira si l'étape est déplacée)." : undefined}
+            value={sec(step.transitionMs)}
             onChange={(e) => patch({ transitionMs: Math.max(0, Number(e.target.value) * 1000) })}
           />
         </label>
