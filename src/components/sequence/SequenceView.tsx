@@ -455,6 +455,7 @@ function SequenceEditor({
         onSelectAnn={setSelAnn}
         onPropagate={setPropagate}
         onGoToStep={goToStep}
+        onAddStep={addStep}
         onFrameSelection={frameSelection}
         onResetCamera={() => actions.patchStep(seq.id, stepIndex, { camera: { ...DEFAULT_CAMERA } })}
         onAddActor={(team) => {

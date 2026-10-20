@@ -1,3 +1,4 @@
+import { useState, type ReactNode } from "react";
 import type {
   SeqStep,
   StepEffect,
@@ -6,6 +7,16 @@ import FmSelect from "../../FmSelect";
 import PopMenu from "../../PopMenu";
 
 import { Switch, Swatches, sec, type Props } from "./shared";
+
+function Section({ title, defaultOpen, children }: { title: string; defaultOpen: boolean; children: ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <details className="seq-collapse" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary className="seq-form__title">{title}</summary>
+      {children}
+    </details>
+  );
+}
 
 export default function StepTab({
   seq,
@@ -17,6 +28,7 @@ export default function StepTab({
   actions,
   onPropagate,
   onGoToStep,
+  onAddStep,
   onFrameSelection,
   onResetCamera,
 }: Props) {
@@ -24,31 +36,68 @@ export default function StepTab({
   const patch = (p: Partial<SeqStep>) => actions.patchStep(id, stepIndex, p);
   return (
     <div className="seq-form">
-      {/* Step-to-step navigation lives in the timeline; here only what
-          acts on this step as a whole, in its menu. */}
+      {/* ‹ Étape › centred to step through the sequence, + (new step) on
+          the left and the menu of what acts on this step on the right. */}
       <div className="seq-stephead">
-        <span className="seq-stephead__title">Étape {stepIndex + 1} / {seq.steps.length}</span>
-        {!editable && <span className="seq-badge">lecture seule</span>}
-        <PopMenu button="⋯" title="Actions sur l'étape" className="seq-tbtn" chevron={false} align="right">
-          <button type="button" className="seq-menu__item" disabled={stepIndex === 0} onClick={() => { actions.moveStep(seq.id, stepIndex, stepIndex - 1); onGoToStep(stepIndex - 1); }}>
-            Déplacer plus tôt
-          </button>
-          <button type="button" className="seq-menu__item" disabled={stepIndex === seq.steps.length - 1} onClick={() => { actions.moveStep(seq.id, stepIndex, stepIndex + 1); onGoToStep(stepIndex + 1); }}>
-            Déplacer plus tard
-          </button>
-          <div className="seq-menu__sep" />
+        <div className="seq-stephead__start">
+          {editable && (
+            <button
+              type="button"
+              className="seq-stepnav__btn seq-stepnav__btn--add"
+              onClick={onAddStep}
+              title="Nouvelle étape : duplique l'étape courante (N)"
+              aria-label="Nouvelle étape"
+            >
+              +
+            </button>
+          )}
+          {!editable && <span className="seq-badge">lecture seule</span>}
+        </div>
+        <div className="seq-stephead__nav">
           <button
             type="button"
-            className="seq-menu__item seq-danger"
-            disabled={seq.steps.length <= 1}
-            onClick={() => {
-              actions.deleteStep(seq.id, stepIndex);
-              onGoToStep(Math.max(0, stepIndex - 1));
-            }}
+            className="seq-stepnav__btn"
+            disabled={stepIndex === 0}
+            onClick={() => onGoToStep(stepIndex - 1)}
+            title="Étape précédente"
+            aria-label="Étape précédente"
           >
-            Supprimer l'étape
+            ‹
           </button>
-        </PopMenu>
+          <span className="seq-stephead__title">Étape {stepIndex + 1} / {seq.steps.length}</span>
+          <button
+            type="button"
+            className="seq-stepnav__btn"
+            disabled={stepIndex >= seq.steps.length - 1}
+            onClick={() => onGoToStep(stepIndex + 1)}
+            title="Étape suivante"
+            aria-label="Étape suivante"
+          >
+            ›
+          </button>
+        </div>
+        <div className="seq-stephead__actions">
+          <PopMenu button="⋯" title="Actions sur l'étape" className="seq-tbtn" chevron={false} align="right">
+            <button type="button" className="seq-menu__item" disabled={stepIndex === 0} onClick={() => { actions.moveStep(seq.id, stepIndex, stepIndex - 1); onGoToStep(stepIndex - 1); }}>
+              Déplacer plus tôt
+            </button>
+            <button type="button" className="seq-menu__item" disabled={stepIndex === seq.steps.length - 1} onClick={() => { actions.moveStep(seq.id, stepIndex, stepIndex + 1); onGoToStep(stepIndex + 1); }}>
+              Déplacer plus tard
+            </button>
+            <div className="seq-menu__sep" />
+            <button
+              type="button"
+              className="seq-menu__item seq-danger"
+              disabled={seq.steps.length <= 1}
+              onClick={() => {
+                actions.deleteStep(seq.id, stepIndex);
+                onGoToStep(Math.max(0, stepIndex - 1));
+              }}
+            >
+              Supprimer l'étape
+            </button>
+          </PopMenu>
+        </div>
       </div>
       <label className="seq-field">
         <span>Nom</span>
@@ -73,30 +122,11 @@ export default function StepTab({
           <input className="seq-input" type="number" min={0} max={30} step={0.1} value={sec(step.holdMs)} onChange={(e) => patch({ holdMs: Math.max(0, Number(e.target.value) * 1000) })} />
         </label>
       </div>
-      {/* Sections, folded unless this step already uses them: the step
-          tab used to be one long scroll of every setting. */}
-      <details className="seq-collapse" open>
-        <summary className="seq-form__title">Positions</summary>
-        <div className="seq-btn-row">
-          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "base")} title="Replacer mon équipe selon la compo en Base">
-            Base
-          </button>
-          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "attack")} title="Replacer mon équipe selon la compo en Attaque">
-            Attaque
-          </button>
-          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "defense")} title="Replacer mon équipe selon la compo en Défense">
-            Défense
-          </button>
-        </div>
-        <div className="seq-btn-row">
-          <button type="button" className="pitch-ctl__btn" onClick={() => actions.mirrorStep(seq.id, stepIndex)} title="Inverser gauche / droite">
-            ⇄ Inverser gauche / droite
-          </button>
-        </div>
-        <Switch label="Propager aux étapes suivantes" checked={propagate} onChange={onPropagate} />
-      </details>
-      <details className="seq-collapse" open={!!(step.focusIds?.length || step.dimOthers || (step.effect && step.effect !== "none")) || undefined}>
-        <summary className="seq-form__title">Mise en avant et effet</summary>
+      {/* Sections: Mise en avant open, Positions folded, the others open
+          only when this step already uses them. That's decided when the
+          step is shown (keyed by step), then only the user folds them, so
+          switching a setting off doesn't snap its section shut. */}
+      <Section key={`${step.id}:Mise en avant et effet`} title="Mise en avant et effet" defaultOpen>
         <div className="seq-btn-row">
           <button type="button" className="pitch-ctl__btn" disabled={!selActors.size} onClick={() => patch({ focusIds: [...selActors] })} title="Mettre en avant les joueurs sélectionnés">
             Mettre en avant
@@ -128,9 +158,27 @@ export default function StepTab({
         {step.effect && step.effect !== "none" && (
           <Swatches value={step.effectColor || (step.effect === "flash" ? "#ff2d3a" : seq.theme.accent)} onPick={(c) => patch({ effectColor: c })} />
         )}
-      </details>
-      <details className="seq-collapse" open={step.camera.zoom !== 1 || undefined}>
-        <summary className="seq-form__title">Caméra</summary>
+      </Section>
+      <Section key={`${step.id}:Positions`} title="Positions" defaultOpen={false}>
+        <div className="seq-btn-row">
+          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "base")} title="Replacer mon équipe selon la compo en Base">
+            Base
+          </button>
+          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "attack")} title="Replacer mon équipe selon la compo en Attaque">
+            Attaque
+          </button>
+          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "defense")} title="Replacer mon équipe selon la compo en Défense">
+            Défense
+          </button>
+        </div>
+        <div className="seq-btn-row">
+          <button type="button" className="pitch-ctl__btn" onClick={() => actions.mirrorStep(seq.id, stepIndex)} title="Inverser gauche / droite">
+            ⇄ Inverser gauche / droite
+          </button>
+        </div>
+        <Switch label="Propager aux étapes suivantes" checked={propagate} onChange={onPropagate} />
+      </Section>
+      <Section key={`${step.id}:Caméra`} title="Caméra" defaultOpen={step.camera.zoom !== 1}>
         <label className="seq-field">
           <span>Zoom ×{step.camera.zoom.toFixed(2)}</span>
           <input type="range" min={0.6} max={4} step={0.05} value={step.camera.zoom} onChange={(e) => patch({ camera: { ...step.camera, zoom: Number(e.target.value) } })} />
@@ -143,9 +191,8 @@ export default function StepTab({
             Terrain entier
           </button>
         </div>
-      </details>
-      <details className="seq-collapse" open={!!step.ghosts || step.easing === "linear" || undefined}>
-        <summary className="seq-form__title">Mouvement</summary>
+      </Section>
+      <Section key={`${step.id}:Mouvement`} title="Mouvement" defaultOpen={!!step.ghosts || step.easing === "linear"}>
         <div className="seq-field">
           <span>Vitesse du déplacement</span>
           <FmSelect<SeqStep["easing"]>
@@ -159,9 +206,8 @@ export default function StepTab({
           />
         </div>
         <Switch label="Fantômes (positions précédentes)" checked={!!step.ghosts} onChange={(v) => patch({ ghosts: v })} />
-      </details>
-      <details className="seq-collapse" open={!!(step.caption || step.chapter) || undefined}>
-        <summary className="seq-form__title">Sous-titre et chapitre</summary>
+      </Section>
+      <Section key={`${step.id}:Sous-titre et chapitre`} title="Sous-titre et chapitre" defaultOpen={!!(step.caption || step.chapter)}>
         <label className="seq-field" title="Visible à l'aperçu et à l'export">
           <span>Sous-titre / commentaire</span>
           <textarea className="seq-input" rows={3} value={step.caption ?? ""} placeholder="Ce que dit la voix off à ce moment…" onChange={(e) => patch({ caption: e.target.value })} />
@@ -171,7 +217,7 @@ export default function StepTab({
           <span>Nouveau chapitre ici</span>
           <input className="seq-input" value={step.chapter ?? ""} placeholder="ex. LE DILEMME" onChange={(e) => patch({ chapter: e.target.value })} />
         </label>
-      </details>
+      </Section>
     </div>
   );
 }

@@ -34,6 +34,7 @@ export interface Props {
   onSelectAnn: (id: string | null) => void;
   onPropagate: (v: boolean) => void;
   onGoToStep: (i: number) => void;
+  onAddStep: () => void;
   onFrameSelection: () => void;
   onResetCamera: () => void;
   onAddActor: (team: Team) => void;
