@@ -1,8 +1,19 @@
 /* ---------- responsive (iPad portrait / narrow) ---------- */
 @media (max-width: 900px) {
-  .layout,
-  .view-row {
+  .layout {
     grid-template-columns: 240px 1fr;
+  }
+  /* The four tabs are wider than the 240px column: as a grid cell they ran
+     under the Système picker. Here the row flows instead, the tabs at their
+     natural width and the formation + phases pushed to the right. */
+  .view-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+  }
+  .view-row__phase {
+    margin-left: auto;
   }
   .topbar__label {
     display: none;

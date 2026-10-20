@@ -62,7 +62,9 @@ interface TopToolsProps {
 // arrow/shape groups collapse into dropdowns and view/export go into a "⋯"
 // menu (Aperçu stays visible; export is the top bar's Partager menu); they expand again once there's room.
 export default function SeqTopTools(p: TopToolsProps) {
-  // 0 = icons + labels, 1 = icons only, 2 = dropdown menus. Step down while
+  // 0 = icons + labels, 1 = icons only, 2 = icons only with grid / zoom in
+  // the "⋯" menu (every drawing tool stays one tap away), 3 = dropdown
+  // menus. Step down while
   // the tools overflow; step back up once the width the previous level
   // needed is available again.
   const [level, setLevel] = useState(0);
@@ -70,7 +72,7 @@ export default function SeqTopTools(p: TopToolsProps) {
   useLayoutEffect(() => {
     const el = p.slot;
     const check = () => {
-      if (level < 2 && el.scrollWidth > el.clientWidth + 1) {
+      if (level < 3 && el.scrollWidth > el.clientWidth + 1) {
         widths.current[level] = el.scrollWidth;
         setLevel(level + 1);
       } else if (level > 0 && el.clientWidth >= widths.current[level - 1]) setLevel(level - 1);
@@ -80,7 +82,8 @@ export default function SeqTopTools(p: TopToolsProps) {
     ro.observe(el);
     return () => ro.disconnect();
   }, [p.slot, level]);
-  const compact = level === 2;
+  const compact = level === 3;
+  const viewInMenu = level >= 2;
 
   const toolBtn = (t: SeqTool, inMenu = false) => (
     <button
@@ -118,6 +121,13 @@ export default function SeqTopTools(p: TopToolsProps) {
     </button>
   );
 
+  const viewMenu = (
+    <ToolMenu title="Vue" button={<span className="seq-tool__more">⋯</span>}>
+      {gridBtn("seq-menu__item")}
+      <div className="seq-menu__row" data-keep>{zoom}</div>
+    </ToolMenu>
+  );
+
   return createPortal(
     compact ? (
       <div className="seq-toolbar seq-toolbar--top" role="toolbar" aria-label="Outils">
@@ -135,10 +145,7 @@ export default function SeqTopTools(p: TopToolsProps) {
         </div>
         <div className="seq-toolbar__group">
           {preview}
-          <ToolMenu title="Vue" button={<span className="seq-tool__more">⋯</span>}>
-            {gridBtn("seq-menu__item")}
-            <div className="seq-menu__row" data-keep>{zoom}</div>
-          </ToolMenu>
+          {viewMenu}
         </div>
       </div>
     ) : (
@@ -150,12 +157,15 @@ export default function SeqTopTools(p: TopToolsProps) {
           </div>
         ))}
         <div className="seq-toolbar__group">{toolBtn("camera")}</div>
-        <div className="seq-toolbar__group">
-          {gridBtn("seq-tool")}
-          {zoom}
-        </div>
+        {!viewInMenu && (
+          <div className="seq-toolbar__group">
+            {gridBtn("seq-tool")}
+            {zoom}
+          </div>
+        )}
         <div className="seq-toolbar__group">
           {preview}
+          {viewInMenu && viewMenu}
         </div>
       </div>
     ),
