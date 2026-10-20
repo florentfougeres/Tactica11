@@ -422,6 +422,7 @@ export default function SequenceStage({
             fg={isDark(color) ? "#ffffff" : "#0b0f14"}
             upper
             outline={sel ? "#21d07a" : undefined}
+            hit
           />
         </g>
       );
@@ -851,6 +852,7 @@ function Pill({
   outline,
   weight = 700,
   round = false,
+  hit = false,
 }: {
   x: number;
   y: number;
@@ -862,11 +864,12 @@ function Pill({
   outline?: string;
   weight?: number;
   round?: boolean; // fully rounded, like the Terrain tab's name pills
+  hit?: boolean; // catches clicks (texts are picked by their bubble)
 }) {
   const w = textW(text, fs, upper) + fs * (round ? 1.4 : 1.1);
   const h = fs * (round ? 1.5 : 1.55);
   return (
-    <g pointerEvents="none">
+    <g pointerEvents={hit ? undefined : "none"}>
       <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={round ? h / 2 : fs * 0.32} fill={bg} stroke={outline} strokeWidth={outline ? fs * 0.12 : undefined} />
       <text
         x={x}

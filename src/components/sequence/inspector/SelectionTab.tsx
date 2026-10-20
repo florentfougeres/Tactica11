@@ -148,7 +148,7 @@ export default function SelectionTab(props: Props) {
   );
 }
 
-function AnnotationForm({ seq, ann, actions, focusLabel, onSelectAnn, info }: Props & { ann: SeqAnnotation }) {
+function AnnotationForm({ seq, step, ann, actions, focusLabel, onSelectAnn, info }: Props & { ann: SeqAnnotation }) {
   const id = seq.id;
   const patch = (p: Partial<SeqAnnotation>) => actions.patchAnnotation(id, ann.id, p);
   const textRef = useRef<HTMLInputElement>(null);
@@ -310,15 +310,29 @@ function AnnotationForm({ seq, ann, actions, focusLabel, onSelectAnn, info }: Pr
         <button type="button" className="pitch-ctl__btn" onClick={() => onSelectAnn(null)}>
           Désélectionner
         </button>
+        {/* On several steps: Suppr (and this button) only take it off this
+            one; the other steps keep it. */}
+        {ann.fromStep !== ann.toStep && (
+          <button
+            type="button"
+            className="pitch-ctl__btn seq-danger"
+            onClick={() => {
+              actions.removeAnnotation(id, ann.id);
+              onSelectAnn(null);
+            }}
+          >
+            Supprimer partout
+          </button>
+        )}
         <button
           type="button"
           className="pitch-ctl__btn seq-danger"
           onClick={() => {
-            actions.removeAnnotation(id, ann.id);
+            actions.removeAnnotationAtStep(id, ann.id, step.id);
             onSelectAnn(null);
           }}
         >
-          Supprimer
+          {ann.fromStep !== ann.toStep ? "Retirer de cette étape" : "Supprimer"}
         </button>
       </div>
     </div>

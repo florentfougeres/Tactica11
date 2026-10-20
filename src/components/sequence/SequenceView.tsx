@@ -255,7 +255,7 @@ function SequenceEditor({
 
   // ----- pointer handling on the stage -----
   const { onPointerDown, onPointerMove, onPointerUp, finishPolygon } = useStagePointer({
-    seq, step, stepIndex, editable, tool, frame, L, actions, propagate, draft, setDraft, setCursor, setMarquee,
+    seq, step, stepIndex, editable, tool, setTool, frame, L, actions, propagate, draft, setDraft, setCursor, setMarquee,
     selActors, setSelActors, selAnn, setSelAnn, setFocusLabel, dragRef, svgRef, camRef, spaceDown, pan, setPan,
   });
 
@@ -265,13 +265,13 @@ function SequenceEditor({
   // ----- keyboard -----
   const deleteSelection = useCallback(() => {
     if (selAnn) {
-      actions.removeAnnotation(seq.id, selAnn);
+      actions.removeAnnotationAtStep(seq.id, selAnn, step.id);
       setSelAnn(null);
     } else if (selActors.size) {
       actions.removeActors(seq.id, [...selActors]);
       setSelActors(new Set());
     }
-  }, [actions, selAnn, selActors, seq.id]);
+  }, [actions, selAnn, selActors, seq.id, step.id]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

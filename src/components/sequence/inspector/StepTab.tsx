@@ -7,6 +7,7 @@ import FmSelect from "../../FmSelect";
 import PopMenu from "../../PopMenu";
 
 import { Switch, Swatches, sec, type Props } from "./shared";
+import StepLayers from "./StepLayers";
 
 function Section({ title, defaultOpen, children }: { title: string; defaultOpen: boolean; children: ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -18,20 +19,21 @@ function Section({ title, defaultOpen, children }: { title: string; defaultOpen:
   );
 }
 
-export default function StepTab({
-  seq,
-  step,
-  stepIndex,
-  editable,
-  selActors,
-  propagate,
-  actions,
-  onPropagate,
-  onGoToStep,
-  onAddStep,
-  onFrameSelection,
-  onResetCamera,
-}: Props) {
+export default function StepTab(props: Props) {
+  const {
+    seq,
+    step,
+    stepIndex,
+    editable,
+    selActors,
+    propagate,
+    actions,
+    onPropagate,
+    onGoToStep,
+    onAddStep,
+    onFrameSelection,
+    onResetCamera,
+  } = props;
   const id = seq.id;
   const patch = (p: Partial<SeqStep>) => actions.patchStep(id, stepIndex, p);
   return (
@@ -126,6 +128,9 @@ export default function StepTab({
           only when this step already uses them. That's decided when the
           step is shown (keyed by step), then only the user folds them, so
           switching a setting off doesn't snap its section shut. */}
+      <Section key={`${step.id}:Calques`} title="Calques" defaultOpen>
+        <StepLayers {...props} />
+      </Section>
       <Section key={`${step.id}:Mise en avant et effet`} title="Mise en avant et effet" defaultOpen>
         <div className="seq-btn-row">
           <button type="button" className="pitch-ctl__btn" disabled={!selActors.size} onClick={() => patch({ focusIds: [...selActors] })} title="Mettre en avant les joueurs sélectionnés">

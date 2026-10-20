@@ -63,6 +63,12 @@ export default function SequenceInspector(props: Props) {
               onChange={(id) => onSeqId(id)}
               ariaLabel="Séquence affichée"
             />
+            <PopMenu button="+" title="Nouvelle séquence" className="seq-tbtn" chevron={false} align="right">
+              <span className="seq-menu__group">Nouvelle séquence depuis</span>
+              <button type="button" className="seq-menu__item" onClick={() => create("base")}>la base</button>
+              <button type="button" className="seq-menu__item" onClick={() => create("attack")}>l'attaque</button>
+              <button type="button" className="seq-menu__item" onClick={() => create("defense")}>la défense</button>
+            </PopMenu>
             {/* Managing sequences is occasional: one menu instead of four
                 buttons permanently on top of the inspector. */}
             <PopMenu button="⋯" title="Gérer les séquences" className="seq-tbtn" chevron={false} align="right">
@@ -79,11 +85,6 @@ export default function SequenceInspector(props: Props) {
               >
                 Dupliquer
               </button>
-              <div className="seq-menu__sep" />
-              <span className="seq-menu__group">Nouvelle séquence depuis</span>
-              <button type="button" className="seq-menu__item" onClick={() => create("base")}>la base</button>
-              <button type="button" className="seq-menu__item" onClick={() => create("attack")}>l'attaque</button>
-              <button type="button" className="seq-menu__item" onClick={() => create("defense")}>la défense</button>
               <div className="seq-menu__sep" />
               <button
                 type="button"

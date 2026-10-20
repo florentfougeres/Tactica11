@@ -34,6 +34,7 @@ export interface StagePointerCtx {
   stepIndex: number;
   editable: boolean;
   tool: SeqTool;
+  setTool: Setter<SeqTool>;
   frame: FrameState;
   L: FrameLayout;
   actions: SequenceActions;
@@ -57,7 +58,7 @@ export interface StagePointerCtx {
 
 export function useStagePointer(ctx: StagePointerCtx) {
   const {
-    seq, step, stepIndex, editable, tool, frame, L, actions, propagate, draft, setDraft, setCursor, setMarquee,
+    seq, step, stepIndex, editable, tool, setTool, frame, L, actions, propagate, draft, setDraft, setCursor, setMarquee,
     selActors, setSelActors, selAnn, setSelAnn, setFocusLabel, dragRef, svgRef, camRef, spaceDown, pan, setPan,
   } = ctx;
   const pitchSize = { w: L.pitch.w, h: L.pitch.h };
@@ -102,11 +103,16 @@ export function useStagePointer(ctx: StagePointerCtx) {
     return a ? { actorId: a } : { pos: p };
   };
 
+  // A new graphic takes the colour of the last one of its kind, so a colour
+  // picked once carries on to the next markings / arrows / zones.
+  const kindColor = (kind: AnnKind) =>
+    seq.annotations.findLast((a) => a.kind === kind)?.color ?? defaultAnnColor(kind, seq.theme);
+
   const newAnn = (kind: AnnKind, anchors: Anchor[], extra: Partial<SeqAnnotation> = {}): SeqAnnotation => ({
     id: sid("ann"),
     kind,
     anchors,
-    color: defaultAnnColor(kind, seq.theme),
+    color: kindColor(kind),
     fromStep: step.id,
     toStep: step.id,
     ...extra,
@@ -116,7 +122,11 @@ export function useStagePointer(ctx: StagePointerCtx) {
     actions.addAnnotation(seq.id, ann);
     setSelAnn(ann.id);
     setSelActors(new Set());
-    if (ann.kind === "label") setFocusLabel((n) => n + 1);
+    if (ann.kind === "label") {
+      setFocusLabel((n) => n + 1);
+      // One click, one text: back to selection so the next click picks.
+      setTool("select");
+    }
   };
 
   const finishPolygon = () => {
@@ -155,6 +165,15 @@ export function useStagePointer(ctx: StagePointerCtx) {
         dragRef.current = { type: "handle", id: selAnn, handle };
         return;
       }
+      const annId = target.closest("[data-ann]")?.getAttribute("data-ann");
+      const ann = annId ? seq.annotations.find((a) => a.id === annId) : null;
+      const grabAnn = (a: SeqAnnotation) => {
+        setSelAnn(a.id);
+        setSelActors(new Set());
+        dragRef.current = { type: "ann", id: a.id, p0: p, start: a, moved: false };
+      };
+      // Texts are drawn above the players, so they win the click too.
+      if (ann?.kind === "label") return grabAnn(ann);
       if (hitBall(p)) {
         dragRef.current = { type: "ball", p0: p, start: frame.ball };
         return;
@@ -174,14 +193,7 @@ export function useStagePointer(ctx: StagePointerCtx) {
         if (ids.has(actor)) dragRef.current = { type: "actors", ids: [...ids], start, p0: p, moved: false };
         return;
       }
-      const annId = target.closest("[data-ann]")?.getAttribute("data-ann");
-      const ann = annId ? seq.annotations.find((a) => a.id === annId) : null;
-      if (ann) {
-        setSelAnn(ann.id);
-        setSelActors(new Set());
-        dragRef.current = { type: "ann", id: ann.id, p0: p, start: ann, moved: false };
-        return;
-      }
+      if (ann) return grabAnn(ann);
       const add = e.shiftKey || e.metaKey || e.ctrlKey;
       if (!add) {
         setSelActors(new Set());
@@ -249,8 +261,12 @@ export function useStagePointer(ctx: StagePointerCtx) {
         if (!d.moved && Math.hypot(dx, dy) < 0.4) return;
         d.moved = true;
         const sh = (q: Pos) => ({ x: q.x + dx, y: q.y + dy });
+        // A text stuck to a player comes off it when dragged (grabbed where clicked).
+        const detach = d.start.kind === "label";
         actions.patchAnnotation(seq.id, d.id, {
-          anchors: d.start.anchors.map((an) => ("pos" in an ? { pos: sh(an.pos) } : an)),
+          anchors: d.start.anchors.map((an) =>
+            "pos" in an ? { pos: sh(an.pos) } : detach ? { pos: sh(d.p0) } : an,
+          ),
           ...(d.start.control ? { control: sh(d.start.control) } : {}),
         });
         return;

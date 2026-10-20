@@ -241,6 +241,35 @@ export function useSequenceActions(lineup: Lineup, setLineup: SetLineup) {
       annotations: q.annotations.filter((a) => a.id !== annId),
     }));
 
+  // Take a graphic off one step only: it shrinks its visible range, or
+  // splits in two when the step sits in the middle of it. Gone once it no
+  // longer covers any step.
+  const removeAnnotationAtStep = (id: string, annId: string, stepId: string) =>
+    update(id, (q) => {
+      const ann = q.annotations.find((a) => a.id === annId);
+      if (!ann) return q;
+      const at = (sId: string) => q.steps.findIndex((s) => s.id === sId);
+      const i = at(stepId);
+      const from = at(ann.fromStep);
+      const to = at(ann.toStep);
+      if (i < from || i > to) return q;
+      const pieces: SeqAnnotation[] =
+        from === to
+          ? []
+          : i === from
+            ? [{ ...ann, fromStep: q.steps[i + 1].id }]
+            : i === to
+              ? [{ ...ann, toStep: q.steps[i - 1].id }]
+              : [
+                  { ...ann, toStep: q.steps[i - 1].id },
+                  { ...ann, id: sid("ann"), fromStep: q.steps[i + 1].id },
+                ];
+      return {
+        ...q,
+        annotations: q.annotations.flatMap((a) => (a.id === annId ? pieces : [a])),
+      };
+    });
+
   return {
     sequences,
     createSeq,
@@ -263,6 +292,7 @@ export function useSequenceActions(lineup: Lineup, setLineup: SetLineup) {
     addAnnotation,
     patchAnnotation,
     removeAnnotation,
+    removeAnnotationAtStep,
   };
 }
 
