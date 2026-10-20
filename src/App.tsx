@@ -17,6 +17,8 @@ import { loadLibrary } from "./storage";
 import Bench from "./components/Bench";
 import Pitch from "./components/Pitch";
 import TopBar from "./components/TopBar";
+import FmSelect from "./components/FmSelect";
+import { FORMATIONS } from "./formations";
 import type { ShareItem } from "./components/ShareMenu";
 import CsvImportDialog from "./components/CsvImportDialog";
 import RosterTable from "./components/RosterTable";
@@ -32,6 +34,7 @@ import BlendSlider from "./components/BlendSlider";
 import OpponentControls from "./components/OpponentControls";
 import { useOnboarding } from "./hooks/useOnboarding";
 import { useTheme } from "./hooks/useTheme";
+import { useMediaQuery } from "./hooks/useMediaQuery";
 import { usePresentation } from "./hooks/usePresentation";
 import { useShareLink } from "./hooks/useShareLink";
 import { usePlayerRoster } from "./hooks/usePlayerRoster";
@@ -77,11 +80,12 @@ export default function App() {
   const { onboardOpen, openOnboarding, closeOnboarding } = useOnboarding();
   const { theme, toggleTheme } = useTheme();
   const [influenceMode, setInfluenceMode] = useState<InfluenceMode>("none");
-  // Follow the screen: a portrait pitch on a landscape screen left ~40% of
-  // the width empty. The rotate button still switches by hand.
-  const [orient, setOrient] = useState<Orient>(() =>
-    window.innerWidth > window.innerHeight ? "landscape" : "portrait",
-  );
+  // Follow the screen (and an iPad being rotated): a portrait pitch on a
+  // landscape screen left ~40% of the width empty. Once the rotate button is
+  // used, that choice wins.
+  const screenOrient: Orient = useMediaQuery("(min-aspect-ratio: 1/1)") ? "landscape" : "portrait";
+  const [manualOrient, setManualOrient] = useState<Orient | null>(null);
+  const orient = manualOrient ?? screenOrient;
   const [activePreset, setActivePreset] = useState<string | null>(null);
   // Opponent-placement mode (attack/defense only): shows + lets you drag the
   // opposing discs. Ephemeral view state; the discs themselves are persisted.
@@ -500,7 +504,6 @@ export default function App() {
         view={view}
         phase={phase}
         name={lineup.name}
-        formation={lineup.formation}
         onPresent={enterPresent}
         onStudio={openStudio}
         onHelp={openOnboarding}
@@ -515,7 +518,6 @@ export default function App() {
         canUndo={canUndo}
         canRedo={canRedo}
         onName={(name) => setLineup((l) => ({ ...l, name }))}
-        onFormation={changeFormation}
         onOpenCompo={openCompo}
         onNewCompo={newCompo}
         onDuplicate={duplicateCompo}
@@ -539,6 +541,16 @@ export default function App() {
           <ViewTabs view={view} onView={setView} />
           {view === "pitch" && (
             <div className="view-row__phase">
+              {/* The formation sits with the phases, right above the pitch it
+                  shapes, rather than in the top bar where it squeezed the
+                  project and compo names. */}
+              <FmSelect
+                className="view-row__formation"
+                value={lineup.formation}
+                options={FORMATIONS.map((f) => ({ value: f, label: f }))}
+                onChange={changeFormation}
+                ariaLabel="Système"
+              />
               <PhaseToggle phase={phase} onPhase={handlePhase} />
             </div>
           )}
@@ -637,7 +649,7 @@ export default function App() {
               influenceMode={influenceMode}
               orient={orient}
               onToggleOrient={() =>
-                setOrient((o) => (o === "portrait" ? "landscape" : "portrait"))
+                setManualOrient(orient === "portrait" ? "landscape" : "portrait")
               }
               onPhase={handlePhase}
               onSelect={setSelectedSlot}

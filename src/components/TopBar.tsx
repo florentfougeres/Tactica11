@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { FORMATIONS } from "../formations";
 import type { Phase } from "../types";
 import type { View } from "./ViewTabs";
 import { useDismiss } from "../hooks/useDismiss";
@@ -9,7 +8,6 @@ interface Props {
   view: View;
   phase: Phase;
   name: string;
-  formation: string;
   compos: { id: string; name: string }[];
   currentId: string;
   projectName: string;
@@ -18,7 +16,6 @@ interface Props {
   canUndo: boolean;
   canRedo: boolean;
   onName: (name: string) => void;
-  onFormation: (formation: string) => void;
   onOpenCompo: (id: string) => void;
   onNewCompo: () => void;
   onDuplicate: () => void;
@@ -49,7 +46,6 @@ export default function TopBar({
   view,
   phase,
   name,
-  formation,
   compos,
   currentId,
   projectName,
@@ -58,7 +54,6 @@ export default function TopBar({
   canUndo,
   canRedo,
   onName,
-  onFormation,
   onOpenCompo,
   onNewCompo,
   onDuplicate,
@@ -83,15 +78,12 @@ export default function TopBar({
   share,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const fmRef = useRef<HTMLDivElement>(null);
   const compoRef = useRef<HTMLDivElement>(null);
   const projectRef = useRef<HTMLDivElement>(null);
-  const [fmOpen, setFmOpen] = useState(false);
   const [compoOpen, setCompoOpen] = useState(false);
   const [projectOpen, setProjectOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useDismiss(fmOpen, () => setFmOpen(false), [fmRef]);
   useDismiss(compoOpen, () => setCompoOpen(false), [compoRef]);
   useDismiss(projectOpen, () => setProjectOpen(false), [projectRef]);
 
@@ -282,46 +274,6 @@ export default function TopBar({
                   Supprimer
                 </button>
               </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {view === "pitch" && (
-        <div className="topbar__field">
-          <span className="topbar__label">Système</span>
-          <div className="fmselect" ref={fmRef}>
-            <button
-              type="button"
-              className="fmselect__btn"
-              onClick={() => setFmOpen((o) => !o)}
-              aria-haspopup="listbox"
-              aria-expanded={fmOpen}
-            >
-              <span>{formation}</span>
-              <span className="fmselect__chevron" aria-hidden="true">
-                ▾
-              </span>
-            </button>
-            {fmOpen && (
-              <ul className="fmselect__menu" role="listbox">
-                {FORMATIONS.map((f) => (
-                  <li key={f}>
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={f === formation}
-                      className={f === formation ? "is-active" : ""}
-                      onClick={() => {
-                        onFormation(f);
-                        setFmOpen(false);
-                      }}
-                    >
-                      {f}
-                    </button>
-                  </li>
-                ))}
-              </ul>
             )}
           </div>
         </div>

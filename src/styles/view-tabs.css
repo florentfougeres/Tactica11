@@ -10,6 +10,15 @@
 .view-row__phase {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+.view-row__formation {
+  width: auto;
+}
+.view-row__formation .fmselect__btn {
+  width: auto;
+  min-width: 104px;
 }
 
 /* ---------- view tabs (Terrain / Effectif) ---------- */

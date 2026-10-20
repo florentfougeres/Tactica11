@@ -17,6 +17,7 @@ import SequencePreview from "./SequencePreview";
 import SequenceExportDialog from "./SequenceExportDialog";
 import "./sequence.css";
 import { useStageView } from "../../hooks/useStageView";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { clampPct, useStagePointer, type Drag } from "./useStagePointer";
 import RotatePitchButton from "../RotatePitchButton";
 import SeqTopTools, { type SeqTool } from "./SeqTopTools";
@@ -386,6 +387,10 @@ function SequenceEditor({
     }
   };
 
+  const toolsAbove = useMediaQuery("(max-width: 1180px)");
+  const [aboveSlot, setAboveSlot] = useState<HTMLDivElement | null>(null);
+  const toolsSlot = toolsAbove ? aboveSlot : toolbarSlot;
+
   // Export entries of the top bar's "Partager" menu. They call through a ref
   // so the menu always runs the latest export (current time, step…).
   const exportRef = useRef({ png: exportPng, video: () => {} });
@@ -462,9 +467,12 @@ function SequenceEditor({
       </div>
 
       <div className="seq-main">
-        {toolbarSlot && (
+        {/* Medium screens: the tools no longer fit in the top bar, so they
+            get a bar of their own right above the pitch, across its width. */}
+        {toolsAbove && <div className="seq-toolbar-slot glass" ref={setAboveSlot} />}
+        {toolsSlot && (
           <SeqTopTools
-            slot={toolbarSlot}
+            slot={toolsSlot}
             tool={tool}
             onTool={setTool}
             showGrid={!!seq.showGrid}

@@ -882,3 +882,21 @@ select.seq-input {
   font-weight: 500;
   color: var(--text-dim);
 }
+
+/* Tool bar above the pitch on medium screens (see SequenceView). Overflow is
+   hidden like the top-bar slot so the compact mode can measure it. */
+.seq-toolbar-slot {
+  flex: 0 0 auto;
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+}
+.seq-toolbar-slot .seq-toolbar--top {
+  margin-left: 0;
+  flex: 1;
+}
+.seq-toolbar-slot .seq-toolbar__group:last-child {
+  margin-left: auto;
+}
