@@ -194,12 +194,12 @@ function StepTab({
         <input className="seq-input" value={step.name ?? ""} placeholder={`Étape ${stepIndex + 1}`} onChange={(e) => patch({ name: e.target.value })} />
       </label>
       <label className="seq-field">
-        <span>Sous-titre / commentaire</span>
+        <span>Sous-titre / commentaire <em className="seq-hint-inline">— visible à l'aperçu et à l'export</em></span>
         <textarea className="seq-input" rows={3} value={step.caption ?? ""} placeholder="Ce que dit la voix off à ce moment…" onChange={(e) => patch({ caption: e.target.value })} />
       </label>
       <Switch label="Karaoké (mot par mot)" checked={!!step.karaoke} onChange={(v) => patch({ karaoke: v })} />
       <label className="seq-field">
-        <span>Nouveau chapitre ici</span>
+        <span>Nouveau chapitre ici <em className="seq-hint-inline">— à l'export</em></span>
         <input className="seq-input" value={step.chapter ?? ""} placeholder="ex. LE DILEMME" onChange={(e) => patch({ chapter: e.target.value })} />
       </label>
 
@@ -651,10 +651,12 @@ function SettingsTab({ seq, actions, safeZones, onSafeZones }: Props) {
           ))}
         </div>
       </div>
-      {seq.format === "9:16" && <Switch label="Zones masquées par TikTok/Reels" checked={safeZones} onChange={onSafeZones} />}
+      {seq.format === "9:16" && <Switch label="Zones TikTok/Reels dans l'aperçu" checked={safeZones} onChange={onSafeZones} />}
 
       <p className="seq-muted">
         Le rendu suit le thème de l'app : cinéma sombre en mode sombre, cinéma clair en mode clair.
+        Le titre, les chapitres et les sous-titres n'apparaissent que dans l'aperçu et l'export,
+        autour du terrain.
       </p>
 
       <label className="seq-field">

@@ -86,6 +86,9 @@ interface Props {
   info: Record<string, ActorInfo>;
   background?: "normal" | "chroma";
   look?: SeqLook;
+  // Published look (preview / export): header, captions and effects, with the
+  // pitch clipped to its own area. Off in the editor: the pitch alone.
+  chrome?: boolean;
   idPrefix?: string;
   overlay?: StageOverlay;
   cameraRef?: Ref<SVGGElement>;
@@ -179,6 +182,7 @@ export default function SequenceStage({
   info,
   background = "normal",
   look = "dark",
+  chrome = true,
   idPrefix = "seq",
   overlay,
   cameraRef,
@@ -544,6 +548,12 @@ export default function SequenceStage({
       <rect data-bg="1" x={0} y={0} width={L.W} height={L.H} fill={bg} />
 
       {/* ---------- camera: everything that lives on the pitch ---------- */}
+      {chrome && (
+        <clipPath id={pid("area")}>
+          <rect x={L.pitch.x - L.pitch.w * 0.05} y={L.pitch.y - L.pitch.h * 0.05} width={L.pitch.w * 1.1} height={L.pitch.h * 1.1} rx={u * 2} />
+        </clipPath>
+      )}
+      <g clipPath={chrome ? `url(#${pid("area")})` : undefined}>
       <g ref={cameraRef} transform={cameraTransform(L, frame.camera)}>
         <clipPath id={pid("apron")}>
           <rect x={apron.x} y={apron.y} width={apron.w} height={apron.h} rx={u * 2} />
@@ -673,7 +683,11 @@ export default function SequenceStage({
         })()}
       </g>
 
-      {/* ---------- screen-space overlays ---------- */}
+      </g>
+
+      {/* ---------- screen-space overlays (published look only) ---------- */}
+      {chrome && (
+        <>
       {L.header?.mode === "top" && (
         <rect x={0} y={0} width={L.W} height={L.header.y + L.header.h + L.pad} fill={`url(#${pid("top")})`} pointerEvents="none" />
       )}
@@ -717,6 +731,9 @@ export default function SequenceStage({
         >
           {frame.effect.text.toUpperCase()}
         </text>
+      )}
+
+        </>
       )}
 
       {overlay?.safeZones && <SafeZones L={L} format={seq.format} />}

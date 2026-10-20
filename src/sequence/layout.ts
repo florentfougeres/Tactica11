@@ -50,7 +50,10 @@ function fit(availW: number, availH: number, ratio: number) {
   return { w, h: w / ratio };
 }
 
-export function frameLayout(seq: LayoutInput): FrameLayout {
+// `chrome` = the published look (preview, export): header + caption areas
+// are reserved around the pitch. Without it (the editor) the pitch alone
+// fills the frame, so there's maximum room to work.
+export function frameLayout(seq: LayoutInput, chrome = true): FrameLayout {
   const { W, H } = FORMAT_SIZE[seq.format];
   const orient: Orient = seq.orient;
   const short = Math.min(W, H);
@@ -59,63 +62,49 @@ export function frameLayout(seq: LayoutInput): FrameLayout {
   const captionFs = short * 0.042;
   const ratio = orient === "portrait" ? 68 / 105 : 105 / 68; // pitch w / h
 
-  // The header always carries the progress bar.
-  const hasHeader = true;
-  const hasCaption = (seq.steps ?? []).some((s) => s.caption?.trim());
-  const vertical = seq.format === "9:16";
-  const captionOverlay = vertical;
-  const capH = hasCaption && !captionOverlay ? captionFs * 1.35 * 2 + pad * 1.5 : 0;
+  // The header always carries the progress bar (published look only).
+  const hasHeader = chrome;
+  const hasCaption = chrome && (seq.steps ?? []).some((s) => s.caption?.trim());
+  // Captions get their own band under the pitch — never drawn over it.
+  const capH = hasCaption ? captionFs * 1.35 * 2 + pad : 0;
 
   // --- option 1: header band on top ---
   const headH = hasHeader ? pad + base * 4.4 : 0;
-  const topAvailW = W - 2 * pad;
-  const topAvailH = H - headH - capH - (hasHeader ? pad * 0.6 : pad) - pad;
-  const top = fit(topAvailW, topAvailH, ratio);
+  const topY = hasHeader ? headH + pad * 0.6 : pad;
+  const top = fit(W - 2 * pad, H - topY - capH - pad, ratio);
 
-  // --- option 2: header column on the left (wide frames only) ---
+  // --- option 2: header column on the left (frame wider than the pitch) ---
   const colW = hasHeader ? Math.min(380, Math.max(260, W * 0.17)) : 0;
-  const sideAvailW = W - colW - 2 * pad;
-  const sideAvailH = H - capH - 2 * pad;
-  // Only worth it when the pitch leaves spare width (frame wider than the pitch).
-  const side = hasHeader && W / H > ratio * 1.1 ? fit(sideAvailW, sideAvailH, ratio) : null;
+  const side =
+    hasHeader && W / H > ratio * 1.1 ? fit(W - colW - 2 * pad, H - capH - 2 * pad, ratio) : null;
 
   const useSide = !!side && side.w * side.h > top.w * top.h * 1.05;
   const p = useSide ? side! : top;
+  const apronH = p.h * APRON;
 
-  let pitch: Box;
-  let header: FrameLayout["header"] = null;
-  if (useSide) {
-    const regionX = colW + pad;
-    const regionW = W - regionX - pad;
-    const regionH = H - capH - 2 * pad;
-    pitch = {
-      x: regionX + (regionW - p.w) / 2,
-      y: pad + (regionH - p.h) / 2,
-      w: p.w,
-      h: p.h,
-    };
-    header = { mode: "side", x: pad, y: pad, w: colW - pad * 0.5, h: H - 2 * pad };
-  } else {
-    const regionY = headH + (hasHeader ? pad * 0.6 : pad);
-    const regionH = H - regionY - capH - pad;
-    pitch = {
-      x: (W - p.w) / 2,
-      y: regionY + (regionH - p.h) / 2,
-      w: p.w,
-      h: p.h,
-    };
-    if (hasHeader) header = { mode: "top", x: pad, y: pad, w: W - 2 * pad, h: headH - pad };
-  }
+  // The pitch (with its grass apron) and the caption band below it form one
+  // block, centred in the space left by the header.
+  const regionX = useSide ? colW + pad : pad;
+  const regionW = W - regionX - pad;
+  const regionY = useSide ? pad : topY;
+  const regionH = H - regionY - pad;
+  const blockY = regionY + Math.max(0, (regionH - apronH - capH) / 2);
+  const pitch: Box = {
+    x: regionX + (regionW - p.w) / 2,
+    y: blockY + (apronH - p.h) / 2,
+    w: p.w,
+    h: p.h,
+  };
 
-  let caption: FrameLayout["caption"] = null;
-  if (hasCaption) {
-    if (captionOverlay) caption = { overlay: true, x: W * 0.07, y: H * 0.765, w: W * 0.86, h: 0 };
-    else {
-      // Band under the pitch, as wide as the pitch area.
-      const x = useSide ? colW + pad : pad;
-      caption = { overlay: false, x, y: H - capH - pad * 0.5, w: W - x - pad, h: capH };
-    }
-  }
+  const header: FrameLayout["header"] = !hasHeader
+    ? null
+    : useSide
+      ? { mode: "side", x: pad, y: pad, w: colW - pad * 0.5, h: H - 2 * pad }
+      : { mode: "top", x: pad, y: pad, w: W - 2 * pad, h: headH - pad };
+
+  const caption: FrameLayout["caption"] = hasCaption
+    ? { overlay: false, x: regionX, y: blockY + apronH, w: regionW, h: capH }
+    : null;
 
   return {
     W,

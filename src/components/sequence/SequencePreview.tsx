@@ -11,11 +11,13 @@ export default function SequencePreview({
   seq,
   info,
   look,
+  safeZones = false,
   onClose,
 }: {
   seq: Sequence;
   info: Record<string, ActorInfo>;
   look: SeqLook;
+  safeZones?: boolean;
   onClose: () => void;
 }) {
   const L = useMemo(() => frameLayout(seq), [seq]);
@@ -53,7 +55,7 @@ export default function SequencePreview({
   return (
     <div className="seq-preview" ref={wrapRef} role="dialog" aria-label="Aperçu de la séquence">
       <div className="seq-preview__stage" style={{ width: L.W * scale, height: L.H * scale }} onClick={pb.toggle}>
-        <SequenceStage seq={seq} frame={frame} layout={L} info={info} look={look} idPrefix="pv" className="seq-preview__svg" />
+        <SequenceStage seq={seq} frame={frame} layout={L} info={info} look={look} overlay={{ safeZones }} idPrefix="pv" className="seq-preview__svg" />
       </div>
       <div className="seq-preview__bar">
         <button type="button" className="seq-tbtn" onClick={() => { pb.setTime(0); pb.play(); }} title="Rejouer">

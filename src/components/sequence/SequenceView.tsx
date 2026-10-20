@@ -141,7 +141,9 @@ function SequenceEditor({
   actions: SequenceActions;
   onSeqId: (id: string | null) => void;
 }) {
-  const L = useMemo(() => frameLayout(seq), [seq]);
+  // Editing view: the pitch alone fills the frame — title, chapters and
+  // captions only appear in the preview / export.
+  const L = useMemo(() => frameLayout(seq, false), [seq]);
   const spans = useMemo(() => stepSpans(seq.steps), [seq.steps]);
   const duration = useMemo(() => totalDuration(seq.steps), [seq.steps]);
   const pb = useSequencePlayback(duration);
@@ -895,6 +897,7 @@ function SequenceEditor({
               layout={L}
               info={info}
               look={look}
+              chrome={false}
               idPrefix="ed"
               svgRef={svgRef}
               cameraRef={camRef}
@@ -904,7 +907,6 @@ function SequenceEditor({
                 selectedAnn: selAnn,
                 draft: draftForStage,
                 marquee,
-                safeZones,
                 editable,
               }}
               onPointerDown={onPointerDown}
@@ -948,7 +950,7 @@ function SequenceEditor({
         />
       </div>
 
-      {preview && <SequencePreview seq={seq} info={info} look={look} onClose={() => setPreview(false)} />}
+      {preview && <SequencePreview seq={seq} info={info} look={look} safeZones={safeZones} onClose={() => setPreview(false)} />}
       {exportOpen && <SequenceExportDialog seq={seq} info={info} look={look} onClose={() => setExportOpen(false)} />}
     </>
   );
