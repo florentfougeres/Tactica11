@@ -6,6 +6,7 @@ import type {
   Orient,
   Phase,
   Player,
+  Project,
   SetPieceState,
   ZoneRadii,
 } from "./types";
@@ -21,6 +22,7 @@ import FmSelect from "./components/FmSelect";
 import { FORMATIONS } from "./formations";
 import type { ShareItem } from "./components/ShareMenu";
 import CsvImportDialog from "./components/CsvImportDialog";
+import ProjectImportDialog from "./components/ProjectImportDialog";
 import RosterView from "./components/roster/RosterView";
 import ViewTabs, { type View } from "./components/ViewTabs";
 import PhaseToggle from "./components/PhaseToggle";
@@ -77,6 +79,8 @@ export default function App() {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [benchDragging, setBenchDragging] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
+  // Project read from "Ouvrir…", waiting for the user to choose what to do with it.
+  const [projectToImport, setProjectToImport] = useState<Project | null>(null);
   const { onboardOpen, openOnboarding, closeOnboarding } = useOnboarding();
   const { theme, toggleTheme } = useTheme();
   const [influenceMode, setInfluenceMode] = useState<InfluenceMode>("none");
@@ -193,7 +197,9 @@ export default function App() {
     duplicateProject,
     deleteProject,
     saveProject,
-    openProjectFile,
+    readProjectToImport,
+    openAsNewProject,
+    importIntoProject,
   } = useProjectActions({
     projects,
     setProjects,
@@ -534,7 +540,9 @@ export default function App() {
         share={share}
         onCopyLink={copyShareLink}
         onSaveProject={saveProject}
-        onImportProject={openProjectFile}
+        onImportProject={async (file) =>
+          setProjectToImport(await readProjectToImport(file))
+        }
       />
 
       {!presenting && !seqTabsInside && (
@@ -681,6 +689,16 @@ export default function App() {
         <CsvImportDialog
           onClose={() => setCsvOpen(false)}
           onImport={addPlayers}
+        />
+      )}
+
+      {projectToImport && (
+        <ProjectImportDialog
+          source={projectToImport}
+          currentProjectName={project.name}
+          onClose={() => setProjectToImport(null)}
+          onOpenAsNew={() => openAsNewProject(projectToImport)}
+          onImport={(options) => importIntoProject(projectToImport, options)}
         />
       )}
 

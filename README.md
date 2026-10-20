@@ -111,7 +111,10 @@ utilise la version web / PWA.
 - **Plusieurs compos** sauvegardées en local (`localStorage`).
 - **Partage & export** : un bouton **Partager** au même endroit sur Compo,
   Phase arrêtée et Séquence (image PNG, lien, Studio, vidéo selon l'onglet),
-  lien partageable (URL compressée), export / import `.json`, import de joueurs depuis un
+  lien partageable (URL compressée), export / import `.json` du projet (à
+  l'ouverture : nouveau projet, ou ajout au projet en cours des compos, phases
+  arrêtées et séquences cochées, en réutilisant les joueurs du même nom),
+  import de joueurs depuis un
   fichier **CSV** (détection automatique de l'en-tête et des colonnes,
   colonnes additionnelles importées comme attributs).
 - **PWA** installable, utilisable hors-ligne.

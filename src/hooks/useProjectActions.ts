@@ -5,8 +5,11 @@ import {
   createDefaultLineup,
   createDefaultProject,
   exportProject,
-  importProject,
+  mergeProjectParts,
+  readProjectFile,
+  remapLineup,
   uid,
+  type ProjectImportOptions,
 } from "../storage";
 
 interface Args {
@@ -150,29 +153,9 @@ export function useProjectActions({
       playerIdMap.set(pl.id, id);
       return { ...pl, id };
     });
-    const lineups = src.lineups.map((l) => ({
-      ...l,
-      id: uid("lineup"),
-      slots: l.slots.map((s) => ({
-        ...s,
-        starterId: s.starterId ? (playerIdMap.get(s.starterId) ?? null) : null,
-        subId: s.subId ? (playerIdMap.get(s.subId) ?? null) : null,
-      })),
-      // Set-piece tokens only ever reference on-pitch starters, so the same
-      // playerIdMap remap applies; mint fresh ids throughout.
-      setPieces: l.setPieces.map((sp) => ({
-        ...sp,
-        id: uid("sp"),
-        tokens: sp.tokens
-          .filter((t) => playerIdMap.has(t.playerId))
-          .map((t) => ({
-            ...t,
-            id: uid("spt"),
-            playerId: playerIdMap.get(t.playerId)!,
-          })),
-        opponents: sp.opponents.map((o) => ({ ...o, id: uid("spo") })),
-      })),
-    }));
+    const lineups = src.lineups.map((l) =>
+      remapLineup(l, (id) => playerIdMap.get(id)),
+    );
     const p: Project = {
       ...src,
       id: uid("proj"),
@@ -224,16 +207,46 @@ export function useProjectActions({
       currentLineupId: lineup.id,
     });
 
-  const openProjectFile = async (file: File) => {
+  // "Ouvrir…" reads the file first; the import dialog then either opens it
+  // as a new project or merges picked compos into the current one.
+  const readProjectToImport = async (file: File): Promise<Project | null> => {
     try {
-      const p = await importProject(file);
-      setProjects((ps) => [...ps, p]);
-      setCurrentProjectId(p.id);
-      reset(p.lineups.find((l) => l.id === p.currentLineupId) ?? p.lineups[0]);
-      setSelectedSlot(null);
+      return await readProjectFile(file);
     } catch {
       alert("Impossible de lire ce fichier projet Tactica11.");
+      return null;
     }
+  };
+
+  const openAsNewProject = (source: Project) => {
+    updateProject((p) => ({
+      ...p,
+      lineups: p.lineups.map((l) => (l.id === lineup.id ? lineup : l)),
+      currentLineupId: lineup.id,
+    }));
+    const p: Project = { ...structuredClone(source), id: uid("proj") };
+    setProjects((ps) => [...ps, p]);
+    setCurrentProjectId(p.id);
+    reset(p.lineups.find((l) => l.id === p.currentLineupId) ?? p.lineups[0]);
+    setSelectedSlot(null);
+  };
+
+  // Add picked compos (with their chosen set pieces / sequences) to the
+  // current project, then open the first one.
+  const importIntoProject = (source: Project, options: ProjectImportOptions) => {
+    const base: Project = {
+      ...project,
+      lineups: project.lineups.map((l) => (l.id === lineup.id ? lineup : l)),
+    };
+    const { project: merged, lineups } = mergeProjectParts(
+      base,
+      structuredClone(source),
+      options,
+    );
+    if (!lineups.length) return;
+    updateProject(() => merged);
+    reset(structuredClone(lineups[0]));
+    setSelectedSlot(null);
   };
 
   return {
@@ -247,6 +260,8 @@ export function useProjectActions({
     duplicateProject,
     deleteProject,
     saveProject,
-    openProjectFile,
+    readProjectToImport,
+    openAsNewProject,
+    importIntoProject,
   };
 }

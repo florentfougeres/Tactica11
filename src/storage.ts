@@ -325,14 +325,219 @@ export function exportProject(project: Project): void {
   void saveFile(blob, `${safeName}.tactica11-projet.json`);
 }
 
-export async function importProject(file: File): Promise<Project> {
+// Parse a whole-project .json. The project keeps its original ids: the caller
+// either opens it as a new project (fresh project id) or picks parts of it to
+// merge into an existing one (mergeProjectParts mints fresh ids there).
+export async function readProjectFile(file: File): Promise<Project> {
   const text = await file.text();
   const data = JSON.parse(text) as Partial<ProjectFile>;
   const raw = data.project;
   if (!raw || !raw.lineups || !raw.players) {
     throw new Error("Fichier de projet invalide");
   }
-  return { ...migrateProject(raw), id: uid("proj") };
+  return migrateProject(raw);
+}
+
+// --- Copying compos between projects ---
+
+// Copy a compo into another project: fresh ids for the compo and its set
+// pieces / sequences, and every player reference remapped through `mapPlayer`.
+// A player it doesn't map isn't carried over: the slot is left empty, the
+// set-piece token dropped, and a sequence disc falls back to its slot's player.
+// Slot ids are kept: they are only unique within a compo, and sequences
+// reference them.
+export function remapLineup(
+  lineup: Lineup,
+  mapPlayer: (id: string) => string | undefined,
+): Lineup {
+  const map = (id: string | null | undefined) =>
+    id ? (mapPlayer(id) ?? null) : null;
+  return {
+    ...lineup,
+    id: uid("lineup"),
+    slots: lineup.slots.map((s) => ({
+      ...s,
+      starterId: map(s.starterId),
+      subId: map(s.subId),
+    })),
+    setPieces: lineup.setPieces.map((sp) => ({
+      ...sp,
+      id: uid("sp"),
+      tokens: sp.tokens.flatMap((t) => {
+        const playerId = mapPlayer(t.playerId);
+        return playerId ? [{ ...t, id: uid("spt"), playerId }] : [];
+      }),
+      opponents: sp.opponents.map((o) => ({ ...o, id: uid("spo") })),
+    })),
+    ...(lineup.sequences
+      ? {
+          sequences: lineup.sequences.map((q) => ({
+            ...q,
+            id: uid("seq"),
+            actors: q.actors.map((a) => {
+              if (!a.playerId) return a;
+              const playerId = mapPlayer(a.playerId);
+              if (playerId) return { ...a, playerId };
+              const { playerId: _drop, ...rest } = a;
+              void _drop;
+              return rest;
+            }),
+          })),
+        }
+      : {}),
+  };
+}
+
+// Every roster player a compo points at: starters, subs, set-piece tokens and
+// sequence discs.
+function lineupPlayerIds(lineup: Lineup): Set<string> {
+  const ids = referencedPlayerIds(lineup);
+  lineup.setPieces.forEach((sp) => sp.tokens.forEach((t) => ids.add(t.playerId)));
+  lineup.sequences?.forEach((q) =>
+    q.actors.forEach((a) => a.playerId && ids.add(a.playerId)),
+  );
+  return ids;
+}
+
+const playerKey = (name: string) => name.trim().toLocaleLowerCase("fr");
+
+// Bring `incoming` players into a project's roster. Custom-attribute columns
+// are deduped by name+type; with `matchByName`, a player whose name already
+// exists in the roster maps onto that player instead of becoming a duplicate.
+// Returns the new roster/columns and the old → new player id map.
+function mergePlayers(
+  project: Project,
+  incoming: Player[],
+  incomingDefs: AttributeDef[],
+  matchByName: boolean,
+): {
+  players: Player[];
+  attributeDefs: AttributeDef[];
+  playerIdMap: Map<string, string>;
+} {
+  const playerIdMap = new Map<string, string>();
+  const byName = new Map<string, string>();
+  if (matchByName) {
+    project.players.forEach((p) => {
+      const key = playerKey(p.name);
+      if (key && !byName.has(key)) byName.set(key, p.id);
+    });
+  }
+  const fresh: Player[] = [];
+  incoming.forEach((p) => {
+    const existing = matchByName ? byName.get(playerKey(p.name)) : undefined;
+    if (existing) {
+      playerIdMap.set(p.id, existing);
+      return;
+    }
+    const id = uid("p");
+    playerIdMap.set(p.id, id);
+    fresh.push({ ...p, id });
+  });
+
+  // Only the columns the newly added players actually use.
+  const usedAttrIds = new Set<string>();
+  fresh.forEach((p) =>
+    Object.keys(p.attributes ?? {}).forEach((k) => usedAttrIds.add(k)),
+  );
+  const attrIdMap = new Map<string, string>();
+  let attributeDefs = project.attributeDefs;
+  incomingDefs
+    .filter((d) => usedAttrIds.has(d.id))
+    .forEach((def) => {
+      const existing = attributeDefs.find(
+        (d) => d.name === def.name && d.type === def.type,
+      );
+      if (existing) {
+        attrIdMap.set(def.id, existing.id);
+      } else {
+        const created: AttributeDef = { ...def, id: uid("attr") };
+        attributeDefs = [...attributeDefs, created];
+        attrIdMap.set(def.id, created.id);
+      }
+    });
+
+  const added = fresh.map((p) =>
+    p.attributes
+      ? {
+          ...p,
+          attributes: Object.fromEntries(
+            Object.entries(p.attributes).map(([k, v]) => [
+              attrIdMap.get(k) ?? k,
+              v,
+            ]),
+          ),
+        }
+      : p,
+  );
+  return {
+    players: [...project.players, ...added],
+    attributeDefs,
+    playerIdMap,
+  };
+}
+
+// What to take from another project's file: whole compos, each with only the
+// chosen set pieces and sequences.
+export interface LineupPick {
+  lineupId: string;
+  setPieceIds: string[];
+  sequenceIds: string[];
+}
+
+export interface ProjectImportOptions {
+  picks: LineupPick[];
+  wholeRoster: boolean; // also bring players no picked compo uses (bench)
+  matchByName: boolean; // reuse roster players with the same name
+}
+
+// Merge the picked parts of `source` into `target` as new compos, with fresh
+// ids throughout and the players they reference added to the target roster.
+export function mergeProjectParts(
+  target: Project,
+  source: Project,
+  { picks, wholeRoster, matchByName }: ProjectImportOptions,
+): { project: Project; lineups: Lineup[] } {
+  const picked: Lineup[] = picks.flatMap((pick) => {
+    const l = source.lineups.find((x) => x.id === pick.lineupId);
+    if (!l) return [];
+    const sequences = (l.sequences ?? []).filter((q) =>
+      pick.sequenceIds.includes(q.id),
+    );
+    return [
+      {
+        ...l,
+        setPieces: l.setPieces.filter((sp) => pick.setPieceIds.includes(sp.id)),
+        ...(sequences.length ? { sequences } : { sequences: undefined }),
+      },
+    ];
+  });
+
+  const needed = new Set<string>();
+  picked.forEach((l) => lineupPlayerIds(l).forEach((id) => needed.add(id)));
+  const incoming = source.players.filter(
+    (p) => wholeRoster || needed.has(p.id),
+  );
+  const { players, attributeDefs, playerIdMap } = mergePlayers(
+    target,
+    incoming,
+    source.attributeDefs,
+    matchByName,
+  );
+
+  const lineups = picked.map((l) =>
+    remapLineup(l, (id) => playerIdMap.get(id)),
+  );
+  return {
+    project: {
+      ...target,
+      players,
+      attributeDefs,
+      lineups: [...target.lineups, ...lineups],
+      currentLineupId: lineups[0]?.id ?? target.currentLineupId,
+    },
+    lineups,
+  };
 }
 
 // --- Share links (self-contained, single compo) ---
@@ -410,65 +615,17 @@ export function mergeImportedBundle(
   project: Project,
   bundle: ImportedBundle,
 ): { project: Project; lineup: Lineup } {
-  const attrIdMap = new Map<string, string>();
-  let attributeDefs = project.attributeDefs;
-  bundle.attributeDefs.forEach((def) => {
-    const existing = attributeDefs.find(
-      (d) => d.name === def.name && d.type === def.type,
-    );
-    if (existing) {
-      attrIdMap.set(def.id, existing.id);
-    } else {
-      const fresh: AttributeDef = { ...def, id: uid("attr") };
-      attributeDefs = [...attributeDefs, fresh];
-      attrIdMap.set(def.id, fresh.id);
-    }
-  });
-
-  const playerIdMap = new Map<string, string>();
-  const newPlayers: Player[] = bundle.players.map((p) => {
-    const id = uid("p");
-    playerIdMap.set(p.id, id);
-    const attributes = p.attributes
-      ? Object.fromEntries(
-          Object.entries(p.attributes).map(([k, v]) => [
-            attrIdMap.get(k) ?? k,
-            v,
-          ]),
-        )
-      : undefined;
-    return { ...p, id, ...(attributes ? { attributes } : {}) };
-  });
-
-  const lineup: Lineup = {
-    ...bundle.lineup,
-    id: uid("lineup"),
-    slots: bundle.lineup.slots.map((s) => ({
-      ...s,
-      starterId: s.starterId ? (playerIdMap.get(s.starterId) ?? null) : null,
-      subId: s.subId ? (playerIdMap.get(s.subId) ?? null) : null,
-    })),
-    // Set-piece tokens only ever reference starters/subs, which are exactly
-    // the players carried in the bundle — remap them the same way, minting
-    // fresh ids throughout so nothing collides with the target project.
-    setPieces: bundle.lineup.setPieces.map((sp) => ({
-      ...sp,
-      id: uid("sp"),
-      tokens: sp.tokens
-        .filter((t) => playerIdMap.has(t.playerId))
-        .map((t) => ({
-          ...t,
-          id: uid("spt"),
-          playerId: playerIdMap.get(t.playerId)!,
-        })),
-      opponents: sp.opponents.map((o) => ({ ...o, id: uid("spo") })),
-    })),
-  };
-
+  const { players, attributeDefs, playerIdMap } = mergePlayers(
+    project,
+    bundle.players,
+    bundle.attributeDefs,
+    false,
+  );
+  const lineup = remapLineup(bundle.lineup, (id) => playerIdMap.get(id));
   return {
     project: {
       ...project,
-      players: [...project.players, ...newPlayers],
+      players,
       attributeDefs,
       lineups: [...project.lineups, lineup],
       currentLineupId: lineup.id,
