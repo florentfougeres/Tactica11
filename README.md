@@ -4,8 +4,9 @@
 
 App web pour créer des **compos et mises en place tactiques de football** :
 formation, placement libre des joueurs, variantes par **phase de jeu**
-(base / attaque / défense), zones d'influence, calque de dessin, adversaires,
-le tout partageable par lien ou exportable.
+(base / attaque / défense), zones d'influence, adversaires, phases arrêtées,
+**séquences animées exportables en vidéo**, le tout partageable par lien ou
+exportable.
 
 100 % côté navigateur — **aucun backend**, aucune synchro en ligne. Utilisable sur
 iPad et ordinateur, installable comme une app (PWA).
@@ -72,17 +73,27 @@ utilise la version web / PWA.
   par poste, numéros de maillot optionnels, table triable et éditable en un clic.
 - **Zones d'influence** par joueur ou par équipe, avec presets de rôles
   (type EA FC) ajustables à la main.
-- **Calque de dessin** par phase : flèches (courses), flèches pointillées
-  (passes), tracé à main levée et zones.
 - **Adversaires** : place les 11 disques adverses en attaque/défense, avec
   sélecteur de couleur.
 - **Phase arrêtée** : onglet dédié pour corners, coups francs, touches et
-  penaltys, avec état avant/après et transition intermédiaire scrubable.
-- **Séquence** : raconte une action en plusieurs étapes animées (deux équipes,
-  ballon et passes, flèches typées droites ou courbes, zones liées aux joueurs,
-  bulles de texte, mise en avant, caméra, chapitres et sous-titres karaoké),
-  avec timeline, lecture, aperçu plein écran et **export vidéo MP4** (9:16,
-  16:9 ou 1:1) pour TikTok, Reels et YouTube.
+  penaltys, avec état avant/après, transition intermédiaire scrubable et
+  calque de dessin (flèches, passes, main levée, zones).
+- **Séquence** : raconte une action en plusieurs étapes animées.
+  - Deux équipes, ballon et passes (le ballon suit son porteur), disques
+    nommés d'après la compo (poste, numéro ou rien) et taille réglable.
+  - Flèches typées (passe, course, conduite, appel, pressing) droites ou
+    courbes, qui se dessinent à l'écran ; zones et espaces en rectangle (en
+    glissant) ou forme libre, aplat ou hachures ; zones et lignes liées aux
+    joueurs, marquages, cercles, textes.
+  - Traînées de mouvement et micro-mouvements « joueurs vivants », activables
+    par joueur ; fantômes, mise en avant, effets, caméra par étape.
+  - Timeline avec transition et maintien par étape (0 s possible), lecture,
+    navigation ‹ › entre étapes, grille positionnelle.
+  - Aperçu plein écran et **export vidéo MP4** (9:16, 16:9 ou 1:1, portrait
+    ou paysage) avec titre, chapitres et sous-titres karaoké, pour TikTok,
+    Reels et YouTube, ou export PNG de l'instant affiché.
+  - Barre d'outils dans la barre du haut, qui se compacte en menus quand la
+    fenêtre est étroite.
 - **Studio** : génère un visuel de compo façon poster (fond 2D/3D, disques ou
   maillots, portrait/paysage) à exporter en image pour les réseaux sociaux.
 - **Grille positionnelle** en surimpression.

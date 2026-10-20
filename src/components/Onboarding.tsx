@@ -39,19 +39,24 @@ const STEPS: Step[] = [
     body: "Affichez la zone de couverture d'un joueur ou de toute l'équipe, avec des presets de rôles ajustables à la main.",
   },
   {
-    icon: "✏️",
-    title: "Calque de dessin",
-    body: "Annotez chaque phase : flèches de course, passes en pointillés, tracés à main levée et zones colorées.",
-  },
-  {
     icon: "🟦",
     title: "Adversaires",
     body: "Placez les onze disques adverses en attaque et en défense, avec un sélecteur de couleur, pour illustrer le bloc d'en face.",
   },
   {
+    icon: "🎬",
+    title: "Séquence : raconter une action",
+    body: "Dans l'onglet Séquence, découpez une action en étapes animées : déplacez les deux équipes, faites circuler le ballon, ajoutez flèches, zones (glissez pour un rectangle), textes, traînées et joueurs « vivants ». La timeline enchaîne transitions et maintiens.",
+  },
+  {
+    icon: "📹",
+    title: "Aperçu & export vidéo",
+    body: "Lancez l'aperçu plein écran puis exportez la séquence en MP4 (9:16, 16:9 ou 1:1, portrait ou paysage) avec titre, chapitres et sous-titres karaoké, prête pour TikTok, Reels ou YouTube.",
+  },
+  {
     icon: "🖥️",
     title: "Présentation & partage",
-    body: "Passez en plein écran pour le vestiaire, puis partagez par lien, exportez en image PNG ou en fichier .json. Vos compos sont sauvegardées localement.",
+    body: "Passez en plein écran pour le vestiaire, créez un visuel dans le Studio, puis partagez par lien, exportez en image PNG ou en fichier .json. Tout est sauvegardé localement, et une app Mac est disponible.",
   },
 ];
 
