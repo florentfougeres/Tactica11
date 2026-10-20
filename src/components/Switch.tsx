@@ -1,5 +1,5 @@
 // On/off toggle row used across the side panels: label on the left, switch on
-// the right (styles: .pitch-ctl__row / .switch in App.css).
+// the right (styles: .pitch-ctl__row / .switch in styles/pitch-controls.css).
 export default function Switch({
   checked,
   onChange,

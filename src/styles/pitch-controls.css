@@ -1,0 +1,295 @@
+/* ---------- pitch controls panel (bottom of the Effectif column) ---------- */
+.pitch-ctl {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pitch-ctl__slider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pitch-ctl__slider span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--text-dim);
+}
+.pitch-ctl__slider input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.autoplay-ctl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.autoplay-ctl__play,
+.autoplay-ctl__speed {
+  border: 1px solid var(--panel-border);
+  background: rgba(var(--overlay-rgb), 0.05);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.autoplay-ctl__play {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.autoplay-ctl__play.is-playing {
+  border-color: rgba(33, 208, 122, 0.5);
+  background: rgba(33, 208, 122, 0.12);
+  color: var(--accent);
+}
+.autoplay-ctl__speed {
+  padding: 4px 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.autoplay-ctl__play:hover,
+.autoplay-ctl__speed:hover {
+  background: rgba(var(--overlay-rgb), 0.1);
+}
+/* iOS-style toggle row: label on the left, switch on the right */
+.pitch-ctl__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.influence-ctl__label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+.opp-colors-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* mirror / reset actions for the current phase */
+.pitch-ctl__actions {
+  display: flex;
+  gap: 8px;
+}
+.pitch-ctl__btn {
+  flex: 1;
+  border: 1px solid var(--panel-border);
+  background: rgba(var(--overlay-rgb), 0.05);
+  border-radius: var(--radius-sm);
+  padding: 9px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pitch-ctl__btn:hover {
+  background: rgba(var(--overlay-rgb), 0.1);
+}
+/* contextual EA-FC role presets, shown above the foot when a player is selected */
+.zone-presets {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 2px 0;
+  animation: menu-in 0.14s ease-out;
+}
+.zone-presets__role {
+  border: 1px solid var(--panel-border);
+  background: rgba(var(--overlay-rgb), 0.05);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.zone-presets__role:hover {
+  border-color: rgba(33, 208, 122, 0.5);
+  background: rgba(33, 208, 122, 0.08);
+}
+.zone-presets__role.is-active {
+  border-color: var(--accent);
+  background: rgba(33, 208, 122, 0.18);
+  color: var(--accent);
+}
+
+.pitch-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 0;
+  min-width: 0;
+  /* Establish a size container so the pitch can be sized against BOTH the
+     available width and height (via cqw/cqh) and never lose its ratio. */
+  container-type: size;
+}
+/* While dragging a token, lift the whole pitch column above the side panels so
+   a token dragged toward the bench stays visible instead of slipping under it. */
+.pitch-wrap--dragging {
+  z-index: 100;
+}
+.pitch {
+  /* aspect ratio (width/height) of the pitch box, flipped in landscape */
+  --ar: calc(68 / 105);
+  position: relative;
+  aspect-ratio: var(--ar);
+  /* Fit inside the wrap in BOTH orientations without distortion: cap the height
+     by the available width too. width follows from aspect-ratio, so the ratio
+     is always exact. */
+  height: min(100cqh, calc(100cqw / var(--ar)));
+  width: auto;
+  max-height: 100%;
+  max-width: 100%;
+  /* Pin the automatic minimum size so toggling overflow (during a drag) can't
+     let the aspect-ratio blow the width past max-width and shift the geometry. */
+  min-width: 0;
+  min-height: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  /* Grass margin around the field of play. Proportional padding (% is relative
+     to width; top/bottom = 1.5% * 105/68 ≈ 2.32%) keeps the inner field at the
+     exact 68/105 ratio — markings undistorted, tokens aligned. */
+  padding: 2.32% 1.5%;
+  background: linear-gradient(165deg, #163d27, #0e2718);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+/* Landscape: flip the ratio; vertical padding becomes 1.5% * 68/105 ≈ 0.97%. */
+.pitch--landscape {
+  --ar: calc(105 / 68);
+  padding: 0.97% 1.5%;
+}
+/* The field of play: everything (grass stripes, line markings, tokens) is
+   positioned relative to this box, so it all shares one coordinate space. */
+.pitch__field {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.pitch--drop {
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9),
+    inset 0 0 0 2px rgba(33, 208, 122, 0.7);
+}
+.pitch__drop-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 8;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #06130c;
+  background: linear-gradient(150deg, var(--accent), var(--accent-2));
+  padding: 8px 16px;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px -8px rgba(33, 208, 122, 0.7);
+  pointer-events: none;
+}
+/* Let a dragged token leave the pitch (e.g. toward the bench) without being
+   clipped. Grass/markings fill the pitch exactly, so nothing else spills out. */
+.pitch--dragging {
+  overflow: visible;
+}
+.pitch__grass {
+  position: absolute;
+  inset: 0;
+  background-color: #143a23;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.05) 0 9.09%,
+      rgba(0, 0, 0, 0.06) 9.09% 18.18%
+    ),
+    radial-gradient(120% 80% at 50% 0%, rgba(33, 208, 122, 0.18), transparent 55%),
+    linear-gradient(165deg, #18432a, #0f2a1a);
+}
+.pitch-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+/* juego de posición overlay — a background guide: above the grass/markings (by
+   DOM order) but BELOW the influence heatmap (z-index 1), tokens and handles, so
+   toggling the zones never disturbs the honeycombs drawn on top. */
+.pitch-grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+/* footer under the pitch — holds the positional-grid toggle */
+/* influence heatmap (honeycomb) — sits above the grass, below the tokens */
+.heatmap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 0 6px rgba(33, 208, 122, 0.25));
+  animation: heatmap-in 0.25s ease-out;
+}
+/* team coverage: many stacked layers → drop the per-layer glow/animation */
+.heatmap--flat {
+  filter: none;
+  animation: none;
+}
+@keyframes heatmap-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* draggable knobs to reshape the influence zone */
+.zone-handles {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.zone-handle {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2.5px solid var(--accent);
+  box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.6);
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+  transition: transform 0.1s;
+}
+.zone-handle:hover {
+  transform: scale(1.15);
+}
+.zone-handle:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+}

@@ -1,0 +1,109 @@
+/* ---------- token ---------- */
+.token {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* above the influence heatmap (z-index 1) so the disc + name stay on top */
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.token--empty {
+  cursor: default;
+  pointer-events: none;
+}
+/* Base mode: empty slots become clickable (quick "create a player" popover). */
+.token--empty.token--base {
+  cursor: pointer;
+  pointer-events: auto;
+}
+.token__disc {
+  position: relative;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: #06130c;
+  background: linear-gradient(150deg, #f4f7fb, #c7d2e0);
+  box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+  transition: box-shadow 0.18s;
+}
+.token--empty .token__disc {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  box-shadow: none;
+  font-size: 11px;
+}
+.token--selected .token__disc {
+  box-shadow: 0 0 0 3px var(--accent), 0 8px 20px -4px rgba(33, 208, 122, 0.7);
+}
+.token__badge {
+  pointer-events: none;
+}
+/* Secondary disc: the optional shirt number, only shown for a starter. */
+.token__number {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #06130c;
+  background: linear-gradient(150deg, var(--accent), var(--accent-2));
+  box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.8),
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+}
+.token__names {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.token__name {
+  font-size: 13px;
+  font-weight: 600;
+  max-width: 150px;
+  text-align: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(8, 12, 18, 0.8);
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.8);
+}
+.token__subname {
+  font-size: 12px;
+  font-weight: 500;
+  max-width: 150px;
+  text-align: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(8, 12, 18, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.token--empty .token__names {
+  display: none;
+}

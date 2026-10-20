@@ -110,6 +110,7 @@ npm run dev      # serveur local → http://localhost:5173
 npm run build    # génère le dossier dist/ (à héberger n'importe où)
 npm run preview  # prévisualiser le build
 npm run lint     # oxlint
+npm test         # tests du moteur de séquence (vitest)
 ```
 
 Pour l'app macOS (nécessite Rust et un Mac) :
@@ -142,3 +143,8 @@ défense) et une zone d'influence optionnelle, que l'on peut ajuster librement.
 S'y ajoutent les adversaires, les dessins par phase, la couleur adverse, les
 situations de phase arrêtée et les réglages du Studio (poster).
 Voir `src/types.ts` et `src/formations.ts`.
+
+Le mode Séquence vit dans `src/sequence/` : modèle (`types.ts`), moteur pur
+qui calcule l'état du terrain à un instant t (`engine.ts`, testé), rendu SVG
+unique pour l'éditeur, l'aperçu et l'export (`SequenceStage.tsx`) et export
+vidéo (`exportVideo.ts`). L'interface est dans `src/components/sequence/`.

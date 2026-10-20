@@ -1,0 +1,10 @@
+/* ---------- responsive (iPad portrait / narrow) ---------- */
+@media (max-width: 900px) {
+  .layout,
+  .view-row {
+    grid-template-columns: 240px 1fr;
+  }
+  .topbar__label {
+    display: none;
+  }
+}

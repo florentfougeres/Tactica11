@@ -1,0 +1,51 @@
+/* ---------- view row: Terrain/Effectif tabs + phase toggle, sharing the
+   same column widths as .layout so the phase toggle sits directly above
+   the pitch instead of floating lower with dead space above the field. */
+.view-row {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  align-items: center;
+  gap: 14px;
+}
+.view-row__phase {
+  display: flex;
+  justify-content: center;
+}
+
+/* ---------- view tabs (Terrain / Effectif) ---------- */
+.view-tabs {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 18px;
+  margin: 0;
+  border-bottom: 1px solid var(--panel-border);
+}
+.view-tabs__btn {
+  position: relative;
+  border: none;
+  background: none;
+  padding: 6px 1px 10px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-dim);
+  transition: color 0.15s;
+}
+.view-tabs__btn.is-active {
+  color: var(--text);
+}
+.view-tabs__btn:not(.is-active):hover {
+  color: var(--text);
+}
+.view-tabs__pill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.view-tabs__label {
+  position: relative;
+  z-index: 1;
+}

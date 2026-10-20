@@ -1,0 +1,44 @@
+/* ---------- pitch ---------- */
+/* column: control bar on top, pitch filling the rest */
+.pitch-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-height: 0;
+  min-width: 0;
+}
+.pitch-bar {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pitch-rotate {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: rgba(var(--menu-bg-rgb), 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--text);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.pitch-rotate:hover {
+  border-color: rgba(33, 208, 122, 0.5);
+  background: rgba(33, 208, 122, 0.08);
+}

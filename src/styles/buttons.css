@@ -1,0 +1,25 @@
+/* ---------- buttons ---------- */
+.btn {
+  border: 1px solid var(--panel-border);
+  background: rgba(var(--overlay-rgb), 0.05);
+  border-radius: var(--radius-sm);
+  padding: 11px;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.btn:hover {
+  background: rgba(var(--overlay-rgb), 0.1);
+}
+.btn--primary {
+  background: linear-gradient(150deg, var(--accent), var(--accent-2));
+  border-color: transparent;
+  color: #06130c;
+}
+.btn--primary:hover {
+  background: linear-gradient(150deg, var(--accent), var(--accent-2));
+  filter: brightness(1.08);
+}
+.btn--ghost {
+  background: none;
+  color: var(--text-dim);
+}

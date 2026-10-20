@@ -1,0 +1,18 @@
+/* ---------- light theme: soften recessed/inset fields ----------
+   These fields darken their surroundings with plain black (works fine on
+   the dark panel), but at the same alpha on a near-white panel it reads as
+   a heavy mid-grey box. Lighter alpha, light theme only — dark is untouched. */
+:root[data-theme="light"] .influence-mode,
+:root[data-theme="light"] .slot-pop__num,
+:root[data-theme="light"] .slot-pop__name-input {
+  background: rgba(0, 0, 0, 0.06);
+}
+:root[data-theme="light"] .bench__item input {
+  background: rgba(0, 0, 0, 0.05);
+}
+:root[data-theme="light"] .modal__paste {
+  background: rgba(0, 0, 0, 0.05);
+}
+:root[data-theme="light"] .modal__preview {
+  background: rgba(0, 0, 0, 0.04);
+}
