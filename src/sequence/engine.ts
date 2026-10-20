@@ -73,7 +73,9 @@ export interface Playhead {
   holding: boolean;
 }
 
-export function playheadAt(steps: SeqStep[], t: number): Playhead {
+// `prefer`: step picked in the editor. Steps with no hold followed by steps
+// with no transition share the same instant; this says which one is meant.
+export function playheadAt(steps: SeqStep[], t: number, prefer?: number): Playhead {
   const spans = stepSpans(steps);
   if (!spans.length) return { index: 0, from: 0, p: 1, e: 1, segT: 0, holding: true };
   const last = spans[spans.length - 1];
@@ -83,6 +85,7 @@ export function playheadAt(steps: SeqStep[], t: number): Playhead {
   let span = spans.find((s) => tc < s.end || (tc === s.arrive && s.end === s.arrive)) ?? last;
   // Exactly at the end of a hold → we're still on that step.
   if (tc === last.end) span = last;
+  if (prefer != null && spans[prefer] && spans[prefer].arrive === tc) span = spans[prefer];
   const i = span.index;
   const segLen = Math.max(1, span.end - span.start);
   const segT = (tc - span.start) / segLen;
@@ -213,10 +216,10 @@ function idleOffset(id: string, t: number, amp: number): Pos {
 }
 
 // live=false (paused editor) freezes the idle micro-movement.
-export function frameAt(seq: Sequence, t: number, live = true): FrameState {
+export function frameAt(seq: Sequence, t: number, live = true, prefer?: number): FrameState {
   const steps = seq.steps;
   const duration = totalDuration(steps);
-  const head = playheadAt(steps, t);
+  const head = playheadAt(steps, t, prefer);
   const to = steps[head.index];
   const from = steps[head.from];
 

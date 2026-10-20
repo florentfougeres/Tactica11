@@ -175,7 +175,10 @@ function SequenceEditor({
   useLayoutEffect(() => {
     setTopSlot(document.getElementById("seq-topbar-slot"));
   }, []);
-  const head = playheadAt(seq.steps, pb.time);
+  // Step last picked (timeline, arrows…): breaks ties between steps that
+  // land on the same instant (no hold, then no transition).
+  const [pickedStep, setPickedStep] = useState<number | undefined>(undefined);
+  const head = playheadAt(seq.steps, pb.time, pickedStep);
   const stepIndex = head.index;
   const step = seq.steps[stepIndex];
   const editable = !pb.playing && head.holding;
@@ -242,7 +245,7 @@ function SequenceEditor({
     return m;
   }, [seq.actors, seq.discMode, lineup.slots, playerById]);
 
-  const frame = useMemo(() => frameAt(seq, pb.time, pb.playing), [seq, pb.time, pb.playing]);
+  const frame = useMemo(() => frameAt(seq, pb.time, pb.playing, pickedStep), [seq, pb.time, pb.playing, pickedStep]);
 
   // ----- go to a step (after it's been created / moved) -----
   // Jump to a step once it exists in the (re-rendered) sequence — by id, so
@@ -254,6 +257,7 @@ function SequenceEditor({
     const i = seq.steps.findIndex((s) => s.id === target);
     if (i < 0) return;
     pendingStep.current = null;
+    setPickedStep(i);
     pb.setTime(spans[i].arrive);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spans]);
@@ -262,6 +266,7 @@ function SequenceEditor({
     (i: number) => {
       pb.pause();
       const c = Math.max(0, Math.min(spans.length - 1, i));
+      setPickedStep(c);
       pb.setTime(spans[c].arrive);
     },
     [pb, spans],
