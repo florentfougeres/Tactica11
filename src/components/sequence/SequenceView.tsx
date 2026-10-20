@@ -836,6 +836,19 @@ function SequenceEditor({
           ))}
           <div className="seq-toolbar__spacer" />
           <div className="seq-toolbar__group">
+            <button
+              type="button"
+              className={`seq-tool ${seq.showGrid ? "is-active" : ""}`}
+              onClick={() => actions.patchSeq(seq.id, { showGrid: !seq.showGrid })}
+              title="Afficher la grille positionnelle (couloirs et zones, comme sur l'onglet Terrain) — visible aussi dans la vidéo"
+              aria-pressed={!!seq.showGrid}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M9 3v18M15 3v18M3 9h18M3 15h18" strokeDasharray="2 2" />
+              </svg>
+              <span>Grille</span>
+            </button>
             <button type="button" className="seq-tool" onClick={() => zoomViewAt(1 / 1.25)} title="Dézoomer la vue" aria-label="Dézoomer">
               −
             </button>

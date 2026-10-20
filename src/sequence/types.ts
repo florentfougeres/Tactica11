@@ -119,6 +119,7 @@ export interface Sequence {
   subtitle: string;
   showNames: boolean;
   showNumbers: boolean;
+  showGrid?: boolean; // juego de posición zones, as on the Terrain tab
   theme: SeqTheme;
   actors: SeqActor[];
   steps: SeqStep[];

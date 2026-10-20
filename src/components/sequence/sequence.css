@@ -313,7 +313,7 @@ select.seq-input {
   background: linear-gradient(150deg, var(--accent), var(--accent-2));
 }
 /* Labels collapse to icons on narrower screens. */
-@media (max-width: 1500px) {
+@media (max-width: 1720px) {
   .seq-toolbar__group .seq-tool > span {
     display: none;
   }

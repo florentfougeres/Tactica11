@@ -25,16 +25,24 @@ import type { Orient } from "../types";
 
 export default function PositionalGrid({
   orient = "portrait",
+  frame,
+  line = "rgba(255,255,255,0.16)",
+  tint = "rgba(33,208,122,0.11)",
 }: {
   orient?: Orient;
+  // Embedded mode (sequence stage): nested <svg> at this box in a parent SVG.
+  frame?: { x: number; y: number; w: number; h: number };
+  line?: string;
+  tint?: string;
 }) {
-  const line = "rgba(255,255,255,0.16)";
-  const tint = "rgba(33,208,122,0.11)";
+  const box = frame
+    ? { x: frame.x, y: frame.y, width: frame.w, height: frame.h }
+    : { className: "pitch-grid" };
   // Landscape: rotate the portrait drawing 90° clockwise into an L×W box.
   const land = orient === "landscape";
   return (
     <svg
-      className="pitch-grid"
+      {...box}
       viewBox={land ? `0 0 ${L} ${W}` : `0 0 ${W} ${L}`}
       preserveAspectRatio="none"
       aria-hidden="true"

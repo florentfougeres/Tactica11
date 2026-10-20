@@ -5,6 +5,7 @@
 import type { ReactNode, Ref } from "react";
 import type { Pos } from "../types";
 import PitchMarkings from "../components/PitchMarkings";
+import PositionalGrid from "../components/PositionalGrid";
 import type { AnnFrame, FrameState } from "./engine";
 import { anchorPos } from "./engine";
 import type { FrameLayout } from "./layout";
@@ -312,7 +313,7 @@ export default function SequenceStage({
         <g key={ann.id} {...common}>
           {sel && <circle cx={pts[0].x} cy={pts[0].y} r={r} {...SEL_GLOW} strokeWidth={1.8 * u} />}
           <circle cx={pts[0].x} cy={pts[0].y} r={r} fill={color} fillOpacity={0.12} stroke={color} strokeWidth={0.5 * u} />
-          {ann.text && <Pill x={pts[0].x} y={pts[0].y + r + 2.2 * u} text={ann.text} fs={2 * u} bg={color} fg="#0b0f14" />}
+          {ann.text && <Pill x={pts[0].x} y={pts[0].y - r - 2.2 * u} text={ann.text} fs={2 * u} bg={color} fg="#0b0f14" />}
         </g>
       );
     }
@@ -346,8 +347,8 @@ export default function SequenceStage({
       const onActor = "actorId" in ann.anchors[0];
       const x = pts[0].x;
       const scale = ann.size ?? 1;
-      // Sit above the player's name pill (when names are shown), not on it.
-      const y = onActor ? pts[0].y - R - (seq.showNames ? 4.6 : 1.4) * u - 1.8 * u * scale : pts[0].y;
+      // Just above the disc (the player's name sits below it).
+      const y = onActor ? pts[0].y - R - 1.4 * u - 1.8 * u * scale : pts[0].y;
       return (
         <g key={ann.id} {...common}>
           <Pill
@@ -417,8 +418,8 @@ export default function SequenceStage({
         {showName && (
           <Pill
             x={c.x}
-            y={c.y - R - 1.9 * u}
-            text={cinema ? inf.name.toUpperCase() : inf.name.toUpperCase()}
+            y={c.y + R + 1.9 * u}
+            text={inf.name.toUpperCase()}
             fs={1.65 * u}
             bg={focus > 0.5 && cinema ? T.accent : "rgba(8,12,18,0.82)"}
             fg={focus > 0.5 && cinema ? "#0b0f14" : "#ffffff"}
@@ -489,6 +490,14 @@ export default function SequenceStage({
         </clipPath>
         <g data-bg="1" clipPath={`url(#${pid("apron")})`}>{stripes}</g>
         <PitchMarkings orient={L.orient} frame={{ x: 0, y: 0, w: pw, h: ph }} line={lineColor} lineWidth={cinema ? 0.28 : 0.4} />
+        {seq.showGrid && (
+          <PositionalGrid
+            orient={L.orient}
+            frame={{ x: 0, y: 0, w: pw, h: ph }}
+            line={cinema ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.45)"}
+            tint={cinema ? "rgba(244,197,49,0.08)" : "rgba(255,255,255,0.12)"}
+          />
+        )}
         {goals.map((g, i) => (
           <rect
             key={i}
