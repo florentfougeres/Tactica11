@@ -215,7 +215,14 @@ export function useProjectActions({
   };
 
   // --- whole-project save / open (.json) ---
-  const saveProject = () => exportProject(project);
+  // Include the compo being edited as it is right now: the sync above is
+  // debounced, so an edit made just before saving would otherwise be missing.
+  const saveProject = () =>
+    exportProject({
+      ...project,
+      lineups: project.lineups.map((l) => (l.id === lineup.id ? lineup : l)),
+      currentLineupId: lineup.id,
+    });
 
   const openProjectFile = async (file: File) => {
     try {
