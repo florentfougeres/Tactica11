@@ -817,3 +817,24 @@ select.seq-input {
 .seq-collapse[open] > summary::before {
   transform: rotate(90deg);
 }
+
+.seq-stepnav__btn {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: rgba(var(--overlay-rgb), 0.05);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.seq-stepnav__btn:hover:not(:disabled) {
+  background: rgba(var(--overlay-rgb), 0.12);
+}
+.seq-stepnav__btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

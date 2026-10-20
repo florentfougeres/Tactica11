@@ -212,8 +212,14 @@ function StepTab({
   const patch = (p: Partial<SeqStep>) => actions.patchStep(id, stepIndex, p);
   return (
     <div className="seq-form">
-      <div className="seq-form__title">
-        Étape {stepIndex + 1} / {seq.steps.length}
+      <div className="seq-form__title seq-stepnav">
+        <button type="button" className="seq-stepnav__btn" disabled={stepIndex === 0} onClick={() => onGoToStep(stepIndex - 1)} title="Étape précédente (←)" aria-label="Étape précédente">
+          ‹
+        </button>
+        <span>Étape {stepIndex + 1} / {seq.steps.length}</span>
+        <button type="button" className="seq-stepnav__btn" disabled={stepIndex >= seq.steps.length - 1} onClick={() => onGoToStep(stepIndex + 1)} title="Étape suivante (→)" aria-label="Étape suivante">
+          ›
+        </button>
         {!editable && <span className="seq-badge">lecture seule</span>}
       </div>
       <label className="seq-field">
@@ -673,12 +679,6 @@ function SettingsTab({ seq, actions }: Props) {
   const theme = (k: keyof Sequence["theme"], v: string) => patch({ theme: { ...seq.theme, [k]: v } });
   return (
     <div className="seq-form">
-      <p className="seq-muted">
-        Le rendu suit le thème de l'app : cinéma sombre en mode sombre, cinéma clair en mode clair.
-        Le format (9:16, 16:9, 1:1) se choisit à l'aperçu et à l'export ; le titre, les chapitres
-        et les sous-titres n'apparaissent qu'à ce moment-là, autour du terrain.
-      </p>
-
       <label className="seq-field">
         <span>Titre (en-tête)</span>
         <input className="seq-input" value={seq.title} onChange={(e) => patch({ title: e.target.value })} placeholder="ex. PSG · LUIS ENRIQUE" />
