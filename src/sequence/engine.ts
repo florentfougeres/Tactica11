@@ -194,6 +194,28 @@ export function chaptersOf(steps: SeqStep[]) {
 // travels into step 1, so they'd otherwise just pop up).
 const FIRST_STEP_DRAW_MS = 900;
 
+// Idle micro-movement ("living" players): a slow, smooth drift around the
+// step position, different for every player (seeded by id) and computed from
+// t alone, so preview and export always match. Amplitude in pitch %.
+const IDLE_AMP = [0, 0.45, 0.8, 1.3];
+
+function seedOf(id: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  return (h >>> 0) / 4294967296;
+}
+
+function idleOffset(id: string, t: number, amp: number): Pos {
+  const r = seedOf(id) * 1000;
+  const wave = (k: number) => {
+    // two incommensurate sines (periods ~2.5–6 s) read as organic drift
+    const w1 = 0.0011 + 0.0012 * ((r * (k + 1) * 0.37) % 1);
+    const w2 = 0.0023 + 0.0014 * ((r * (k + 2) * 0.61) % 1);
+    return (Math.sin(w1 * t + r * (k + 3)) + 0.55 * Math.sin(w2 * t + r * (k + 5))) / 1.55;
+  };
+  return { x: wave(0) * amp, y: wave(1) * amp };
+}
+
 // live=false (paused editor) shows step 1 fully drawn instead of animating it.
 export function frameAt(seq: Sequence, t: number, live = true): FrameState {
   const steps = seq.steps;
@@ -208,6 +230,14 @@ export function frameAt(seq: Sequence, t: number, live = true): FrameState {
   Object.keys(posTo).forEach((id) => {
     positions[id] = lerpPos(posFrom[id], posTo[id], head.e);
   });
+  const idleAmp = live ? IDLE_AMP[seq.idle ?? 0] : 0;
+  if (idleAmp > 0)
+    seq.actors.forEach((a) => {
+      const p = positions[a.id];
+      if (!p || a.idle === false) return;
+      const o = idleOffset(a.id, t, idleAmp);
+      positions[a.id] = { x: p.x + o.x, y: p.y + o.y };
+    });
 
   // Ball: each end is evaluated against the *current* player positions, so a
   // carried ball follows its carrier; a carrier change is a pass that leaves

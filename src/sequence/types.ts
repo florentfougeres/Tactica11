@@ -24,6 +24,7 @@ export interface SeqActor {
   name?: string; // label under the disc (overrides the roster name)
   gk?: boolean;
   trail?: boolean; // highlighter trail when moving (default off)
+  idle?: boolean; // false = no idle micro-movement for this player
 }
 
 // Where the ball is at a given step: a free spot, or at a player's feet (it
@@ -121,6 +122,7 @@ export interface Sequence {
   showNumbers?: boolean; // legacy (pre-discMode): false meant empty discs
   showGrid?: boolean; // juego de posición zones, as on the Compo tab
   trailColor?: string;
+  idle?: 0 | 1 | 2 | 3; // idle micro-movement of the players: off / light / medium / strong
   homeDiscScale?: number; // disc size of our team, 1 = default
   awayDiscScale?: number; // disc size of the opponents, 1 = default
   theme: SeqTheme;

@@ -428,6 +428,9 @@ function SelectionTab(props: Props) {
           </div>
           <Switch label="Gardien" checked={!!single.gk} onChange={(v) => actions.patchActor(seq.id, single.id, { gk: v })} />
           <Switch label="Traînée de mouvement" checked={!!single.trail} onChange={(v) => actions.patchActor(seq.id, single.id, { trail: v })} />
+          {!!seq.idle && (
+            <Switch label="Micro-mouvements" checked={single.idle !== false} onChange={(v) => actions.patchActor(seq.id, single.id, { idle: v })} />
+          )}
           <div className="seq-btn-row">
             <button
               type="button"
@@ -700,6 +703,20 @@ function SettingsTab({ seq, actions }: Props) {
       </label>
       <Switch label="Noms des joueurs" checked={seq.showNames} onChange={(v) => patch({ showNames: v })} />
       <Switch label="Grille positionnelle" checked={!!seq.showGrid} onChange={(v) => patch({ showGrid: v })} />
+      <div className="seq-field">
+        <span>Joueurs vivants (micro-mouvements en lecture et à l'export)</span>
+        <FmSelect
+          ariaLabel="Micro-mouvements des joueurs"
+          value={String(seq.idle ?? 0)}
+          options={[
+            { value: "0", label: "Aucun" },
+            { value: "1", label: "Léger" },
+            { value: "2", label: "Moyen" },
+            { value: "3", label: "Fort" },
+          ]}
+          onChange={(v) => patch({ idle: Number(v) as 0 | 1 | 2 | 3 })}
+        />
+      </div>
       {(
         <div className="seq-field">
           <span>Couleur des traînées</span>
