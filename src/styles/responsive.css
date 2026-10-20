@@ -29,6 +29,20 @@
   }
 }
 
+/* Séquence: below this width its tools no longer fit between the project
+   name and Partager (Aperçu and the ⋯ menu got cut off). They get their own
+   full-width line instead, like the Compo fields above. */
+@media (max-width: 1180px) {
+  .topbar--sequence {
+    flex-wrap: wrap;
+  }
+  .topbar--sequence .topbar__seq {
+    order: 2;
+    flex-basis: 100%;
+    margin-top: 10px;
+  }
+}
+
 /* ---------- touch screens (iPad) ----------
    Fingers need bigger targets than a mouse: swatches, the roster's remove
    button, the timeline checkbox and the small toolbar buttons were 13–24px. */

@@ -77,19 +77,20 @@ export default function StepTab({
           tab used to be one long scroll of every setting. */}
       <details className="seq-collapse" open>
         <summary className="seq-form__title">Positions</summary>
-        <span className="seq-muted">Replacer mon équipe selon la compo :</span>
         <div className="seq-btn-row">
-          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "base")} title="Replace nos joueurs selon la formation de base de la compo">
+          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "base")} title="Replacer mon équipe selon la compo en Base">
             Base
           </button>
-          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "attack")}>
+          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "attack")} title="Replacer mon équipe selon la compo en Attaque">
             Attaque
           </button>
-          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "defense")}>
+          <button type="button" className="pitch-ctl__btn" onClick={() => actions.applyPhase(seq.id, stepIndex, "defense")} title="Replacer mon équipe selon la compo en Défense">
             Défense
           </button>
+        </div>
+        <div className="seq-btn-row">
           <button type="button" className="pitch-ctl__btn" onClick={() => actions.mirrorStep(seq.id, stepIndex)} title="Inverser gauche / droite">
-            ⇄ Miroir
+            ⇄ Inverser gauche / droite
           </button>
         </div>
         <Switch label="Propager aux étapes suivantes" checked={propagate} onChange={onPropagate} />
@@ -97,11 +98,11 @@ export default function StepTab({
       <details className="seq-collapse" open={!!(step.focusIds?.length || step.dimOthers || (step.effect && step.effect !== "none")) || undefined}>
         <summary className="seq-form__title">Mise en avant et effet</summary>
         <div className="seq-btn-row">
-          <button type="button" className="pitch-ctl__btn" disabled={!selActors.size} onClick={() => patch({ focusIds: [...selActors] })}>
-            Mettre en avant la sélection
+          <button type="button" className="pitch-ctl__btn" disabled={!selActors.size} onClick={() => patch({ focusIds: [...selActors] })} title="Mettre en avant les joueurs sélectionnés">
+            Mettre en avant
           </button>
-          <button type="button" className="pitch-ctl__btn" disabled={!step.focusIds?.length} onClick={() => patch({ focusIds: [] })}>
-            Tout retirer
+          <button type="button" className="pitch-ctl__btn" disabled={!step.focusIds?.length} onClick={() => patch({ focusIds: [] })} title="Retirer toutes les mises en avant">
+            Retirer
           </button>
         </div>
         <Switch label="Atténuer les autres joueurs" checked={!!step.dimOthers} onChange={(v) => patch({ dimOthers: v })} />

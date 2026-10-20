@@ -128,7 +128,7 @@ export default function SequenceTimeline({
         </span>
         <label className="seq-carry" title="La nouvelle étape garde les flèches, zones et textes de l'étape courante">
           <input type="checkbox" checked={carry} onChange={(e) => onCarry(e.target.checked)} />
-          Garder les éléments graphiques
+          Garder les dessins
         </label>
         <button type="button" className="seq-tbtn seq-tbtn--add" onClick={onAddStep} title="Nouvelle étape : duplique l'étape courante (N)">
           + Étape
