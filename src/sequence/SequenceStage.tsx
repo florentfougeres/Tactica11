@@ -643,7 +643,9 @@ export default function SequenceStage({
 
         {/* editor handles */}
         {overlay?.editable && overlay.selectedAnn && (() => {
-          const ann = seq.annotations.find((x) => x.id === overlay.selectedAnn);
+          // Only for a graphic shown at this instant (a selection can outlive
+          // its steps, e.g. once playback stops on the last step).
+          const ann = frame.annotations.find((af) => af.ann.id === overlay.selectedAnn)?.ann;
           if (!ann) return null;
           const hs: ReactNode[] = [];
           const numbered = ann.kind === "playerLine" || ann.kind === "playerZone";
