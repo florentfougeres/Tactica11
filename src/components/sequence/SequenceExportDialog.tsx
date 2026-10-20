@@ -17,6 +17,7 @@ export default function SequenceExportDialog({
   look,
   time,
   onFormat,
+  onOrient,
   onClose,
 }: {
   seq: Sequence;
@@ -24,6 +25,7 @@ export default function SequenceExportDialog({
   look: SeqLook;
   time: number; // editor playhead, for the thumbnail
   onFormat: (f: SeqFormat) => void;
+  onOrient: (o: Sequence["orient"]) => void;
   onClose: () => void;
 }) {
   const L = useMemo(() => frameLayout(seq), [seq]);
@@ -93,6 +95,21 @@ export default function SequenceExportDialog({
           <span className="seq-muted">
             {seq.format === "9:16" ? "TikTok, Reels, Shorts" : seq.format === "16:9" ? "YouTube" : "Publication carrée"}
           </span>
+        </div>
+        <div className="seq-field">
+          <span>Terrain</span>
+          <div className="seg">
+            {(
+              [
+                ["portrait", "Portrait"],
+                ["landscape", "Paysage"],
+              ] as const
+            ).map(([o, label]) => (
+              <button key={o} type="button" disabled={running} className={`seg__btn ${seq.orient === o ? "is-active" : ""}`} onClick={() => onOrient(o)}>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="seq-export__thumb" style={{ width: thumbW, height: thumbH }}>
           <SequenceStage seq={seq} frame={thumb} layout={L} info={info} look={look} idPrefix="th" className="seq-preview__svg" />

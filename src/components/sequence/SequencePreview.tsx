@@ -57,6 +57,9 @@ export default function SequencePreview({
 
   return (
     <div className="seq-preview" ref={wrapRef} role="dialog" aria-label="Aperçu de la séquence">
+      <button type="button" className="present-exit" onClick={onClose} title="Quitter l'aperçu (Échap)">
+        ✕ Quitter
+      </button>
       <div className="seq-preview__stage" style={{ width: L.W * scale, height: L.H * scale }} onClick={pb.toggle}>
         <SequenceStage seq={seq} frame={frame} layout={L} info={info} look={look} overlay={{ safeZones }} idPrefix="pv" className="seq-preview__svg" />
       </div>

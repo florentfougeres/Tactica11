@@ -62,7 +62,7 @@ const TOOL_HINT: Record<SeqTool, string> = {
   circle: "Cliquer sur un joueur ou un point",
   line: "Glisser pour tracer une ligne (⇧ : horizontale)",
   label: "Cliquer sur un joueur ou un point, puis saisir le texte",
-  camera: "Glisser pour déplacer le cadrage de l'étape · molette pour zoomer",
+  camera: "Glisser pour déplacer le cadrage de l'étape · zoom avec le curseur « Zoom » de l'onglet Étape",
 };
 
 type Drag =
@@ -640,23 +640,8 @@ function SequenceEditor({
     }
   };
 
-  const onWheel = (e: React.WheelEvent<SVGSVGElement>) => {
-    if (tool === "camera" && editable) {
-      const z = Math.min(5, Math.max(0.6, step.camera.zoom * Math.exp(-e.deltaY * 0.0015)));
-      actions.patchStep(seq.id, stepIndex, { camera: { ...step.camera, zoom: z } });
-      return;
-    }
-    zoomViewAt(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY);
-  };
-
-  // Non-passive wheel listener so the page doesn't scroll while zooming.
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const stop = (e: WheelEvent) => e.preventDefault();
-    el.addEventListener("wheel", stop, { passive: false });
-    return () => el.removeEventListener("wheel", stop);
-  }, []);
+  // No mouse-wheel zoom on purpose (too easy to trigger by accident): the
+  // view zooms with the − / + buttons, the camera with the step's Zoom slider.
 
   // ----- keyboard -----
   const deleteSelection = useCallback(() => {
@@ -933,7 +918,6 @@ function SequenceEditor({
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
               onDoubleClick={() => draft && finishPolygon()}
-              onWheel={onWheel}
             />
           </div>
         </div>
@@ -971,7 +955,7 @@ function SequenceEditor({
       </div>
 
       {preview && <SequencePreview seq={seq} info={info} look={look} onFormat={(format) => actions.patchSeq(seq.id, { format })} onClose={() => setPreview(false)} />}
-      {exportOpen && <SequenceExportDialog seq={seq} info={info} look={look} time={pb.time} onFormat={(format) => actions.patchSeq(seq.id, { format })} onClose={() => setExportOpen(false)} />}
+      {exportOpen && <SequenceExportDialog seq={seq} info={info} look={look} time={pb.time} onFormat={(format) => actions.patchSeq(seq.id, { format })} onOrient={(orient) => actions.patchSeq(seq.id, { orient })} onClose={() => setExportOpen(false)} />}
     </>
   );
 }
