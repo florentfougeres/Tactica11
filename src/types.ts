@@ -61,9 +61,79 @@ export interface Player {
   id: string;
   name: string;
   number?: number;
+  position?: PlayerPosition; // preferred position (fiche joueur)
+  foot?: Foot;
+  status?: PlayerStatus; // unset = available
   // Custom attribute values, keyed by AttributeDef.id.
   attributes?: Record<string, string | number>;
 }
+
+// A player's preferred position, same codes as the formation roles.
+export type PlayerPosition =
+  | "G"
+  | "DD"
+  | "DC"
+  | "DG"
+  | "MDC"
+  | "MC"
+  | "MD"
+  | "MG"
+  | "MOC"
+  | "AD"
+  | "AG"
+  | "BU";
+
+export type PositionLine = "gk" | "def" | "mid" | "att";
+
+export const POSITIONS: {
+  code: PlayerPosition;
+  label: string;
+  line: PositionLine;
+}[] = [
+  { code: "G", label: "Gardien", line: "gk" },
+  { code: "DD", label: "Arrière droit", line: "def" },
+  { code: "DC", label: "Défenseur central", line: "def" },
+  { code: "DG", label: "Arrière gauche", line: "def" },
+  { code: "MDC", label: "Milieu défensif", line: "mid" },
+  { code: "MC", label: "Milieu central", line: "mid" },
+  { code: "MD", label: "Milieu droit", line: "mid" },
+  { code: "MG", label: "Milieu gauche", line: "mid" },
+  { code: "MOC", label: "Milieu offensif", line: "mid" },
+  { code: "AD", label: "Ailier droit", line: "att" },
+  { code: "AG", label: "Ailier gauche", line: "att" },
+  { code: "BU", label: "Avant-centre", line: "att" },
+];
+
+// Read a position typed by hand or found in a CSV: a code ("DC", "bu") or a
+// label ("Défenseur central"), accents and case ignored.
+export function parsePosition(raw: string): PlayerPosition | undefined {
+  const norm = (v: string) =>
+    v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+  const v = norm(raw);
+  return POSITIONS.find((p) => norm(p.code) === v || norm(p.label) === v)?.code;
+}
+
+export const LINE_LABEL: Record<PositionLine, string> = {
+  gk: "Gardiens",
+  def: "Défenseurs",
+  mid: "Milieux",
+  att: "Attaquants",
+};
+
+export type Foot = "right" | "left" | "both";
+export const FOOT_LABEL: Record<Foot, string> = {
+  right: "Droit",
+  left: "Gauche",
+  both: "Les deux",
+};
+
+export type PlayerStatus = "available" | "doubtful" | "injured" | "suspended";
+export const STATUS_LABEL: Record<PlayerStatus, string> = {
+  available: "Disponible",
+  doubtful: "Incertain",
+  injured: "Blessé",
+  suspended: "Suspendu",
+};
 
 // Influence zone radii, as a fraction of the pitch WIDTH, in each direction
 // from the player. Lets the zone be lopsided (e.g. reach further forward).

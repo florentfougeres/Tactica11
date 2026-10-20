@@ -21,7 +21,7 @@ import FmSelect from "./components/FmSelect";
 import { FORMATIONS } from "./formations";
 import type { ShareItem } from "./components/ShareMenu";
 import CsvImportDialog from "./components/CsvImportDialog";
-import RosterTable from "./components/RosterTable";
+import RosterView from "./components/roster/RosterView";
 import ViewTabs, { type View } from "./components/ViewTabs";
 import PhaseToggle from "./components/PhaseToggle";
 import Onboarding from "./components/Onboarding";
@@ -249,6 +249,7 @@ export default function App() {
   // --- roster (shared across every compo in the current project) ---
   const {
     addPlayer,
+    updatePlayer,
     createPlayerInSlot,
     setPlayerNumber,
     addPlayers,
@@ -562,12 +563,11 @@ export default function App() {
 
       <main className={`layout ${view === "sequence" ? "layout--seq" : ""}`}>
         {view === "roster" ? (
-          <RosterTable
+          <RosterView
             players={project.players}
             attributeDefs={project.attributeDefs}
             onAddPlayer={addPlayer}
-            onRenamePlayer={renamePlayer}
-            onSetNumber={setPlayerNumber}
+            onPatchPlayer={updatePlayer}
             onSetAttribute={setAttribute}
             onRemovePlayer={removePlayer}
             onAddColumn={addColumn}

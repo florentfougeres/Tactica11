@@ -7,6 +7,7 @@ import {
   detectExtraColumns,
   type ImportedPlayer,
 } from "../csv";
+import FmSelect from "./FmSelect";
 
 interface Props {
   onClose: () => void;
@@ -33,6 +34,11 @@ export default function CsvImportDialog({ onClose, onImport }: Props) {
     const sample = (hasHeader ? rows[1] : rows[0])?.[i]?.trim();
     return sample ? `Colonne ${i + 1} · ex. « ${sample} »` : `Colonne ${i + 1}`;
   };
+
+  const colOptions = Array.from({ length: colCount }, (_, i) => ({
+    value: String(i),
+    label: colLabel(i),
+  }));
 
   function ingest(text: string) {
     const parsed = parseCsv(text);
@@ -145,34 +151,25 @@ export default function CsvImportDialog({ onClose, onImport }: Props) {
 
             {colCount > 1 && (
               <div className="modal__cols">
-                <label className="modal__field">
+                <div className="modal__field">
                   <span>Colonne du nom</span>
-                  <select
-                    value={nameCol}
-                    onChange={(e) => setNameCol(Number(e.target.value))}
-                  >
-                    {Array.from({ length: colCount }, (_, i) => (
-                      <option key={i} value={i}>
-                        {colLabel(i)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  <FmSelect
+                    value={String(nameCol)}
+                    options={colOptions}
+                    onChange={(v) => setNameCol(Number(v))}
+                    ariaLabel="Colonne du nom"
+                  />
+                </div>
 
-                <label className="modal__field">
+                <div className="modal__field">
                   <span>Numéro (optionnel)</span>
-                  <select
-                    value={numberCol}
-                    onChange={(e) => setNumberCol(Number(e.target.value))}
-                  >
-                    <option value={-1}>Aucun</option>
-                    {Array.from({ length: colCount }, (_, i) => (
-                      <option key={i} value={i}>
-                        {colLabel(i)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  <FmSelect
+                    value={String(numberCol)}
+                    options={[{ value: "-1", label: "Aucun" }, ...colOptions]}
+                    onChange={(v) => setNumberCol(Number(v))}
+                    ariaLabel="Colonne du numéro"
+                  />
+                </div>
               </div>
             )}
 

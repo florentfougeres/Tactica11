@@ -1,6 +1,15 @@
-import type { AttrType, Lineup, Project } from "../types";
+import {
+  parsePosition,
+  type AttrType,
+  type Lineup,
+  type Player,
+  type PlayerPosition,
+  type Project,
+} from "../types";
 import { uid } from "../storage";
 import type { ImportedPlayer } from "../csv";
+
+const POSITION_COLUMN = /^(poste|position|pos)$/i;
 
 type ProjectUpdater = (fn: (p: Project) => Project) => void;
 type LineupUpdater = (fn: (l: Lineup) => Lineup) => void;
@@ -11,13 +20,31 @@ export function usePlayerRoster(
   updateProject: ProjectUpdater,
   setLineup: LineupUpdater,
 ) {
-  const addPlayer = (name: string, number?: number) =>
+  // Returns the new player's id so the roster can open its fiche right away.
+  const addPlayer = (name: string, number?: number): string => {
+    const id = uid("p");
     updateProject((p) => ({
       ...p,
       players: [
         ...p.players,
-        { id: uid("p"), name, ...(number != null ? { number } : {}) },
+        { id, name, ...(number != null ? { number } : {}) },
       ],
+    }));
+    return id;
+  };
+
+  // Patch a player's own fields (fiche joueur); an undefined value clears it.
+  const updatePlayer = (id: string, patch: Partial<Omit<Player, "id">>) =>
+    updateProject((p) => ({
+      ...p,
+      players: p.players.map((pl) => {
+        if (pl.id !== id) return pl;
+        const next: Player = { ...pl, ...patch };
+        (Object.keys(patch) as (keyof typeof patch)[]).forEach((k) => {
+          if (patch[k] === undefined) delete next[k];
+        });
+        return next;
+      }),
     }));
 
   // Quick-create from an empty pitch slot (base mode): mint a player with a
@@ -69,19 +96,27 @@ export function usePlayerRoster(
         return def.id;
       };
 
-      const newPlayers = players.map((pl) => {
+      const newPlayers = players.map((pl): Player => {
         let attributes: Record<string, string | number> | undefined;
+        let position: PlayerPosition | undefined;
         if (pl.attributes) {
           attributes = {};
           for (const [label, value] of Object.entries(pl.attributes)) {
+            // A recognisable "Poste" column fills the player's position.
+            if (!position && POSITION_COLUMN.test(label.trim())) {
+              position = parsePosition(String(value));
+              if (position) continue;
+            }
             const type: AttrType = typeof value === "number" ? "number" : "text";
             attributes[attrIdForLabel(label, type)] = value;
           }
+          if (!Object.keys(attributes).length) attributes = undefined;
         }
         return {
           id: uid("p"),
           name: pl.name,
           ...(pl.number != null ? { number: pl.number } : {}),
+          ...(position ? { position } : {}),
           ...(attributes ? { attributes } : {}),
         };
       });
@@ -174,6 +209,7 @@ export function usePlayerRoster(
 
   return {
     addPlayer,
+    updatePlayer,
     createPlayerInSlot,
     setPlayerNumber,
     addPlayers,

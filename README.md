@@ -70,7 +70,12 @@ utilise la version web / PWA.
 - **Placement libre** des joueurs sur le terrain, animé au ressort (Framer Motion),
   avec création d'un joueur directement depuis un emplacement vide en mode base.
 - **Effectif en glisser-déposer** : vivier de joueurs, titulaires + remplaçants
-  par poste, numéros de maillot optionnels, table triable et éditable en un clic.
+  par poste, numéros de maillot optionnels.
+- **Onglet Effectif** : la base de joueurs du projet, partagée par toutes ses
+  compos, en table triable ou en cartes par ligne (gardiens → attaquants),
+  avec recherche, filtre par ligne et une fiche joueur sur le côté : nom,
+  numéro, poste, pied fort, statut (incertain, blessé, suspendu) et infos
+  personnalisées.
 - **Zones d'influence** par joueur ou par équipe, avec presets de rôles
   (type EA FC) ajustables à la main.
 - **Adversaires** : place les 11 disques adverses en attaque/défense, avec
