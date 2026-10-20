@@ -78,7 +78,9 @@ export function playheadAt(steps: SeqStep[], t: number): Playhead {
   if (!spans.length) return { index: 0, from: 0, p: 1, e: 1, segT: 0, holding: true };
   const last = spans[spans.length - 1];
   const tc = Math.min(Math.max(0, t), last.end);
-  let span = spans.find((s) => tc < s.end) ?? last;
+  // A step with no hold (arrive === end) still owns the instant it arrives,
+  // so it can be selected and edited.
+  let span = spans.find((s) => tc < s.end || (tc === s.arrive && s.end === s.arrive)) ?? last;
   // Exactly at the end of a hold → we're still on that step.
   if (tc === last.end) span = last;
   const i = span.index;
