@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 export type View = "pitch" | "roster" | "setpiece" | "sequence";
 
 const LABELS: Record<View, string> = {
-  pitch: "Terrain",
+  pitch: "Compo",
   roster: "Effectif",
   setpiece: "Phase arrêtée",
   sequence: "Séquence",

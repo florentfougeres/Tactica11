@@ -46,7 +46,7 @@ const TYPE_LABEL: Record<SetPieceType, string> = {
 
 // Composer for the "Coup de pied arrêté" view: pairs the set-piece list (left)
 // with the half-pitch board (right), mirroring how App.tsx pairs Bench+Pitch
-// for the main "Terrain" view.
+// for the main "Compo" view.
 export default function SetPieceView({
   lineup,
   playerById,

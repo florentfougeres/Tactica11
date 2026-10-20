@@ -16,7 +16,7 @@ interface Props {
 
 // Adding players / CSV import live only in the Effectif tab (RosterTable) —
 // this panel is just the "who's still on the bench, drag them onto the
-// pitch" view for the Terrain tab.
+// pitch" view for the Compo tab.
 const Bench = forwardRef<HTMLElement, Props>(function Bench(
   {
     players,

@@ -727,6 +727,44 @@
   background: rgba(33, 208, 122, 0.18);
   color: var(--accent);
 }
+/* FmSelect (generic dropdown reusing the formation picker's look) */
+.fmselect--block {
+  width: 100%;
+}
+.fmselect--block .fmselect__btn {
+  width: 100%;
+  min-width: 0;
+  font-size: 13px;
+}
+.fmselect__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.fmselect__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+.fmselect__menu--floating {
+  position: fixed;
+  z-index: 600;
+  min-width: 0;
+  overflow-y: auto;
+}
+.fmselect__menu--floating button {
+  font-size: 13px;
+  white-space: normal;
+}
+.fmselect__group {
+  padding: 8px 11px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+}
 
 /* ---------- layout ---------- */
 .layout {

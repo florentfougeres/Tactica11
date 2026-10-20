@@ -10,6 +10,7 @@ import type {
   Team,
 } from "../../sequence/types";
 import { ANN_LABEL, ARROW_KINDS, SEQ_COLORS, isArrow } from "../../sequence/types";
+import FmSelect from "../FmSelect";
 import type { ActorInfo } from "../../sequence/SequenceStage";
 
 type Tab = "step" | "selection" | "settings";
@@ -101,18 +102,12 @@ export default function SequenceInspector(props: Props) {
       </header>
 
       <div className="seq-panel__picker">
-        <select
-          className="seq-input"
+        <FmSelect
           value={seq.id}
-          onChange={(e) => onSeqId(e.target.value)}
-          aria-label="Séquence affichée"
-        >
-          {sequences.map((q) => (
-            <option key={q.id} value={q.id}>
-              {q.name}
-            </option>
-          ))}
-        </select>
+          options={sequences.map((q) => ({ value: q.id, label: q.name || "Sans nom" }))}
+          onChange={(id) => onSeqId(id)}
+          ariaLabel="Séquence affichée"
+        />
         <div className="seq-panel__picker-actions">
           <button type="button" className="pitch-ctl__btn" onClick={() => setNewOpen((o) => !o)} aria-expanded={newOpen}>
             + Nouvelle
@@ -227,13 +222,18 @@ function StepTab({
           <input className="seq-input" type="number" min={0} max={30} step={0.1} value={sec(step.holdMs)} onChange={(e) => patch({ holdMs: Math.max(0, Number(e.target.value) * 1000) })} />
         </label>
       </div>
-      <label className="seq-field">
+      <div className="seq-field">
         <span>Mouvement</span>
-        <select className="seq-input" value={step.easing} onChange={(e) => patch({ easing: e.target.value as SeqStep["easing"] })}>
-          <option value="easeInOut">Fluide (accélère / ralentit)</option>
-          <option value="linear">Linéaire</option>
-        </select>
-      </label>
+        <FmSelect<SeqStep["easing"]>
+          value={step.easing}
+          options={[
+            { value: "easeInOut", label: "Fluide (accélère / ralentit)" },
+            { value: "linear", label: "Linéaire" },
+          ]}
+          onChange={(v) => patch({ easing: v })}
+          ariaLabel="Mouvement"
+        />
+      </div>
       <Switch label="Fantômes (positions précédentes)" checked={!!step.ghosts} onChange={(v) => patch({ ghosts: v })} />
 
       <div className="seq-form__title">Mise en avant</div>
@@ -246,14 +246,19 @@ function StepTab({
         </button>
       </div>
       <Switch label="Atténuer les autres joueurs" checked={!!step.dimOthers} onChange={(v) => patch({ dimOthers: v })} />
-      <label className="seq-field">
+      <div className="seq-field">
         <span>Effet</span>
-        <select className="seq-input" value={step.effect ?? "none"} onChange={(e) => patch({ effect: e.target.value as StepEffect })}>
-          <option value="none">Aucun</option>
-          <option value="flash">Flash de couleur (danger)</option>
-          <option value="bigText">Mot géant</option>
-        </select>
-      </label>
+        <FmSelect<StepEffect>
+          value={step.effect ?? "none"}
+          options={[
+            { value: "none", label: "Aucun" },
+            { value: "flash", label: "Flash de couleur (danger)" },
+            { value: "bigText", label: "Mot géant" },
+          ]}
+          onChange={(v) => patch({ effect: v })}
+          ariaLabel="Effet"
+        />
+      </div>
       {step.effect === "bigText" && (
         <label className="seq-field">
           <span>Texte</span>
@@ -463,6 +468,7 @@ function AnnotationForm({ seq, ann, actions, focusLabel, onSelectAnn, info }: Pr
     }
   }, [focusLabel]); // eslint-disable-line react-hooks/exhaustive-deps
   const fromIdx = seq.steps.findIndex((s) => s.id === ann.fromStep);
+  const stepOptions = seq.steps.map((s, i) => ({ value: s.id, label: s.name ? `${i + 1} · ${s.name}` : String(i + 1) }));
   const toIdx = seq.steps.findIndex((s) => s.id === ann.toStep);
   const hasText = ["label", "line", "zone", "space", "playerZone", "playerLine", "circle", "marking"].includes(ann.kind);
   const minAnchors = ann.kind === "playerZone" ? 3 : 2;
@@ -557,28 +563,30 @@ function AnnotationForm({ seq, ann, actions, focusLabel, onSelectAnn, info }: Pr
         <Swatches value={ann.color} onPick={(c) => patch({ color: c })} />
       </div>
       <div className="seq-field-row">
-        <label className="seq-field">
+        <div className="seq-field">
           <span>Visible de l'étape</span>
-          <select className="seq-input" value={ann.fromStep} onChange={(e) => {
-            const i = seq.steps.findIndex((s) => s.id === e.target.value);
-            patch({ fromStep: e.target.value, ...(i > toIdx ? { toStep: e.target.value } : {}) });
-          }}>
-            {seq.steps.map((s, i) => (
-              <option key={s.id} value={s.id}>{i + 1}</option>
-            ))}
-          </select>
-        </label>
-        <label className="seq-field">
+          <FmSelect
+            value={ann.fromStep}
+            options={stepOptions}
+            onChange={(v) => {
+              const i = seq.steps.findIndex((s) => s.id === v);
+              patch({ fromStep: v, ...(i > toIdx ? { toStep: v } : {}) });
+            }}
+            ariaLabel="Visible à partir de l'étape"
+          />
+        </div>
+        <div className="seq-field">
           <span>à l'étape</span>
-          <select className="seq-input" value={ann.toStep} onChange={(e) => {
-            const i = seq.steps.findIndex((s) => s.id === e.target.value);
-            patch({ toStep: e.target.value, ...(i < fromIdx ? { fromStep: e.target.value } : {}) });
-          }}>
-            {seq.steps.map((s, i) => (
-              <option key={s.id} value={s.id}>{i + 1}</option>
-            ))}
-          </select>
-        </label>
+          <FmSelect
+            value={ann.toStep}
+            options={stepOptions}
+            onChange={(v) => {
+              const i = seq.steps.findIndex((s) => s.id === v);
+              patch({ toStep: v, ...(i < fromIdx ? { fromStep: v } : {}) });
+            }}
+            ariaLabel="Visible jusqu'à l'étape"
+          />
+        </div>
       </div>
       <div className="seq-btn-row">
         <button type="button" className="pitch-ctl__btn" onClick={() => patch({ toStep: seq.steps[seq.steps.length - 1].id })}>
@@ -737,34 +745,31 @@ function PlayerPicker({ seq, lineup, players, actions, actorId }: Props & { acto
   const starters = players.filter((p) => starterIds.has(p.id));
   const others = players.filter((p) => !starterIds.has(p.id));
   const slot = actor.slotId ? lineup.slots.find((s) => s.id === actor.slotId) : null;
-  const opt = (p: Player) => (
-    <option key={p.id} value={p.id}>
-      {p.number != null ? `${p.number} · ` : ""}
-      {p.name}
-    </option>
-  );
+  const label = (p: Player) => `${p.number != null ? `${p.number} · ` : ""}${p.name}`;
+  const options = [
+    { value: "", label: slot ? `Titulaire du poste (${slot.role})` : "Aucun (texte libre)" },
+    ...starters.map((p) => ({ value: p.id, label: label(p), group: "Titulaires de la compo" })),
+    ...others.map((p) => ({ value: p.id, label: label(p), group: "Reste de l'effectif" })),
+  ];
   return (
-    <label className="seq-field">
+    <div className="seq-field">
       <span>Joueur de l'effectif</span>
-      <select
-        className="seq-input"
+      <FmSelect
         value={actor.playerId ?? ""}
-        onChange={(e) =>
+        options={options}
+        onChange={(v) =>
           actions.patchActor(seq.id, actor.id, {
-            playerId: e.target.value || undefined,
+            playerId: v || undefined,
             // Let the roster drive name / number once a player is picked.
             name: undefined,
             label: undefined,
           })
         }
-      >
-        <option value="">{slot ? `Titulaire du poste (${slot.role})` : "Aucun (texte libre)"}</option>
-        {starters.length > 0 && <optgroup label="Titulaires de la compo">{starters.map(opt)}</optgroup>}
-        {others.length > 0 && <optgroup label="Reste de l'effectif">{others.map(opt)}</optgroup>}
-      </select>
+        ariaLabel="Joueur de l'effectif"
+      />
       {players.length === 0 && (
         <span className="seq-muted">Ajoute des joueurs dans l'onglet Effectif pour afficher leurs noms.</span>
       )}
-    </label>
+    </div>
   );
 }

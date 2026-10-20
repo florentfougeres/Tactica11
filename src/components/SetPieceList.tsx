@@ -91,7 +91,7 @@ export default function SetPieceList({
           <div className="sp-roster__list">
             {players.length === 0 && (
               <p className="bench__empty">
-                Place des titulaires sur le terrain (onglet Terrain) pour
+                Place des titulaires sur le terrain (onglet Compo) pour
                 pouvoir les ajouter ici.
               </p>
             )}

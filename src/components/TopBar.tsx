@@ -326,7 +326,7 @@ export default function TopBar({
       <div className="topbar__actions">
         {/* Undo/redo cover the active compo's whole edit history — pitch
             positions/opponents/drawings AND its set pieces share one stack —
-            so they're relevant on both Terrain and Phase arrêtée. Effectif
+            so they're relevant on Compo, Phase arrêtée and Séquence. Effectif
             (the shared roster) isn't part of that history, so hide them there
             rather than show controls that would just do nothing. */}
         {(view === "pitch" || view === "setpiece" || view === "sequence") && (

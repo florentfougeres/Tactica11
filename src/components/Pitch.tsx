@@ -26,7 +26,7 @@ interface Props {
   slots: Slot[];
   phase: Phase;
   // Whether to render the Base/Attaque/Défense toggle inline above the pitch.
-  // Normally it lives in the top view-row next to Terrain/Effectif; in
+  // Normally it lives in the top view-row next to Compo/Effectif; in
   // presentation mode that row is hidden, so the pitch renders it itself.
   showPhaseToggle?: boolean;
   playerById: (id: string | null) => Player | null;
