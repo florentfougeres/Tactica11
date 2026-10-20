@@ -667,16 +667,25 @@ function SettingsTab({ seq, actions, safeZones, onSafeZones }: Props) {
         <span>Taille des disques — adversaires ×{(seq.awayDiscScale ?? 1).toFixed(2)}</span>
         <input type="range" min={0.6} max={1.8} step={0.05} value={seq.awayDiscScale ?? 1} onChange={(e) => patch({ awayDiscScale: Number(e.target.value) })} />
       </label>
-      <Switch label="Texte dans les disques" checked={seq.showNumbers} onChange={(v) => patch({ showNumbers: v })} />
-      {seq.showNumbers && (
+      <div className="seq-field">
+        <span>Dans les disques de mon équipe</span>
         <div className="seg">
-          {(["number", "role"] as const).map((m) => (
-            <button key={m} type="button" className={`seg__btn ${(seq.discMode ?? "number") === m ? "is-active" : ""}`} onClick={() => patch({ discMode: m })}>
-              {m === "number" ? "Numéro" : "Poste"}
+          {(
+            [
+              ["role", "Poste"],
+              ["number", "Numéro"],
+              ["none", "Rien"],
+            ] as const
+          ).map(([m, label]) => (
+            <button key={m} type="button" className={`seg__btn ${(seq.discMode ?? "role") === m ? "is-active" : ""}`} onClick={() => patch({ discMode: m })}>
+              {label}
             </button>
           ))}
         </div>
-      )}
+        {seq.discMode === "number" && (
+          <span className="seq-muted">Un joueur sans numéro dans l'Effectif aura un disque vide.</span>
+        )}
+      </div>
 
       <div className="seq-form__title">Couleurs</div>
       <div className="seq-field">

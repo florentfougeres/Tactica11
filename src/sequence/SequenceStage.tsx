@@ -460,7 +460,7 @@ export default function SequenceStage({
           strokeWidth={0.28 * u}
         />
         {sel && <circle cx={c.x} cy={c.y} r={R + 0.75 * u} fill="none" stroke="#21d07a" strokeWidth={0.55 * u} />}
-        {seq.showNumbers && inf.disc && (
+        {inf.disc && (
           <text
             x={c.x}
             y={c.y}

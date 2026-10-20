@@ -95,6 +95,8 @@ export interface SeqAnnotation {
   toStep: string;
 }
 
+export type DiscMode = "role" | "number" | "none";
+
 export interface SeqTheme {
   homeColor: string;
   homeText: string;
@@ -110,11 +112,11 @@ export interface Sequence {
   name: string;
   format: SeqFormat;
   orient: "portrait" | "landscape"; // pitch orientation (vertical / horizontal)
-  discMode?: "number" | "role"; // what our discs show: shirt number or position
+  discMode?: DiscMode; // what our discs show: position, shirt number or nothing
   title: string; // header line (brand / topic)
   subtitle: string;
   showNames: boolean;
-  showNumbers: boolean;
+  showNumbers?: boolean; // legacy (pre-discMode): false meant empty discs
   showGrid?: boolean; // juego de posición zones, as on the Terrain tab
   homeDiscScale?: number; // disc size of our team, 1 = default
   awayDiscScale?: number; // disc size of the opponents, 1 = default

@@ -187,10 +187,14 @@ function SequenceEditor({
   // ----- actor labels (disc text + name) -----
   const info = useMemo(() => {
     const m: Record<string, ActorInfo> = {};
-    const roleMode = seq.discMode === "role";
+    const mode = seq.discMode ?? "role";
     seq.actors.forEach((a) => {
-      if (a.team !== "home" || (!a.slotId && !a.playerId)) {
+      if (a.team === "away") {
         m[a.id] = { disc: a.label ?? "", name: a.name ?? "" };
+        return;
+      }
+      if (!a.slotId && !a.playerId) {
+        m[a.id] = { disc: mode === "none" ? "" : (a.label ?? ""), name: a.name ?? "" };
         return;
       }
       // A disc shows its bound roster player, else the slot's starter.
@@ -198,9 +202,11 @@ function SequenceEditor({
       const player = a.playerId ? playerById(a.playerId) : slot ? playerById(slot.starterId) : null;
       const role = slot?.role ?? "";
       const number = player?.number != null ? String(player.number) : "";
-      const fallback = roleMode ? role || number : number || role;
+      // Our discs: position, shirt number (empty when the player has none) or
+      // nothing; a hand-typed disc label still wins unless "Rien".
+      const auto = mode === "role" ? role : mode === "number" ? number : "";
       m[a.id] = {
-        disc: a.label ?? fallback,
+        disc: mode === "none" ? "" : (a.label ?? auto),
         name: a.name ?? player?.name ?? "",
       };
     });

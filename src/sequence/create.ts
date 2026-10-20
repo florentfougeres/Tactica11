@@ -101,7 +101,7 @@ export function createSequence(
     title: lineup.name,
     subtitle: lineup.formation,
     showNames: true,
-    showNumbers: true,
+    discMode: "role",
     theme,
     actors,
     steps: [first],
@@ -160,7 +160,13 @@ export function migrateSequence(q: Sequence): Sequence {
     title: q.title ?? "",
     subtitle: q.subtitle ?? "",
     showNames: q.showNames ?? true,
-    showNumbers: q.showNumbers ?? true,
+    // Legacy "Texte dans les disques" off → nothing in our discs.
+    discMode:
+      q.discMode === "role" || q.discMode === "number" || q.discMode === "none"
+        ? q.discMode
+        : q.showNumbers === false
+          ? "none"
+          : "role",
     // Sequences made with the retired "sober" style get the default colours.
     theme: (q as { preset?: string }).preset === "sober" ? { ...DEFAULT_THEME } : { ...DEFAULT_THEME, ...(q.theme ?? {}) },
     actors,
