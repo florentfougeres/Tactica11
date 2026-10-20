@@ -5,6 +5,7 @@ import { exportPitchPng } from "../exportImage";
 import PitchMarkings from "./PitchMarkings";
 import StudioToken from "./StudioToken";
 import ColorSwatchRow from "./ColorSwatchRow";
+import Switch from "./Switch";
 
 interface Props {
   lineup: Lineup;
@@ -136,62 +137,14 @@ export default function StudioView({
               </button>
             ))}
           </div>
-          <label className="pitch-ctl__row">
-            <span>Afficher les lignes du terrain</span>
-            <span className="switch">
-              <input
-                type="checkbox"
-                checked={settings.showLines}
-                onChange={(e) =>
-                  onPatchSettings({ showLines: e.target.checked })
-                }
-              />
-              <span className="switch__track" />
-              <span className="switch__thumb" />
-            </span>
-          </label>
+          <Switch label="Afficher les lignes du terrain" checked={settings.showLines} onChange={(v) => onPatchSettings({ showLines: v })} />
         </section>
 
         <section className="studio-section">
           <span className="influence-ctl__label">Affichage</span>
-          <label className="pitch-ctl__row">
-            <span>Postes</span>
-            <span className="switch">
-              <input
-                type="checkbox"
-                checked={settings.showRole}
-                onChange={(e) => onPatchSettings({ showRole: e.target.checked })}
-              />
-              <span className="switch__track" />
-              <span className="switch__thumb" />
-            </span>
-          </label>
-          <label className="pitch-ctl__row">
-            <span>Noms</span>
-            <span className="switch">
-              <input
-                type="checkbox"
-                checked={settings.showName}
-                onChange={(e) => onPatchSettings({ showName: e.target.checked })}
-              />
-              <span className="switch__track" />
-              <span className="switch__thumb" />
-            </span>
-          </label>
-          <label className="pitch-ctl__row">
-            <span>Numéros</span>
-            <span className="switch">
-              <input
-                type="checkbox"
-                checked={settings.showNumber}
-                onChange={(e) =>
-                  onPatchSettings({ showNumber: e.target.checked })
-                }
-              />
-              <span className="switch__track" />
-              <span className="switch__thumb" />
-            </span>
-          </label>
+          <Switch label="Postes" checked={settings.showRole} onChange={(v) => onPatchSettings({ showRole: v })} />
+          <Switch label="Noms" checked={settings.showName} onChange={(v) => onPatchSettings({ showName: v })} />
+          <Switch label="Numéros" checked={settings.showNumber} onChange={(v) => onPatchSettings({ showNumber: v })} />
           <div className="pitch-ctl__slider">
             <span>Police</span>
             <input

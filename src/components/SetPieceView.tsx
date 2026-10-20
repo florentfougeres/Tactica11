@@ -14,6 +14,7 @@ import AutoplayControl from "./AutoplayControl";
 import SetPieceList, { type OnPitchPlayer } from "./SetPieceList";
 import SetPiecePitch from "./SetPiecePitch";
 import SetPieceStateToggle from "./SetPieceStateToggle";
+import Switch from "./Switch";
 
 type SetPieceActions = ReturnType<typeof useSetPieceActions>;
 
@@ -198,31 +199,9 @@ export default function SetPieceView({
         ))}
       </div>
 
-      <label className="pitch-ctl__row">
-        <span>Afficher les numéros</span>
-        <span className="switch">
-          <input
-            type="checkbox"
-            checked={showNumbers}
-            onChange={(e) => onShowNumbers(e.target.checked)}
-          />
-          <span className="switch__track" />
-          <span className="switch__thumb" />
-        </span>
-      </label>
+      <Switch label="Afficher les numéros" checked={showNumbers} onChange={onShowNumbers} />
 
-      <label className="pitch-ctl__row">
-        <span>Adversaires</span>
-        <span className="switch">
-          <input
-            type="checkbox"
-            checked={opponentMode}
-            onChange={(e) => onOpponentMode(e.target.checked)}
-          />
-          <span className="switch__track" />
-          <span className="switch__thumb" />
-        </span>
-      </label>
+      <Switch label="Adversaires" checked={opponentMode} onChange={onOpponentMode} />
       {opponentMode && (
         <button
           type="button"
@@ -255,18 +234,7 @@ export default function SetPieceView({
         </div>
       )}
 
-      <label className="pitch-ctl__row">
-        <span>Dessin</span>
-        <span className="switch">
-          <input
-            type="checkbox"
-            checked={drawMode}
-            onChange={(e) => onDrawMode(e.target.checked)}
-          />
-          <span className="switch__track" />
-          <span className="switch__thumb" />
-        </span>
-      </label>
+      <Switch label="Dessin" checked={drawMode} onChange={onDrawMode} />
     </div>
   );
 

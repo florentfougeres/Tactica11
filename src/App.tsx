@@ -43,6 +43,7 @@ import SetPieceView from "./components/SetPieceView";
 import StudioView from "./components/StudioView";
 import SequenceView from "./components/sequence/SequenceView";
 import { useSequenceActions } from "./hooks/useSequenceActions";
+import Switch from "./components/Switch";
 
 // French phase labels, used to suffix exported PNG filenames.
 const PHASE_LABEL: Record<Phase, string> = {
@@ -436,48 +437,15 @@ export default function App() {
         </div>
       )}
 
-      <label className="pitch-ctl__row">
-        <span>Afficher la grille</span>
-        <span className="switch">
-          <input
-            type="checkbox"
-            checked={showGrid}
-            onChange={(e) => setShowGrid(e.target.checked)}
-          />
-          <span className="switch__track" />
-          <span className="switch__thumb" />
-        </span>
-      </label>
+      <Switch label="Afficher la grille" checked={showGrid} onChange={setShowGrid} />
 
       {phase === "base" && (
-        <label className="pitch-ctl__row">
-          <span>Afficher les numéros</span>
-          <span className="switch">
-            <input
-              type="checkbox"
-              checked={showNumbers}
-              onChange={(e) => setShowNumbers(e.target.checked)}
-            />
-            <span className="switch__track" />
-            <span className="switch__thumb" />
-          </span>
-        </label>
+        <Switch label="Afficher les numéros" checked={showNumbers} onChange={setShowNumbers} />
       )}
 
       {phase !== "base" && (
         <>
-          <label className="pitch-ctl__row">
-            <span>Adversaires</span>
-            <span className="switch">
-              <input
-                type="checkbox"
-                checked={opponentMode}
-                onChange={toggleOpponentMode}
-              />
-              <span className="switch__track" />
-              <span className="switch__thumb" />
-            </span>
-          </label>
+          <Switch label="Adversaires" checked={opponentMode} onChange={toggleOpponentMode} />
           {opponentMode && (
             <div
               className="opp-colors-row"
