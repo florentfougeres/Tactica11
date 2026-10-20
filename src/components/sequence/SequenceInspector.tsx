@@ -427,6 +427,7 @@ function SelectionTab(props: Props) {
             ))}
           </div>
           <Switch label="Gardien" checked={!!single.gk} onChange={(v) => actions.patchActor(seq.id, single.id, { gk: v })} />
+          <Switch label="Traînée de mouvement" checked={single.trail !== false} onChange={(v) => actions.patchActor(seq.id, single.id, { trail: v })} />
           <div className="seq-btn-row">
             <button
               type="button"
@@ -699,8 +700,7 @@ function SettingsTab({ seq, actions }: Props) {
       </label>
       <Switch label="Noms des joueurs" checked={seq.showNames} onChange={(v) => patch({ showNames: v })} />
       <Switch label="Grille positionnelle" checked={!!seq.showGrid} onChange={(v) => patch({ showGrid: v })} />
-      <Switch label="Traînées de mouvement" checked={seq.trails !== false} onChange={(v) => patch({ trails: v })} />
-      {seq.trails !== false && (
+      {(
         <div className="seq-field">
           <span>Couleur des traînées</span>
           <Swatches value={seq.trailColor || seq.theme.accent} onPick={(c) => patch({ trailColor: c })} colors={["#f4c531", "#d7ff3a", "#3effa0", "#3fd8ff", "#ff4fd8", "#ffffff"]} />

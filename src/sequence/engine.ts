@@ -272,7 +272,7 @@ export function frameAt(seq: Sequence, t: number): FrameState {
 
   // Trails: drawn while moving, then fading out during the hold.
   const trails: TrailFrame[] = [];
-  if (seq.trails !== false && head.index > 0) {
+  if (head.index > 0) {
     const prev = head.holding ? positionsOf(seq, steps[head.index - 1]) : posFrom;
     let opacity = 1;
     if (head.holding) {
@@ -281,6 +281,7 @@ export function frameAt(seq: Sequence, t: number): FrameState {
     }
     if (opacity > 0.01)
       seq.actors.forEach((a) => {
+        if (a.trail === false) return;
         const f = prev[a.id];
         const tt = posTo[a.id];
         if (f && tt && Math.hypot(f.x - tt.x, f.y - tt.y) > 1.5)

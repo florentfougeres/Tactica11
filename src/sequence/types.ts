@@ -23,6 +23,7 @@ export interface SeqActor {
   label?: string; // text inside the disc (overrides number/role)
   name?: string; // label under the disc (overrides the roster name)
   gk?: boolean;
+  trail?: boolean; // highlighter trail when moving (default on)
 }
 
 // Where the ball is at a given step: a free spot, or at a player's feet (it
@@ -119,7 +120,6 @@ export interface Sequence {
   showNames: boolean;
   showNumbers?: boolean; // legacy (pre-discMode): false meant empty discs
   showGrid?: boolean; // juego de posición zones, as on the Compo tab
-  trails?: boolean; // highlighter trail behind moving players (default on)
   trailColor?: string;
   homeDiscScale?: number; // disc size of our team, 1 = default
   awayDiscScale?: number; // disc size of the opponents, 1 = default
