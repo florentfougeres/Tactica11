@@ -31,6 +31,9 @@ interface Props {
   focusLabel: number;
   actions: SequenceActions;
   onSeqId: (id: string | null) => void;
+  onCreated: (id: string) => void; // new / duplicated sequence → open + rename
+  autoRename: boolean;
+  onRenameDone: () => void;
   onSelectActors: (s: Set<string>) => void;
   onSelectAnn: (id: string | null) => void;
   onPropagate: (v: boolean) => void;
@@ -75,8 +78,13 @@ function Swatches({ value, onPick, colors = SEQ_COLORS }: { value: string; onPic
 }
 
 export default function SequenceInspector(props: Props) {
-  const { seq, sequences, selActors, selAnn, actions, onSeqId } = props;
+  const { seq, sequences, selActors, selAnn, actions, onSeqId, onCreated, autoRename, onRenameDone } = props;
   const [tab, setTab] = useState<Tab>("step");
+  const [renaming, setRenaming] = useState(autoRename);
+  const stopRenaming = () => {
+    setRenaming(false);
+    onRenameDone();
+  };
   const [newOpen, setNewOpen] = useState(false);
 
   // Jump to the selection tab whenever something gets selected.
@@ -89,7 +97,7 @@ export default function SequenceInspector(props: Props) {
 
   const create = (phase: Phase) => {
     setNewOpen(false);
-    onSeqId(actions.createSeq(phase));
+    onCreated(actions.createSeq(phase));
   };
 
   return (
@@ -100,12 +108,33 @@ export default function SequenceInspector(props: Props) {
       </header>
 
       <div className="seq-panel__picker">
-        <FmSelect
-          value={seq.id}
-          options={sequences.map((q) => ({ value: q.id, label: q.name || "Sans nom" }))}
-          onChange={(id) => onSeqId(id)}
-          ariaLabel="Séquence affichée"
-        />
+        {renaming ? (
+          <input
+            className="seq-input seq-panel__rename"
+            autoFocus
+            value={seq.name}
+            placeholder="Nom de la séquence"
+            aria-label="Nom de la séquence"
+            onFocus={(e) => e.target.select()}
+            onChange={(e) => actions.patchSeq(seq.id, { name: e.target.value })}
+            onBlur={stopRenaming}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === "Escape") (e.target as HTMLInputElement).blur();
+            }}
+          />
+        ) : (
+          <div className="seq-panel__picker-row">
+            <FmSelect
+              value={seq.id}
+              options={sequences.map((q) => ({ value: q.id, label: q.name || "Sans nom" }))}
+              onChange={(id) => onSeqId(id)}
+              ariaLabel="Séquence affichée"
+            />
+            <button type="button" className="seq-tbtn" onClick={() => setRenaming(true)} title="Renommer la séquence" aria-label="Renommer la séquence">
+              ✎
+            </button>
+          </div>
+        )}
         <div className="seq-panel__picker-actions">
           <button type="button" className="pitch-ctl__btn" onClick={() => setNewOpen((o) => !o)} aria-expanded={newOpen}>
             + Nouvelle
@@ -115,7 +144,7 @@ export default function SequenceInspector(props: Props) {
             className="pitch-ctl__btn"
             onClick={() => {
               const id = actions.duplicateSeq(seq.id);
-              if (id) onSeqId(id);
+              if (id) onCreated(id);
             }}
           >
             Dupliquer
@@ -550,6 +579,28 @@ function AnnotationForm({ seq, ann, actions, focusLabel, onSelectAnn, info }: Pr
           <input ref={textRef} className="seq-input" value={ann.text ?? ""} placeholder={ann.kind === "label" ? "4 CONTRE 3" : "Optionnel"} onChange={(e) => patch({ text: e.target.value })} />
         </label>
       )}
+      {(ann.kind === "zone" || ann.kind === "space" || ann.kind === "playerZone") && (
+        <div className="seq-field">
+          <span>Remplissage</span>
+          <div className="seg">
+            {(
+              [
+                ["solid", "Aplat"],
+                ["hatch", "Hachures"],
+              ] as const
+            ).map(([v, label]) => (
+              <button
+                key={v}
+                type="button"
+                className={`seg__btn ${(ann.fill ?? (ann.kind === "space" ? "hatch" : "solid")) === v ? "is-active" : ""}`}
+                onClick={() => patch({ fill: v })}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {(ann.kind === "circle" || ann.kind === "label") && (
         <label className="seq-field">
           <span>Taille ×{(ann.size ?? 1).toFixed(1)}</span>
@@ -648,6 +699,13 @@ function SettingsTab({ seq, actions }: Props) {
       </label>
       <Switch label="Noms des joueurs" checked={seq.showNames} onChange={(v) => patch({ showNames: v })} />
       <Switch label="Grille positionnelle" checked={!!seq.showGrid} onChange={(v) => patch({ showGrid: v })} />
+      <Switch label="Traînées de mouvement" checked={seq.trails !== false} onChange={(v) => patch({ trails: v })} />
+      {seq.trails !== false && (
+        <div className="seq-field">
+          <span>Couleur des traînées</span>
+          <Swatches value={seq.trailColor || seq.theme.accent} onPick={(c) => patch({ trailColor: c })} colors={["#f4c531", "#d7ff3a", "#3effa0", "#3fd8ff", "#ff4fd8", "#ffffff"]} />
+        </div>
+      )}
       <label className="seq-field">
         <span>Taille des disques — nous ×{(seq.homeDiscScale ?? 1).toFixed(2)}</span>
         <input type="range" min={0.6} max={1.8} step={0.05} value={seq.homeDiscScale ?? 1} onChange={(e) => patch({ homeDiscScale: Number(e.target.value) })} />

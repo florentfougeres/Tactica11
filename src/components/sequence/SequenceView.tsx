@@ -83,8 +83,14 @@ const clampPct = (v: number) => Math.min(104, Math.max(-4, v));
 export default function SequenceView({ lineup, players, look, playerById, actions, seqId, onSeqId }: Props) {
   const sequences = lineup.sequences ?? [];
   const seq: Sequence | null = sequences.find((q) => q.id === seqId) ?? sequences[0] ?? null;
+  // A freshly created / duplicated sequence opens with its name field focused.
+  const [renameId, setRenameId] = useState<string | null>(null);
+  const openCreated = (id: string) => {
+    setRenameId(id);
+    onSeqId(id);
+  };
 
-  if (!seq) return <SequenceEmpty actions={actions} onSeqId={onSeqId} />;
+  if (!seq) return <SequenceEmpty actions={actions} onSeqId={openCreated} />;
   return (
     <SequenceEditor
       key={seq.id}
@@ -95,6 +101,9 @@ export default function SequenceView({ lineup, players, look, playerById, action
       playerById={playerById}
       actions={actions}
       onSeqId={onSeqId}
+      onCreated={openCreated}
+      autoRename={renameId === seq.id}
+      onRenameDone={() => setRenameId(null)}
     />
   );
 }
@@ -133,6 +142,9 @@ function SequenceEditor({
   playerById,
   actions,
   onSeqId,
+  onCreated,
+  autoRename,
+  onRenameDone,
 }: {
   seq: Sequence;
   lineup: Lineup;
@@ -141,6 +153,9 @@ function SequenceEditor({
   playerById: (id: string | null) => Player | null;
   actions: SequenceActions;
   onSeqId: (id: string | null) => void;
+  onCreated: (id: string) => void;
+  autoRename: boolean;
+  onRenameDone: () => void;
 }) {
   // Editing view: the pitch alone fills the frame — title, chapters and
   // captions only appear in the preview / export.
@@ -799,6 +814,9 @@ function SequenceEditor({
         focusLabel={focusLabel}
         actions={actions}
         onSeqId={onSeqId}
+        onCreated={onCreated}
+        autoRename={autoRename}
+        onRenameDone={onRenameDone}
         onSelectActors={setSelActors}
         onSelectAnn={setSelAnn}
         onPropagate={setPropagate}

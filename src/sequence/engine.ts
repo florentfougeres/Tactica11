@@ -121,6 +121,18 @@ export interface GhostFrame {
   opacity: number;
 }
 
+// Highlighter trail: the path a player just travelled, fading out shortly
+// after arrival.
+export interface TrailFrame {
+  actorId: string;
+  from: Pos;
+  to: Pos;
+  opacity: number;
+}
+
+// How long a trail lingers once the player has arrived.
+export const TRAIL_FADE_MS = 1600;
+
 export interface FrameState {
   head: Playhead;
   positions: Record<string, Pos>;
@@ -128,6 +140,7 @@ export interface FrameState {
   camera: Camera;
   annotations: AnnFrame[];
   ghosts: GhostFrame[];
+  trails: TrailFrame[];
   focus: Record<string, number>; // actorId → halo strength 0..1
   dim: number; // 0..1 how much non-focused actors are faded
   caption: { text: string; karaoke: boolean; t: number; opacity: number } | null;
@@ -257,6 +270,24 @@ export function frameAt(seq: Sequence, t: number): FrameState {
     });
   }
 
+  // Trails: drawn while moving, then fading out during the hold.
+  const trails: TrailFrame[] = [];
+  if (seq.trails !== false && head.index > 0) {
+    const prev = head.holding ? positionsOf(seq, steps[head.index - 1]) : posFrom;
+    let opacity = 1;
+    if (head.holding) {
+      const since = Math.max(0, t - stepSpans(steps)[head.index].arrive);
+      opacity = Math.max(0, 1 - since / TRAIL_FADE_MS);
+    }
+    if (opacity > 0.01)
+      seq.actors.forEach((a) => {
+        const f = prev[a.id];
+        const tt = posTo[a.id];
+        if (f && tt && Math.hypot(f.x - tt.x, f.y - tt.y) > 1.5)
+          trails.push({ actorId: a.id, from: f, to: positions[a.id], opacity });
+      });
+  }
+
   // Focus halo / dimming cross-fade between the two steps.
   const focus: Record<string, number> = {};
   const fFrom = new Set(from.focusIds ?? []);
@@ -307,6 +338,7 @@ export function frameAt(seq: Sequence, t: number): FrameState {
     camera,
     annotations,
     ghosts,
+    trails,
     focus,
     dim,
     caption,

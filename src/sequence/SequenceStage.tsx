@@ -311,7 +311,7 @@ export default function SequenceStage({
 
     if (ann.kind === "zone" || ann.kind === "space" || ann.kind === "playerZone") {
       if (pts.length < 3) return null;
-      const hatch = ann.kind === "space";
+      const hatch = ann.fill ? ann.fill === "hatch" : ann.kind === "space";
       return (
         <g key={ann.id} {...common}>
           {hatch && (
@@ -336,7 +336,7 @@ export default function SequenceStage({
             strokeWidth={0.38 * u}
             strokeOpacity={0.95}
             strokeLinejoin="round"
-            strokeDasharray={hatch ? `${f(u)} ${f(u * 0.8)}` : undefined}
+            strokeDasharray={ann.kind === "space" ? `${f(u)} ${f(u * 0.8)}` : undefined}
           />
           {ann.text && <Pill x={centroid(pts).x} y={centroid(pts).y} text={ann.text} fs={2.1 * u} bg={color} fg="#0b0f14" />}
         </g>
@@ -585,6 +585,27 @@ export default function SequenceStage({
         {frame.annotations
           .filter((af) => ["zone", "space", "playerZone"].includes(af.ann.kind))
           .map((af) => annNode(af))}
+
+        {/* trails: highlighter stroke along the path just travelled */}
+        {frame.trails.map((tr) => {
+          const a = loc(tr.from);
+          const b = loc(tr.to);
+          const id = pid(`trail-${tr.actorId}`);
+          const color = seq.trailColor || T.accent;
+          const w = rOf(tr.actorId) * 1.35;
+          return (
+            <g key={`trail-${tr.actorId}`} opacity={tr.opacity} pointerEvents="none">
+              <defs>
+                <linearGradient id={id} gradientUnits="userSpaceOnUse" x1={a.x} y1={a.y} x2={b.x} y2={b.y}>
+                  <stop offset="0%" stopColor={color} stopOpacity={0} />
+                  <stop offset="35%" stopColor={color} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={color} stopOpacity={0.62} />
+                </linearGradient>
+              </defs>
+              <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={`url(#${id})`} strokeWidth={w} strokeLinecap="round" />
+            </g>
+          );
+        })}
 
         {/* ghosts: where moved players came from */}
         {frame.ghosts.map((g) => {

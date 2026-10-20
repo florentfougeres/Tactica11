@@ -90,6 +90,7 @@ export interface SeqAnnotation {
   text?: string;
   color: string;
   size?: number; // circle radius / label scale, 1 = default
+  fill?: "solid" | "hatch"; // zones: flat colour or hatching (default: hatch for "space")
   // Visible from step `fromStep` to step `toStep` (inclusive, by id).
   fromStep: string;
   toStep: string;
@@ -117,7 +118,9 @@ export interface Sequence {
   subtitle: string;
   showNames: boolean;
   showNumbers?: boolean; // legacy (pre-discMode): false meant empty discs
-  showGrid?: boolean; // juego de posición zones, as on the Terrain tab
+  showGrid?: boolean; // juego de posición zones, as on the Compo tab
+  trails?: boolean; // highlighter trail behind moving players (default on)
+  trailColor?: string;
   homeDiscScale?: number; // disc size of our team, 1 = default
   awayDiscScale?: number; // disc size of the opponents, 1 = default
   theme: SeqTheme;

@@ -684,3 +684,17 @@ select.seq-input {
 .seq-preview__bar .seg {
   flex: 0 0 auto;
 }
+
+.seq-panel__picker-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+.seq-panel__picker-row .fmselect {
+  flex: 1;
+  min-width: 0;
+}
+.seq-panel__rename {
+  border-color: var(--accent);
+  font-weight: 600;
+}
