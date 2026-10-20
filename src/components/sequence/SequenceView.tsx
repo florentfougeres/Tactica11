@@ -167,7 +167,8 @@ function SequenceEditor({
   const L = useMemo(() => frameLayout(seq, false), [seq]);
   const spans = useMemo(() => stepSpans(seq.steps), [seq.steps]);
   const duration = useMemo(() => totalDuration(seq.steps), [seq.steps]);
-  const pb = useSequencePlayback(duration);
+  // Open on step 1 itself (after its intro), ready to edit.
+  const pb = useSequencePlayback(duration, spans[0]?.arrive ?? 0);
   // The toolbars live in the app chrome (top bar), via portals.
   const [topSlot, setTopSlot] = useState<HTMLElement | null>(null);
   useLayoutEffect(() => {

@@ -3,13 +3,13 @@ import { AUTOPLAY_SPEEDS } from "./useAutoplay";
 
 // Linear playback of a sequence: a single time t (ms) advanced on rAF.
 // Everything on the stage is derived from t (see sequence/engine.ts).
-export function useSequencePlayback(duration: number) {
-  const [time, setTimeRaw] = useState(0);
+export function useSequencePlayback(duration: number, initial = 0) {
+  const [time, setTimeRaw] = useState(initial);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<number>(1);
   const [loop, setLoop] = useState(false);
 
-  const timeRef = useRef(0);
+  const timeRef = useRef(initial);
   const durRef = useRef(duration);
   const loopRef = useRef(loop);
   useLayoutEffect(() => {

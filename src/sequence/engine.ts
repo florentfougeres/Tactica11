@@ -20,9 +20,9 @@ export interface StepSpan {
   end: number; // ms — end of hold
 }
 
-// Step 0 has no incoming transition.
-export const effectiveTransition = (steps: SeqStep[], i: number) =>
-  i === 0 ? 0 : Math.max(0, steps[i].transitionMs);
+// Every step plays its transition, the first one too: nothing moves into it,
+// but its graphics draw themselves in (an intro).
+export const effectiveTransition = (steps: SeqStep[], i: number) => Math.max(0, steps[i].transitionMs);
 
 export function stepSpans(steps: SeqStep[]): StepSpan[] {
   const spans: StepSpan[] = [];
@@ -86,9 +86,9 @@ export function playheadAt(steps: SeqStep[], t: number): Playhead {
   const i = span.index;
   const segLen = Math.max(1, span.end - span.start);
   const segT = (tc - span.start) / segLen;
-  if (tc < span.arrive && i > 0) {
+  if (tc < span.arrive) {
     const p = (tc - span.start) / Math.max(1, span.arrive - span.start);
-    return { index: i, from: i - 1, p, e: ease(p, steps[i].easing), segT, holding: false };
+    return { index: i, from: Math.max(0, i - 1), p, e: ease(p, steps[i].easing), segT, holding: false };
   }
   return { index: i, from: i, p: 1, e: 1, segT, holding: true };
 }
@@ -190,10 +190,6 @@ export function chaptersOf(steps: SeqStep[]) {
   return out;
 }
 
-// How long arrows of the first step take to draw themselves in (nothing
-// travels into step 1, so they'd otherwise just pop up).
-const FIRST_STEP_DRAW_MS = 900;
-
 // Idle micro-movement ("living" players): a slow, smooth drift around the
 // step position, different for every player (seeded by id) and computed from
 // t alone, so preview and export always match. Amplitude in pitch %.
@@ -216,7 +212,7 @@ function idleOffset(id: string, t: number, amp: number): Pos {
   return { x: wave(0) * amp, y: wave(1) * amp };
 }
 
-// live=false (paused editor) shows step 1 fully drawn instead of animating it.
+// live=false (paused editor) freezes the idle micro-movement.
 export function frameAt(seq: Sequence, t: number, live = true): FrameState {
   const steps = seq.steps;
   const duration = totalDuration(steps);
@@ -282,13 +278,10 @@ export function frameAt(seq: Sequence, t: number, live = true): FrameState {
   const annotations: AnnFrame[] = [];
   seq.annotations.forEach((ann) => {
     const inTo = annVisibleAt(ann, idx, head.index);
-    const inFrom = annVisibleAt(ann, idx, head.from);
+    const inFrom = head.from !== head.index && annVisibleAt(ann, idx, head.from);
     let visibility = 0;
     let progress = 1;
-    if (head.holding) {
-      visibility = inTo ? 1 : 0;
-      if (inTo && live && head.index === 0) progress = Math.min(1, Math.max(0, t) / FIRST_STEP_DRAW_MS);
-    }    else if (inFrom && inTo) visibility = 1;
+    if (head.holding) visibility = inTo ? 1 : 0;    else if (inFrom && inTo) visibility = 1;
     else if (inTo) {
       visibility = Math.min(1, head.p * 2.5);
       progress = head.e;
