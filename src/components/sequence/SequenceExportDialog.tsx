@@ -97,21 +97,24 @@ export default function SequenceExportDialog({
             {seq.format === "9:16" ? "TikTok, Reels, Shorts" : seq.format === "16:9" ? "YouTube" : "Publication carrée"}
           </span>
         </div>
-        <div className="seq-field">
-          <span>Terrain</span>
-          <div className="seg">
-            {(
-              [
-                ["portrait", "Portrait"],
-                ["landscape", "Paysage"],
-              ] as const
-            ).map(([o, label]) => (
-              <button key={o} type="button" disabled={running} className={`seg__btn ${seq.orient === o ? "is-active" : ""}`} onClick={() => onOrient(o)}>
-                {label}
-              </button>
-            ))}
+        {/* Wide frame → horizontal pitch, tall → vertical: only the square leaves a choice. */}
+        {seq.format === "1:1" && (
+          <div className="seq-field">
+            <span>Terrain</span>
+            <div className="seg">
+              {(
+                [
+                  ["portrait", "Portrait"],
+                  ["landscape", "Paysage"],
+                ] as const
+              ).map(([o, label]) => (
+                <button key={o} type="button" disabled={running} className={`seg__btn ${seq.orient === o ? "is-active" : ""}`} onClick={() => onOrient(o)}>
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <div className="seq-export__thumb" style={{ width: thumbW, height: thumbH }}>
           <SequenceStage seq={seq} frame={thumb} layout={L} info={info} look={look} idPrefix="th" className="seq-preview__svg" />
         </div>

@@ -15,6 +15,9 @@ export class ExportUnsupported extends Error {}
 export const canExportVideo = () =>
   typeof window !== "undefined" && "VideoEncoder" in window;
 
+// Safari / WKWebView (Chromium browsers also say "AppleWebKit").
+const isWebKit = () => /AppleWebKit/.test(navigator.userAgent) && !/Chrome|Chromium|Edg\//.test(navigator.userAgent);
+
 function safeName(name: string): string {
   return name.trim().replace(/[^\p{L}\p{N}_-]+/gu, "_") || "sequence";
 }
@@ -99,6 +102,11 @@ export async function exportVideo(
   const source = new mb.CanvasSource(canvas, {
     codec,
     bitrate: mb.QUALITY_HIGH,
+    // WebKit's H.264 encoder (Safari, the macOS app) in "quality" mode holds
+    // every frame back and never outputs one, so the export froze at ~1%
+    // once mediabunny waited for its queue to drain. "realtime" outputs each
+    // frame right away; no frame gets dropped since we feed it one at a time.
+    ...(isWebKit() ? { latencyMode: "realtime" as const } : {}),
   });
   output.addVideoTrack(source, { frameRate: opts.fps });
   await output.start();

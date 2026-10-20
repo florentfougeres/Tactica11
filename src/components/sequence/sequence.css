@@ -194,19 +194,6 @@ select.seq-input {
   color: var(--text-dim);
   font-weight: 500;
 }
-.seq-color {
-  width: 26px;
-  height: 22px;
-  padding: 0;
-  border: 1px solid var(--panel-border);
-  border-radius: 6px;
-  background: none;
-  cursor: pointer;
-}
-.seq-color--wide {
-  width: 100%;
-  height: 30px;
-}
 .seq-kinds {
   display: flex;
   flex-wrap: wrap;

@@ -25,6 +25,26 @@ export default function SettingsTab({ seq, actions }: Props) {
         <input className="seq-input" value={seq.subtitle} onChange={(e) => patch({ subtitle: e.target.value })} placeholder="ex. 4-3-3" />
       </label>
       <Switch label="Noms des joueurs" checked={seq.showNames} onChange={(v) => patch({ showNames: v })} />
+      {seq.showNames && (
+        <>
+          <div className="seq-field">
+            <span>Couleur des noms</span>
+            <ColorSwatches ariaLabel="Couleur des noms" colors={SEQ_COLORS} value={seq.theme.nameText} onChange={(c) => theme("nameText", c)} />
+          </div>
+          <label className="seq-field">
+            <span>Taille des noms ×{(seq.nameScale ?? 1).toFixed(2)}</span>
+            <input type="range" min={0.6} max={1.8} step={0.05} value={seq.nameScale ?? 1} onChange={(e) => patch({ nameScale: Number(e.target.value) })} />
+          </label>
+          <Switch label="Noms en gras" checked={seq.nameBold !== false} onChange={(v) => patch({ nameBold: v })} />
+          <Switch label="Halo derrière les noms" checked={seq.nameHalo !== false} onChange={(v) => patch({ nameHalo: v })} />
+          {seq.nameHalo !== false && (
+            <div className="seq-field">
+              <span>Couleur du halo</span>
+              <ColorSwatches ariaLabel="Couleur du halo" colors={SEQ_COLORS} value={seq.theme.nameHalo} onChange={(c) => theme("nameHalo", c)} />
+            </div>
+          )}
+        </>
+      )}
       <div className="seq-field">
         <span>Joueurs vivants (micro-mouvements en lecture et à l'export)</span>
         <FmSelect
@@ -94,25 +114,21 @@ export default function SettingsTab({ seq, actions }: Props) {
           onChange2={(c) => theme("awayColor2", c)}
         />
       </div>
-      <div className="seq-field-row">
-        <label className="seq-field">
-          <span>Gardien (nous)</span>
-          <input type="color" className="seq-color seq-color--wide" value={seq.theme.homeGk} onChange={(e) => theme("homeGk", e.target.value)} />
-        </label>
-        <label className="seq-field">
-          <span>Gardien (adv.)</span>
-          <input type="color" className="seq-color seq-color--wide" value={seq.theme.awayGk} onChange={(e) => theme("awayGk", e.target.value)} />
-        </label>
+      <div className="seq-field">
+        <span>Gardien (nous)</span>
+        <ColorSwatches ariaLabel="Couleur du gardien (nous)" colors={SEQ_COLORS} value={seq.theme.homeGk} onChange={(c) => theme("homeGk", c)} />
       </div>
-      <div className="seq-field-row">
-        <label className="seq-field">
-          <span>Texte (nous)</span>
-          <input type="color" className="seq-color seq-color--wide" value={seq.theme.homeText} onChange={(e) => theme("homeText", e.target.value)} />
-        </label>
-        <label className="seq-field">
-          <span>Texte (adv.)</span>
-          <input type="color" className="seq-color seq-color--wide" value={seq.theme.awayText} onChange={(e) => theme("awayText", e.target.value)} />
-        </label>
+      <div className="seq-field">
+        <span>Gardien (adv.)</span>
+        <ColorSwatches ariaLabel="Couleur du gardien (adversaire)" colors={SEQ_COLORS} value={seq.theme.awayGk} onChange={(c) => theme("awayGk", c)} />
+      </div>
+      <div className="seq-field">
+        <span>Texte dans les disques (nous)</span>
+        <ColorSwatches ariaLabel="Couleur du texte des disques (nous)" colors={SEQ_COLORS} value={seq.theme.homeText} onChange={(c) => theme("homeText", c)} />
+      </div>
+      <div className="seq-field">
+        <span>Texte dans les disques (adv.)</span>
+        <ColorSwatches ariaLabel="Couleur du texte des disques (adversaire)" colors={SEQ_COLORS} value={seq.theme.awayText} onChange={(c) => theme("awayText", c)} />
       </div>
       <div className="seq-field">
         <span>Accent (mise en avant, sous-titres)</span>

@@ -14,6 +14,7 @@ import type { FrameLayout } from "./layout";
 import { cameraTransform, toLocal } from "./layout";
 import type { SeqActor, Sequence } from "./types";
 import { discScale, isArrow } from "./types";
+import { FONT, measure, textW, wrap } from "./text";
 
 // The stage follows the app's light / dark theme ("cinéma sombre" / "clair").
 export type SeqLook = "dark" | "light";
@@ -89,12 +90,6 @@ interface Props {
 }
 
 // Exactly the app's font stack (index.css), so the board reads like the Terrain tab.
-const FONT = "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
-
-// Text width estimate (no DOM measuring: the export renders to static markup).
-const textW = (s: string, fs: number, upper = false) =>
-  s.length * fs * (upper ? 0.66 : 0.58);
-
 type P = { x: number; y: number };
 const f = (n: number) => n.toFixed(1);
 
@@ -396,6 +391,7 @@ export default function SequenceStage({
     const discText = focus > 0.5 ? "#0b0f14" : textColor;
     const fs = inf.disc.length > 2 ? R * 0.62 : R * 0.74;
     const showName = seq.showNames && inf.name;
+    const nameFs = 2.15 * u * (seq.nameScale ?? 1);
     return (
       <g key={a.id} data-actor={a.id} opacity={opacity} style={overlay?.editable ? { cursor: "grab" } : undefined}>
         {focus > 0 && (
@@ -436,12 +432,15 @@ export default function SequenceStage({
         {showName && (
           <Pill
             x={c.x}
-            y={c.y + R + 2.3 * u}
+            // Halo: its top edge sits just under the disc. Bare text: the
+            // capitals do (no half-pill of padding above them).
+            y={c.y + R + 0.8 * u + (seq.nameHalo === false ? 0.4 : 0.7) * nameFs}
             text={inf.name}
-            fs={2.15 * u}
-            bg={focus > 0.5 ? T.accent : "rgba(8,12,18,0.8)"}
-            fg={focus > 0.5 ? "#0b0f14" : "#ffffff"}
-            weight={600}
+            fs={nameFs}
+            bg={seq.nameHalo === false ? undefined : focus > 0.5 ? T.accent : T.nameHalo}
+            bgOpacity={focus > 0.5 ? 1 : 0.85}
+            fg={focus > 0.5 && seq.nameHalo !== false ? "#0b0f14" : T.nameText}
+            weight={seq.nameBold === false ? 500 : 700}
             round
           />
         )}
@@ -495,11 +494,6 @@ export default function SequenceStage({
         </radialGradient>
         <linearGradient id={pid("top")} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={PAL.shade} stopOpacity={0.75} />
-          <stop offset="100%" stopColor={PAL.shade} stopOpacity={0} />
-        </linearGradient>
-        <linearGradient id={pid("left")} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor={PAL.shade} stopOpacity={0.55} />
-          <stop offset="80%" stopColor={PAL.shade} stopOpacity={0.35} />
           <stop offset="100%" stopColor={PAL.shade} stopOpacity={0} />
         </linearGradient>
         <linearGradient id={pid("bottom")} x1="0" y1="1" x2="0" y2="0">
@@ -662,11 +656,8 @@ export default function SequenceStage({
       {/* ---------- screen-space overlays (published look only) ---------- */}
       {chrome && (
         <>
-      {L.header?.mode === "top" && (
+      {L.header && (
         <rect x={0} y={0} width={L.W} height={L.header.y + L.header.h + L.pad} fill={`url(#${pid("top")})`} pointerEvents="none" />
-      )}
-      {L.header?.mode === "side" && (
-        <rect x={0} y={0} width={L.header.x + L.header.w + L.pad * 0.5} height={L.H} fill={`url(#${pid("left")})`} pointerEvents="none" />
       )}
       {/* Overlaid captions (9:16) rely on their outline, no dark band over the pitch. */}
       {L.caption && !L.caption.overlay && (
@@ -694,13 +685,13 @@ export default function SequenceStage({
           dy="0.35em"
           fontFamily={FONT}
           fontWeight={900}
-          fontSize={L.W * 0.12 * (0.85 + 0.15 * frame.effect.strength)}
+          fontSize={bigTextFs(frame.effect.text, L.W) * (0.85 + 0.15 * frame.effect.strength)}
           fill={frame.effect.color}
           stroke="#0b0f14"
           strokeWidth={L.W * 0.006}
           paintOrder="stroke"
           opacity={frame.effect.strength}
-          letterSpacing={L.W * 0.004}
+          letterSpacing={bigTextFs(frame.effect.text, L.W) * (0.85 + 0.15 * frame.effect.strength) * 0.04}
           pointerEvents="none"
         >
           {frame.effect.text.toUpperCase()}
@@ -725,6 +716,13 @@ const SEL_GLOW = {
   pointerEvents: "none" as const,
 };
 
+// Big effect text: 12% of the frame width, shrunk so the word(s) fit in
+// 90% of it (a long word in 16:9 used to run off both edges).
+function bigTextFs(text: string, W: number) {
+  const fs = W * 0.12;
+  return fs * Math.min(1, (W * 0.9) / Math.max(1, textW(text, fs, true, 900)));
+}
+
 function centroid(pts: P[]): P {
   const s = pts.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
   return { x: s.x / pts.length, y: s.y / pts.length };
@@ -736,6 +734,7 @@ function Pill({
   text,
   fs,
   bg,
+  bgOpacity,
   fg,
   upper = false,
   outline,
@@ -747,7 +746,8 @@ function Pill({
   y: number;
   text: string;
   fs: number;
-  bg: string;
+  bg?: string; // no background: bare text
+  bgOpacity?: number;
   fg: string;
   upper?: boolean;
   outline?: string;
@@ -755,15 +755,18 @@ function Pill({
   round?: boolean; // fully rounded, like the Terrain tab's name pills
   hit?: boolean; // catches clicks (texts are picked by their bubble)
 }) {
-  const w = textW(text, fs, upper) + fs * (round ? 1.4 : 1.1);
-  const h = fs * (round ? 1.5 : 1.55);
+  const h = fs * (round ? 1.4 : 1.55);
+  // Even padding around the measured text; a round pill's caps add h/2.
+  const w = textW(text, fs, upper, weight) + (round ? h * 0.75 : fs * 1.1);
+  const m = measure(upper ? text.toUpperCase() : text, weight);
   return (
     <g pointerEvents={hit ? undefined : "none"}>
-      <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={round ? h / 2 : fs * 0.32} fill={bg} stroke={outline} strokeWidth={outline ? fs * 0.12 : undefined} />
+      {bg && (
+        <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={round ? h / 2 : fs * 0.32} fill={bg} fillOpacity={bgOpacity} stroke={outline} strokeWidth={outline ? fs * 0.12 : undefined} />
+      )}
       <text
-        x={x}
-        y={y}
-        dy="0.36em"
+        x={x + (m && !upper ? m.inkDx * fs : 0)}
+        y={y + (m ? m.capDy : 0.36) * fs}
         textAnchor="middle"
         fontFamily={FONT}
         fontWeight={weight}
@@ -791,57 +794,50 @@ function Header({ seq, frame, L, pal }: { seq: Sequence; frame: FrameState; L: F
   const fillOf = (c: { start: number; end: number }) =>
     Math.min(1, Math.max(0, (frame.time - c.start) / Math.max(1, c.end - c.start)));
 
-  if (box.mode === "side") {
-    // Left column: title, subtitle, then the chapters as a vertical list,
-    // each with its own progress bar (current one in the accent colour).
-    const titleFs = base * 1.25;
-    const titleLines = title ? wrap(title.toUpperCase().split(/\s+/), titleFs, box.w, true) : [];
-    const words = title.toUpperCase().split(/\s+/);
-    let y = box.y + titleFs;
-    const nodes: ReactNode[] = [];
-    titleLines.forEach((li, k) => {
-      nodes.push(
-        <text key={`t${k}`} x={box.x} y={y} fontFamily={FONT} fontWeight={900} fontSize={titleFs} fill={pal.ink} letterSpacing={base * 0.06}>
-          {li.map((i) => words[i]).join(" ")}
-        </text>,
-      );
-      y += titleFs * 1.15;
-    });
-    if (sub) {
-      y += base * 0.2;
-      nodes.push(
-        <text key="sub" x={box.x} y={y} fontFamily={FONT} fontWeight={800} fontSize={base * 0.95} fill={accentText} letterSpacing={base * 0.05}>
-          {sub.toUpperCase()}
-        </text>,
-      );
-      y += base * 1.2;
-    }
-    {
-      y += base * 0.9;
-      chapters.forEach((c, i) => {
-        const cur = i === frame.chapterIndex || (frame.chapterIndex < 0 && chapters.length === 1);
-        const fill = fillOf(c);
-        if (c.title) {
-          nodes.push(
-            <text key={`c${i}`} x={box.x} y={y} fontFamily={FONT} fontWeight={800} fontSize={base * 0.72} fill={cur ? accentText : pal.ink} fillOpacity={cur ? 1 : 0.55} letterSpacing={base * 0.07}>
-              {c.title.toUpperCase()}
-            </text>,
+  if (box.mode === "line") {
+    // Wide frames: title and subtitle (or current chapter) on one line, the
+    // segmented progress bar right under it. Shrunk to fit if too long.
+    const label = (frame.chapterIndex >= 0 ? frame.chapters[frame.chapterIndex].title : "") || sub;
+    const gapX = base * 0.9;
+    const titleW = title ? textW(title, base * 1.05, true, 900) : 0;
+    const labelW = label ? base * 0.85 + textW(label, base * 0.85, true, 800) : 0;
+    const k = Math.min(1, box.w / Math.max(1, titleW + (title && label ? gapX : 0) + labelW));
+    const y = box.y + base * 0.95;
+    const labelX = box.x + (title ? (titleW + gapX) * k : 0);
+    const barY = box.y + base * 1.55;
+    const gap = base * 0.35;
+    const n = chapters.length;
+    const segW = (box.w - gap * (n - 1)) / n;
+    return (
+      <g pointerEvents="none">
+        {title && (
+          <text x={box.x} y={y} fontFamily={FONT} fontWeight={900} fontSize={base * 1.05 * k} fill={pal.ink} letterSpacing={base * 1.05 * k * 0.04}>
+            {title.toUpperCase()}
+          </text>
+        )}
+        {label && (
+          <g>
+            <rect x={labelX} y={y - base * 0.6 * k} width={base * 0.5 * k} height={base * 0.5 * k} fill={T.accent} />
+            <text x={labelX + base * 0.85 * k} y={y} fontFamily={FONT} fontWeight={800} fontSize={base * 0.85 * k} fill={accentText} letterSpacing={base * 0.85 * k * 0.04}>
+              {label.toUpperCase()}
+            </text>
+          </g>
+        )}
+        {chapters.map((c, i) => {
+          const fill = fillOf(c);
+          const x = box.x + i * (segW + gap);
+          return (
+            <g key={i}>
+              <rect x={x} y={barY} width={segW} height={base * 0.24} rx={base * 0.12} fill={pal.ink} fillOpacity={0.18} />
+              {fill > 0 && <rect x={x} y={barY} width={segW * fill} height={base * 0.24} rx={base * 0.12} fill={T.accent} />}
+            </g>
           );
-          y += base * 0.55;
-        }
-        nodes.push(
-          <g key={`b${i}`}>
-            <rect x={box.x} y={y} width={box.w} height={base * 0.22} rx={base * 0.11} fill={pal.ink} fillOpacity={0.16} />
-            {fill > 0 && <rect x={box.x} y={y} width={box.w * fill} height={base * 0.22} rx={base * 0.11} fill={T.accent} />}
-          </g>,
-        );
-        y += base * 1.35;
-      });
-    }
-    return <g pointerEvents="none">{nodes}</g>;
+        })}
+      </g>
+    );
   }
 
-  // ----- top band -----
+  // ----- stacked band (tall frames) -----
   const pad = box.x;
   // Cinema: brand line, segmented progress bar (one segment per chapter, or
   // a single bar), current chapter label.
@@ -880,23 +876,6 @@ function Header({ seq, frame, L, pal }: { seq: Sequence; frame: FrameState; L: F
   );
 }
 
-// Wrap words into lines that fit `maxW`.
-function wrap(words: string[], fs: number, maxW: number, upper: boolean) {
-  const lines: number[][] = [[]];
-  let w = 0;
-  const space = fs * 0.32;
-  words.forEach((word, i) => {
-    const ww = textW(word, fs, upper) + fs * 0.5;
-    if (w > 0 && w + ww > maxW) {
-      lines.push([]);
-      w = 0;
-    }
-    lines[lines.length - 1].push(i);
-    w += ww + space;
-  });
-  return lines;
-}
-
 function Caption({ seq, frame, L, pal }: { seq: Sequence; frame: FrameState; L: FrameLayout; pal: Palette }) {
   const cap = frame.caption;
   if (!cap) return null;
@@ -905,8 +884,13 @@ function Caption({ seq, frame, L, pal }: { seq: Sequence; frame: FrameState; L: 
   const words = cap.text.split(/\s+/).filter(Boolean).map((w) => (upper ? w.toUpperCase() : w));
   const box = L.caption;
   if (!box) return null;
-  const fs = L.captionFs;
-  const lines = wrap(words, fs, box.w, upper);
+  // The band holds two lines: a longer caption is set smaller to fit.
+  let fs = L.captionFs;
+  let lines = wrap(words, fs, box.w, upper);
+  while (lines.length > 2 && fs > L.captionFs * 0.5) {
+    fs *= 0.92;
+    lines = wrap(words, fs, box.w, upper);
+  }
   const lineH = fs * 1.35;
   // Overlay: lines grow upward from the anchor; band: centred vertically.
   const bottom = box.overlay ? box.y : box.y + box.h / 2 + ((lines.length - 1) * lineH) / 2;

@@ -4,12 +4,13 @@
 // identically.
 //
 // The header and caption areas are reserved only when they have something to
-// show, and never overlap the pitch: the pitch takes all the room left.
-// When the frame is wider than the pitch (16:9, or 1:1 with a vertical pitch)
-// the header moves to a left column if that gives the pitch more room.
+// show, and never overlap the pitch: the pitch takes all the room left,
+// centred with even margins. Tall frames stack the header (title, progress,
+// chapter); wide ones fit it on a single line to leave the pitch more height.
 import type { Orient, Pos } from "../types";
 import { posToPx } from "../types";
 import type { Camera, SeqFormat, Sequence } from "./types";
+import { wrap } from "./text";
 
 export interface Box {
   x: number;
@@ -27,7 +28,7 @@ export interface FrameLayout {
   pad: number;
   base: number; // header font unit
   captionFs: number;
-  header: (Box & { mode: "top" | "side" }) | null;
+  header: (Box & { mode: "stack" | "line" }) | null;
   // Captions: a reserved band under the pitch, or overlaid (vertical formats
   // keep them above the TikTok / Reels bottom UI, over the lower pitch).
   caption: (Box & { overlay: boolean }) | null;
@@ -42,7 +43,7 @@ export const FORMAT_SIZE: Record<SeqFormat, { W: number; H: number }> = {
 // The drawn grass apron extends 5% beyond the pitch lines on every side.
 const APRON = 1.1;
 
-type LayoutInput = Pick<Sequence, "format" | "orient" | "title" | "subtitle" | "steps">;
+type LayoutInput = Pick<Sequence, "format" | "orient" | "steps">;
 
 function fit(availW: number, availH: number, ratio: number) {
   const boxW = Math.max(1, Math.min(availW, availH * ratio));
@@ -56,56 +57,43 @@ function fit(availW: number, availH: number, ratio: number) {
 export function frameLayout(seq: LayoutInput, chrome = true): FrameLayout {
   if (!chrome) return editorLayout(seq.orient);
   const { W, H } = FORMAT_SIZE[seq.format];
-  const orient: Orient = seq.orient;
+  const orient = exportOrient(seq);
   const short = Math.min(W, H);
   const pad = Math.round(short * 0.03);
   const base = short * 0.028;
   const captionFs = short * 0.042;
   const ratio = orient === "portrait" ? 68 / 105 : 105 / 68; // pitch w / h
 
-  // The header always carries the progress bar (published look only).
-  const hasHeader = chrome;
-  const hasCaption = chrome && (seq.steps ?? []).some((s) => s.caption?.trim());
-  // Captions get their own band under the pitch — never drawn over it.
-  const capH = hasCaption ? captionFs * 1.35 * 2 + pad : 0;
+  // Captions get their own band under the pitch — never drawn over it —
+  // as tall as the longest one needs (two lines at most, longer ones are set
+  // smaller to fit).
+  const capLines = Math.max(
+    0,
+    ...(seq.steps ?? []).map((s) => {
+      const words = s.caption?.trim().split(/\s+/) ?? [];
+      return words.length ? Math.min(2, wrap(words, captionFs, W - 2 * pad, false).length) : 0;
+    }),
+  );
+  const hasCaption = capLines > 0;
+  const capH = hasCaption ? captionFs * 1.35 * capLines + pad : 0;
 
-  // --- option 1: header band on top ---
-  const headH = hasHeader ? pad + base * 4.4 : 0;
-  const topY = hasHeader ? headH + pad * 0.6 : pad;
-  const top = fit(W - 2 * pad, H - topY - capH - pad, ratio);
-
-  // --- option 2: header column on the left (frame wider than the pitch) ---
-  const colW = hasHeader ? Math.min(380, Math.max(260, W * 0.17)) : 0;
-  const side =
-    hasHeader && W / H > ratio * 1.1 ? fit(W - colW - 2 * pad, H - capH - 2 * pad, ratio) : null;
-
-  const useSide = !!side && side.w * side.h > top.w * top.h * 1.05;
-  const p = useSide ? side! : top;
+  // The header always carries the progress bar.
+  const mode = W > H * 0.9 ? "line" : "stack";
+  const headH = pad + base * (mode === "line" ? 2.3 : 4.4);
+  const topY = headH + pad * 0.6;
+  const p = fit(W - 2 * pad, H - topY - capH - pad, ratio);
   const apronH = p.h * APRON;
 
   // The pitch (with its grass apron) and the caption band below it form one
-  // block, centred in the space left by the header.
-  const regionX = useSide ? colW + pad : pad;
-  const regionW = W - regionX - pad;
-  const regionY = useSide ? pad : topY;
-  const regionH = H - regionY - pad;
-  const blockY = regionY + Math.max(0, (regionH - apronH - capH) / 2);
+  // block, centred in the space under the header.
+  const regionH = H - topY - pad;
+  const blockY = topY + Math.max(0, (regionH - apronH - capH) / 2);
   const pitch: Box = {
-    x: regionX + (regionW - p.w) / 2,
+    x: (W - p.w) / 2,
     y: blockY + (apronH - p.h) / 2,
     w: p.w,
     h: p.h,
   };
-
-  const header: FrameLayout["header"] = !hasHeader
-    ? null
-    : useSide
-      ? { mode: "side", x: pad, y: pad, w: colW - pad * 0.5, h: H - 2 * pad }
-      : { mode: "top", x: pad, y: pad, w: W - 2 * pad, h: headH - pad };
-
-  const caption: FrameLayout["caption"] = hasCaption
-    ? { overlay: false, x: regionX, y: blockY + apronH, w: regionW, h: capH }
-    : null;
 
   return {
     W,
@@ -116,9 +104,16 @@ export function frameLayout(seq: LayoutInput, chrome = true): FrameLayout {
     pad,
     base,
     captionFs,
-    header,
-    caption,
+    header: { mode, x: pad, y: pad, w: W - 2 * pad, h: headH - pad },
+    caption: hasCaption ? { overlay: false, x: pad, y: blockY + apronH, w: W - 2 * pad, h: capH } : null,
   };
+}
+
+// Pitch orientation of the published frame: a wide frame gets a horizontal
+// pitch, a tall one a vertical pitch; only the square format leaves the
+// choice (the sequence's own orientation, as in the editor).
+export function exportOrient(seq: Pick<Sequence, "format" | "orient">): Orient {
+  return seq.format === "16:9" ? "landscape" : seq.format === "9:16" ? "portrait" : seq.orient;
 }
 
 // Editing view: no output format at all — just the pitch (vertical or

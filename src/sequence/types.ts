@@ -110,6 +110,8 @@ export interface SeqTheme {
   awayText: string;
   awayGk: string;
   accent: string;
+  nameText: string; // players' names under the discs
+  nameHalo: string; // pill behind the names (when `nameHalo` is on)
 }
 
 export interface Sequence {
@@ -121,6 +123,9 @@ export interface Sequence {
   title: string; // header line (brand / topic)
   subtitle: string;
   showNames: boolean;
+  nameHalo?: boolean; // pill behind the names (default on)
+  nameScale?: number; // names' font size, 1 = default
+  nameBold?: boolean; // names in bold (default on)
   showNumbers?: boolean; // legacy (pre-discMode): false meant empty discs
   showGrid?: boolean; // juego de posición zones, as on the Compo tab
   trailColor?: string;
@@ -143,6 +148,8 @@ export const DEFAULT_THEME: SeqTheme = {
   awayText: "#f2f2ee",
   awayGk: "#5b6675",
   accent: "#f4c531",
+  nameText: "#ffffff",
+  nameHalo: "#0b0f14",
 };
 
 export const ARROW_LABEL: Record<ArrowKind, string> = {
