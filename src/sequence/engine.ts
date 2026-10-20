@@ -288,7 +288,7 @@ export function frameAt(seq: Sequence, t: number, live = true): FrameState {
     }
     if (opacity > 0.01)
       seq.actors.forEach((a) => {
-        if (a.trail === false) return;
+        if (!a.trail) return;
         const f = prev[a.id];
         const tt = posTo[a.id];
         if (f && tt && Math.hypot(f.x - tt.x, f.y - tt.y) > 1.5)

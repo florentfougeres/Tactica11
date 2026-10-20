@@ -23,7 +23,7 @@ export interface SeqActor {
   label?: string; // text inside the disc (overrides number/role)
   name?: string; // label under the disc (overrides the roster name)
   gk?: boolean;
-  trail?: boolean; // highlighter trail when moving (default on)
+  trail?: boolean; // highlighter trail when moving (default off)
 }
 
 // Where the ball is at a given step: a free spot, or at a player's feet (it

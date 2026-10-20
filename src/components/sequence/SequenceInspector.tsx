@@ -427,7 +427,7 @@ function SelectionTab(props: Props) {
             ))}
           </div>
           <Switch label="Gardien" checked={!!single.gk} onChange={(v) => actions.patchActor(seq.id, single.id, { gk: v })} />
-          <Switch label="Traînée de mouvement" checked={single.trail !== false} onChange={(v) => actions.patchActor(seq.id, single.id, { trail: v })} />
+          <Switch label="Traînée de mouvement" checked={!!single.trail} onChange={(v) => actions.patchActor(seq.id, single.id, { trail: v })} />
           <div className="seq-btn-row">
             <button
               type="button"
