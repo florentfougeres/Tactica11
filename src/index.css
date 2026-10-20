@@ -68,3 +68,23 @@ button {
 button {
   cursor: pointer;
 }
+
+/* Keyboard focus ring for every control. Text inputs keep their own focus
+   style (accent border), the rest had none at all. */
+:is(button, a, summary, [role="button"], [role="tab"], [tabindex], input[type="checkbox"], input[type="radio"], input[type="range"], input[type="color"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Respect the system "reduce motion" setting for interface transitions.
+   Framer Motion springs are handled by <MotionConfig reducedMotion="user">. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

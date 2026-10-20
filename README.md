@@ -95,7 +95,8 @@ utilise la version web / PWA.
   - Barre d'outils dans la barre du haut, qui se compacte en menus quand la
     fenêtre est étroite.
 - **Studio** : génère un visuel de compo façon poster (fond 2D/3D, disques ou
-  maillots, portrait/paysage) à exporter en image pour les réseaux sociaux.
+  maillots, portrait/paysage) à exporter en image pour les réseaux sociaux,
+  accessible depuis le menu **Partager**.
 - **Grille positionnelle** en surimpression.
 - **Thème clair / sombre** avec bascule dans la barre du haut.
 - **Mode présentation plein écran** avec tiroir d'outils repliable.

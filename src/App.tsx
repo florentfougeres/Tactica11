@@ -605,6 +605,7 @@ export default function App() {
             <Bench
               ref={benchRef}
               players={benchPlayers}
+              rosterSize={project.players.length}
               onRename={renamePlayer}
               onSetNumber={setPlayerNumber}
               onRemove={removePlayer}

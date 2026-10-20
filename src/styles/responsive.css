@@ -7,4 +7,24 @@
   .topbar__label {
     display: none;
   }
+
+  /* Compo shows three fields (projet, compo, système) plus the actions:
+     on one line the last buttons were pushed off-screen. The fields move
+     to a second line, where the names get the full width. */
+  .topbar--pitch {
+    flex-wrap: wrap;
+  }
+  .topbar--pitch::after {
+    content: "";
+    order: 1;
+    flex-basis: 100%;
+  }
+  .topbar--pitch .topbar__field {
+    order: 2;
+    margin-top: 10px;
+  }
+  .topbar--pitch .topbar__field--name {
+    flex: 1 1 0;
+    max-width: none;
+  }
 }

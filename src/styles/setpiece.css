@@ -337,10 +337,29 @@
 
 .sp-empty {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   text-align: center;
   color: var(--text-dim);
   font-size: 14px;
+  line-height: 1.5;
   padding: 40px;
+}
+.sp-empty p {
+  margin: 0;
+  max-width: 42ch;
+}
+.sp-empty__title {
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 700;
+}
+.sp-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
 }

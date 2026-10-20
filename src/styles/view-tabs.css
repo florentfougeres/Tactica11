@@ -16,7 +16,7 @@
 .view-tabs {
   display: inline-flex;
   align-self: flex-start;
-  gap: 18px;
+  gap: 16px;
   margin: 0;
   border-bottom: 1px solid var(--panel-border);
 }
@@ -27,6 +27,7 @@
   padding: 6px 1px 10px;
   font-weight: 600;
   font-size: 13px;
+  white-space: nowrap;
   color: var(--text-dim);
   transition: color 0.15s;
 }

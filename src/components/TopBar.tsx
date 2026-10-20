@@ -101,7 +101,7 @@ export default function TopBar({
   };
 
   return (
-    <header className="topbar glass">
+    <header className={`topbar topbar--${view} glass`}>
       <div className="brand">
         <span className="brand__mark">⬡</span>
         <span className="brand__name">
@@ -383,6 +383,21 @@ export default function TopBar({
                   <span>{copied ? "Lien copié ✓" : "Copier le lien (cette compo)"}</span>
                   <span className="export-menu__ext">URL</span>
                 </button>
+                {/* Studio lives here rather than as a lone icon: it is the
+                    poster-style share visual, so it belongs with sharing. It
+                    works from the base positions only. */}
+                <button
+                  role="menuitem"
+                  disabled={phase !== "base"}
+                  title={phase !== "base" ? "Disponible en phase Base" : undefined}
+                  onClick={() => {
+                    setExportOpen(false);
+                    onStudio();
+                  }}
+                >
+                  <span>Créer un visuel (Studio)</span>
+                  <span className="export-menu__ext">{phase !== "base" ? "Base" : "poster"}</span>
+                </button>
               </div>
             )}
           </div>
@@ -432,24 +447,6 @@ export default function TopBar({
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        )}
-        {view === "pitch" && phase === "base" && (
-          <button
-            className="btn btn--icon"
-            onClick={onStudio}
-            title="Studio : visuel à partager"
-            aria-label="Studio : visuel à partager"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M8 3 L4 6 L6 9 L8 7 L8 20 L16 20 L16 7 L18 9 L20 6 L16 3 C14 5 10 5 8 3 Z"
                 stroke="currentColor"
                 strokeWidth="1.8"
                 strokeLinecap="round"

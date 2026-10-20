@@ -291,7 +291,19 @@ export default function SetPieceView({
         />
       ) : (
         <div className="sp-empty glass">
-          <p>Crée un corner ou un coup franc pour commencer.</p>
+          <p className="sp-empty__title">Prépare tes coups de pied arrêtés</p>
+          <p>
+            Place tes joueurs avant et après le ballon, et dessine les courses
+            et les zones.
+          </p>
+          <div className="sp-empty__actions">
+            <button type="button" className="btn btn--primary" onClick={() => sp.newSetPiece("corner")}>
+              Créer un corner
+            </button>
+            <button type="button" className="btn" onClick={() => sp.newSetPiece("free-kick")}>
+              Créer un coup franc
+            </button>
+          </div>
         </div>
       )}
     </>

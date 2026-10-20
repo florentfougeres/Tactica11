@@ -16,47 +16,47 @@ const STEPS: Step[] = [
   {
     icon: "⬡",
     title: "Bienvenue sur Tactica11",
-    body: "Construisez vos compos et mises en place tactiques de football, directement dans le navigateur. Rien à installer, tout reste sur votre appareil.",
+    body: "Construis tes compos et mises en place tactiques de football, directement dans le navigateur. Rien à installer, tout reste sur ton appareil.",
   },
   {
     icon: "📋",
     title: "Formations prêtes à l'emploi",
-    body: "Choisissez un système (4-3-3, 4-2-3-1, 3-5-2…) dans la barre du haut. Les onze joueurs se replacent au ressort à chaque changement.",
+    body: "Choisis un système (4-3-3, 4-2-3-1, 3-5-2…) dans la barre du haut. Les onze joueurs se replacent au ressort à chaque changement.",
   },
   {
     icon: "🔀",
     title: "Phases de jeu",
-    body: "Basculez entre base, attaque et défense : chaque emplacement garde ses propres positions. Le slider Déf ↔ Att anime la transition.",
+    body: "Bascule entre base, attaque et défense : chaque emplacement garde ses propres positions. Le slider Déf ↔ Att anime la transition.",
   },
   {
     icon: "👥",
     title: "Effectif & placement",
-    body: "Glissez vos joueurs depuis le vivier vers le terrain, ou déplacez-les librement en attaque et en défense. Titulaires, remplaçants et numéros de maillot inclus.",
+    body: "Glisse tes joueurs depuis le vivier vers le terrain, ou déplace-les librement en attaque et en défense. Titulaires, remplaçants et numéros de maillot inclus.",
   },
   {
     icon: "🎯",
     title: "Zones d'influence",
-    body: "Affichez la zone de couverture d'un joueur ou de toute l'équipe, avec des presets de rôles ajustables à la main.",
+    body: "Affiche la zone de couverture d'un joueur ou de toute l'équipe, avec des presets de rôles ajustables à la main.",
   },
   {
     icon: "🟦",
     title: "Adversaires",
-    body: "Placez les onze disques adverses en attaque et en défense, avec un sélecteur de couleur, pour illustrer le bloc d'en face.",
+    body: "Place les onze disques adverses en attaque et en défense, avec un sélecteur de couleur, pour illustrer le bloc d'en face.",
   },
   {
     icon: "🎬",
     title: "Séquence : raconter une action",
-    body: "Dans l'onglet Séquence, découpez une action en étapes animées : déplacez les deux équipes, faites circuler le ballon, ajoutez flèches, zones (glissez pour un rectangle), textes, traînées et joueurs « vivants ». La timeline enchaîne transitions et maintiens.",
+    body: "Dans l'onglet Séquence, découpe une action en étapes animées : déplace les deux équipes, fais circuler le ballon, ajoute flèches, zones (glisse pour un rectangle), textes, traînées et joueurs « vivants ». La timeline enchaîne transitions et maintiens.",
   },
   {
     icon: "📹",
     title: "Aperçu & export vidéo",
-    body: "Lancez l'aperçu plein écran puis exportez la séquence en MP4 (9:16, 16:9 ou 1:1, portrait ou paysage) avec titre, chapitres et sous-titres karaoké, prête pour TikTok, Reels ou YouTube.",
+    body: "Lance l'aperçu plein écran puis exporte la séquence en MP4 (9:16, 16:9 ou 1:1, portrait ou paysage) avec titre, chapitres et sous-titres karaoké, prête pour TikTok, Reels ou YouTube.",
   },
   {
     icon: "🖥️",
     title: "Présentation & partage",
-    body: "Passez en plein écran pour le vestiaire, créez un visuel dans le Studio, puis partagez par lien, exportez en image PNG ou en fichier .json. Tout est sauvegardé localement, et une app Mac est disponible.",
+    body: "Passe en plein écran pour le vestiaire, crée un visuel avec le Studio (menu Partager), puis partage par lien, exporte en image PNG ou en fichier .json. Tout est sauvegardé localement, et une app Mac est disponible.",
   },
 ];
 

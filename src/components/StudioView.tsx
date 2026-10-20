@@ -93,7 +93,7 @@ export default function StudioView({
             ))}
           </div>
           <ColorSwatchRow
-            label="Couleur du maillot/rond"
+            label="Couleur des jetons"
             colors={STUDIO_DISC_COLORS}
             value={settings.discColor}
             onChange={(c) => onPatchSettings({ discColor: c })}

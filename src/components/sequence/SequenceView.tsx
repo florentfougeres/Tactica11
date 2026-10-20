@@ -275,6 +275,8 @@ function SequenceEditor({
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const k = e.key;
       if (k === " ") {
+        // Space on a focused button activates that button, not playback.
+        if (t?.closest("button, [role='button']")) return;
         e.preventDefault();
         spaceDown.current = true;
         return;
@@ -328,7 +330,7 @@ function SequenceEditor({
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.key !== " ") return;
       const t = e.target as HTMLElement | null;
-      if (t && /^(input|textarea|select|button)$/i.test(t.tagName)) {
+      if (t && (/^(input|textarea|select|button)$/i.test(t.tagName) || t.closest("[role='button']"))) {
         spaceDown.current = false;
         return;
       }

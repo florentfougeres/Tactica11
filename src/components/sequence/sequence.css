@@ -586,9 +586,13 @@ select.seq-input {
   line-height: 1.4;
 }
 
+/* iPad portrait / narrow: the inspector goes on top and the stage keeps the
+   larger share of the height. With a single auto row the stage collapsed to
+   0px, so both rows are sized explicitly and the inspector scrolls inside. */
 @media (max-width: 900px) {
   .layout--seq {
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 2fr) minmax(0, 3fr);
   }
 }
 

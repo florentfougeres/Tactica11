@@ -68,9 +68,7 @@ export default function SetPieceList({
 
       <div className="sp-list__items">
         {setPieces.length === 0 && (
-          <p className="bench__empty">
-            Crée un corner ou un coup franc pour commencer.
-          </p>
+          <p className="bench__empty">Aucune phase arrêtée pour cette compo.</p>
         )}
         {setPieces.map((sp) => (
           <SetPieceRow

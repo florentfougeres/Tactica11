@@ -148,6 +148,16 @@ export default function SequenceTimeline({
               className={`seq-block ${i === current ? "is-current" : ""} ${dragOver === i ? "is-over" : ""}`}
               style={{ flexGrow: len, flexBasis: 0 }}
               draggable
+              role="button"
+              tabIndex={0}
+              aria-label={`Étape ${i + 1}${s.name ? ` : ${s.name}` : ""}`}
+              aria-current={i === current ? "step" : undefined}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSelectStep(i);
+                }
+              }}
               onDragStart={(e) => {
                 setDragFrom(i);
                 e.dataTransfer.effectAllowed = "move";

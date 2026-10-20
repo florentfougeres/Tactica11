@@ -190,7 +190,7 @@ export default function RosterTable({
       <div className="roster-page__body">
         <p className="modal__hint">
           Cette base est partagée par toutes les compos du projet : modifier
-          un joueur ici l'actualise partout. Cliquez sur une cellule pour la
+          un joueur ici l'actualise partout. Clique sur une cellule pour la
           modifier, sur un en-tête pour trier.
         </p>
 

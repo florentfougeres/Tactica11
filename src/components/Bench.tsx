@@ -5,6 +5,7 @@ import type { Player } from "../types";
 
 interface Props {
   players: Player[]; // bench players (not on pitch)
+  rosterSize: number; // whole roster, to tell "no players yet" from "all placed"
   onRename: (playerId: string, name: string) => void;
   onSetNumber: (playerId: string, number: number | null) => void;
   onRemove: (playerId: string) => void;
@@ -20,6 +21,7 @@ interface Props {
 const Bench = forwardRef<HTMLElement, Props>(function Bench(
   {
     players,
+    rosterSize,
     onRename,
     onSetNumber,
     onRemove,
@@ -33,15 +35,18 @@ const Bench = forwardRef<HTMLElement, Props>(function Bench(
   return (
     <aside className="bench glass" ref={ref}>
       <header className="panel__header">
-        <h2>Effectif</h2>
+        {/* Not "Effectif": that's the tab with the whole roster, while this
+            lists only the players not yet in the compo. */}
+        <h2>Disponibles</h2>
         <span className="chip">{players.length}</span>
       </header>
 
       <div className="bench__list">
         {players.length === 0 && (
           <p className="bench__empty">
-            Ajoute des joueurs dans l'onglet Effectif, puis glisse-les sur le
-            terrain.
+            {rosterSize === 0
+              ? "Ajoute des joueurs dans l'onglet Effectif, puis glisse-les sur le terrain."
+              : "Tout l'effectif est placé, en titulaire ou en remplaçant."}
           </p>
         )}
         {players.map((p) => (
