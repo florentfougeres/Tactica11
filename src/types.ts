@@ -228,50 +228,57 @@ export const DRAW_COLORS = [
 export const DEFAULT_DRAW_COLOR = DRAW_COLORS[0];
 
 // ---------- Studio (shareable lineup poster) ----------
-// Settings for the "Studio" mode: a standalone, base-phase-only fullscreen
-// view that renders the starting XI as a stylised, exportable poster for
-// social media. Deliberately NOT part of Lineup — it's a visual-identity
-// preference (kit colours, layout), not tactical data, and keeping it out of
-// Lineup keeps it out of the undo/redo history too (see useUndoableLineup).
-export type StudioDiscStyle = "circle" | "jersey";
-// The pitch is always the poster's background — "2d" is the familiar flat
-// top-down view, "3d" tilts it into a broadcast-style perspective shot.
-export type StudioBackground = "2d" | "3d";
+// Settings for the "Studio" mode: a fullscreen view that renders the XI of
+// the phase shown as a stylised, exportable poster for social media.
+// Deliberately NOT part of Lineup — it's a visual-identity preference (kit
+// colours, look), not tactical data, and keeping it out of Lineup keeps it
+// out of the undo/redo history too (see useUndoableLineup).
+export type StudioDiscStyle = "circle" | "jersey"; // 3D puck or shirt
+export type StudioCamera = "flat" | "perspective"; // from above, or a tilted broadcast view
+export type StudioPitchStyle = "grass" | "lines"; // striped turf, or a tactics board
+export type StudioLabelStyle = "plate" | "text"; // name on a banner, or plain text
 
 export interface StudioSettings {
+  camera: StudioCamera;
+  tilt: number; // perspective angle, degrees (20 = high camera, 60 = low)
+  pitchStyle: StudioPitchStyle;
+  theme: "dark" | "light"; // poster background and board colours
   discStyle: StudioDiscStyle;
   discColor: string;
+  discColor2?: string; // second colour: two-colour pucks / shirts (see colors.ts)
   numberColor: string;
-  labelColor: string; // role/name text under the disc, and title/subtitle
-  discSize: number; // token width, in % of the pitch field's own width
-  nameFontSize: number; // px, base size for the role/name labels
-  background: StudioBackground;
+  discSize: number; // token size, in % of the pitch width
+  labelStyle: StudioLabelStyle;
+  nameFontSize: number; // base size of the names (poster px / 2)
   showRole: boolean;
   showName: boolean;
   showNumber: boolean;
   showLines: boolean; // pitch markings
+  showList: boolean; // team sheet (numbers + names) beside / under the pitch
   title: string; // empty → falls back to the project name at render time
   subtitle: string; // empty → falls back to the formation at render time
-  // The canvas is always sized to the pitch's own true ratio (68:105 or its
-  // inverse) — no arbitrary social-media presets to letterbox against, so
-  // the pitch fills the poster edge to edge instead of floating in padding.
-  aspect: Orient;
+  aspect: Orient; // portrait 4:5 (pitch upright) or landscape 16:10 (sideways)
 }
 
 export const STUDIO_DISC_COLORS = ["#eef1f2", "#101418", ...DRAW_COLORS];
 
 export const DEFAULT_STUDIO_SETTINGS: StudioSettings = {
+  camera: "perspective",
+  tilt: 40,
+  pitchStyle: "grass",
+  theme: "dark",
   discStyle: "circle",
   discColor: STUDIO_DISC_COLORS[0],
+  discColor2: undefined, // listed so "reset" clears it
   numberColor: STUDIO_DISC_COLORS[1],
-  labelColor: "#ffffff",
   discSize: 10,
+  labelStyle: "plate",
   nameFontSize: 14,
-  background: "2d",
   showRole: true,
   showName: true,
   showNumber: true,
   showLines: true,
+  showList: false,
   title: "",
   subtitle: "",
   aspect: "portrait",
@@ -296,6 +303,7 @@ export interface Lineup {
   slots: Slot[]; // always 11 on-pitch slots
   opponents?: Opponent[]; // optional opposing discs (attack/defense only)
   opponentColor?: string; // disc colour for the opposing team
+  opponentColor2?: string; // second colour: two-colour discs (see colors.ts)
   drawings?: Partial<Record<Phase, Drawing[]>>; // optional annotations per phase
   setPieces: SetPiece[]; // corners / coups francs belonging to this compo
   sequences?: Sequence[]; // animated tactical sequences (mode Séquence)
@@ -344,6 +352,7 @@ export interface SetPiece {
   tokens: SetPieceToken[];
   opponents: SetPieceOpponent[];
   opponentColor?: string; // disc colour for the opposing team, same palette as the main pitch
+  opponentColor2?: string; // second colour: two-colour discs (see colors.ts)
   drawings?: Partial<Record<SetPieceState, Drawing[]>>;
 }
 

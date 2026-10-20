@@ -280,6 +280,7 @@ export default function App() {
     moveOpponent,
     setOpponentLabel,
     setOpponentColor,
+    setOpponentColor2,
     handlePlayerDrop,
     handleBenchDrop,
     removeStarter,
@@ -472,6 +473,8 @@ export default function App() {
           onToggle={toggleOpponentMode}
           color={lineup.opponentColor}
           onColor={setOpponentColor}
+          color2={lineup.opponentColor2}
+          onColor2={setOpponentColor2}
         />
       )}
     </div>
@@ -510,7 +513,6 @@ export default function App() {
       )}
       <TopBar
         view={view}
-        phase={phase}
         name={lineup.name}
         onPresent={enterPresent}
         onStudio={openStudio}
@@ -682,6 +684,7 @@ export default function App() {
               opponents={lineup.opponents ?? []}
               opponentMode={opponentMode}
               opponentColor={lineup.opponentColor ?? DEFAULT_OPPONENT_COLOR}
+              opponentColor2={lineup.opponentColor2}
               onMoveOpponent={moveOpponent}
               onLabelOpponent={setOpponentLabel}
             />
@@ -711,6 +714,7 @@ export default function App() {
       {studioOpen && (
         <StudioView
           lineup={lineup}
+          phase={phase}
           project={project}
           playerById={playerById}
           settings={studioSettings}

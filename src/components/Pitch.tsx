@@ -52,6 +52,7 @@ interface Props {
   opponents: Opponent[];
   opponentMode: boolean;
   opponentColor: string;
+  opponentColor2?: string;
   onMoveOpponent: (id: string, pos: { x: number; y: number }) => void;
   onLabelOpponent: (id: string, label: string) => void;
 }
@@ -87,6 +88,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     opponents,
     opponentMode,
     opponentColor,
+    opponentColor2,
     onMoveOpponent,
     onLabelOpponent,
   },
@@ -265,6 +267,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
               size={size}
               orient={orient}
               color={opponentColor}
+              color2={opponentColor2}
               editable={!frozen}
               instant={scrubbing}
               onMove={onMoveOpponent}

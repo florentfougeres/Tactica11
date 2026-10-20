@@ -3,12 +3,17 @@ import type {
 } from "../../../sequence/types";
 import FmSelect from "../../FmSelect";
 
-import { Switch, Swatches, type Props } from "./shared";
+import { Switch, type Props } from "./shared";
+import ColorSwatches from "../../ColorSwatches";
+import TeamColorField from "../../TeamColorField";
+import { SEQ_COLORS } from "../../../sequence/types";
+
+const TRAIL_COLORS = ["#f4c531", "#d7ff3a", "#3effa0", "#3fd8ff", "#ff4fd8", "#ffffff"];
 
 export default function SettingsTab({ seq, actions }: Props) {
   const id = seq.id;
   const patch = (p: Partial<Sequence>) => actions.patchSeq(id, p);
-  const theme = (k: keyof Sequence["theme"], v: string) => patch({ theme: { ...seq.theme, [k]: v } });
+  const theme = (k: keyof Sequence["theme"], v: string | undefined) => patch({ theme: { ...seq.theme, [k]: v } });
   return (
     <div className="seq-form">
       <label className="seq-field">
@@ -34,12 +39,10 @@ export default function SettingsTab({ seq, actions }: Props) {
           onChange={(v) => patch({ idle: Number(v) as 0 | 1 | 2 | 3 })}
         />
       </div>
-      {(
-        <div className="seq-field">
-          <span>Couleur des traînées</span>
-          <Swatches value={seq.trailColor || seq.theme.accent} onPick={(c) => patch({ trailColor: c })} colors={["#f4c531", "#d7ff3a", "#3effa0", "#3fd8ff", "#ff4fd8", "#ffffff"]} />
-        </div>
-      )}
+      <div className="seq-field">
+        <span>Couleur des traînées</span>
+        <ColorSwatches ariaLabel="Couleur des traînées" value={seq.trailColor || seq.theme.accent} onChange={(c) => patch({ trailColor: c })} colors={TRAIL_COLORS} />
+      </div>
       <label className="seq-field">
         <span>Taille des disques, nous ×{(seq.homeDiscScale ?? 1).toFixed(2)}</span>
         <input type="range" min={0.6} max={1.8} step={0.05} value={seq.homeDiscScale ?? 1} onChange={(e) => patch({ homeDiscScale: Number(e.target.value) })} />
@@ -71,11 +74,25 @@ export default function SettingsTab({ seq, actions }: Props) {
       <div className="seq-form__title">Couleurs</div>
       <div className="seq-field">
         <span>Nous</span>
-        <Swatches value={seq.theme.homeColor} onPick={(c) => theme("homeColor", c)} />
+        <TeamColorField
+          label="Couleur de mon équipe"
+          colors={SEQ_COLORS}
+          value={seq.theme.homeColor}
+          onChange={(c) => theme("homeColor", c)}
+          value2={seq.theme.homeColor2}
+          onChange2={(c) => theme("homeColor2", c)}
+        />
       </div>
       <div className="seq-field">
         <span>Adversaire</span>
-        <Swatches value={seq.theme.awayColor} onPick={(c) => theme("awayColor", c)} />
+        <TeamColorField
+          label="Couleur de l'adversaire"
+          colors={SEQ_COLORS}
+          value={seq.theme.awayColor}
+          onChange={(c) => theme("awayColor", c)}
+          value2={seq.theme.awayColor2}
+          onChange2={(c) => theme("awayColor2", c)}
+        />
       </div>
       <div className="seq-field-row">
         <label className="seq-field">
@@ -99,7 +116,7 @@ export default function SettingsTab({ seq, actions }: Props) {
       </div>
       <div className="seq-field">
         <span>Accent (mise en avant, sous-titres)</span>
-        <Swatches value={seq.theme.accent} onPick={(c) => theme("accent", c)} />
+        <ColorSwatches ariaLabel="Couleur d'accent" colors={SEQ_COLORS} value={seq.theme.accent} onChange={(c) => theme("accent", c)} />
       </div>
       <div className="seq-btn-row">
         <button type="button" className="pitch-ctl__btn" onClick={() => actions.resetTheme(id)}>

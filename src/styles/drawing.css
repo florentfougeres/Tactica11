@@ -66,23 +66,6 @@
   margin: 4px 3px;
   background: var(--panel-border);
 }
-.draw-bar__swatch {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  cursor: pointer;
-  padding: 0;
-  transition: transform 0.12s, border-color 0.12s;
-}
-.draw-bar__swatch:hover {
-  transform: scale(1.12);
-}
-.draw-bar__swatch.is-active {
-  border-color: #fff;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
-}
-
 /* influence-view toggle (attack/defense), in the control bar above the pitch */
 .influence-switch {
   display: flex;

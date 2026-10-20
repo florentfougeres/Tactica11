@@ -6,7 +6,9 @@ import type {
 import FmSelect from "../../FmSelect";
 import PopMenu from "../../PopMenu";
 
-import { Switch, Swatches, sec, type Props } from "./shared";
+import { Switch, sec, type Props } from "./shared";
+import ColorSwatches from "../../ColorSwatches";
+import { SEQ_COLORS } from "../../../sequence/types";
 import StepLayers from "./StepLayers";
 
 function Section({ title, defaultOpen, children }: { title: string; defaultOpen: boolean; children: ReactNode }) {
@@ -161,7 +163,7 @@ export default function StepTab(props: Props) {
           </label>
         )}
         {step.effect && step.effect !== "none" && (
-          <Swatches value={step.effectColor || (step.effect === "flash" ? "#ff2d3a" : seq.theme.accent)} onPick={(c) => patch({ effectColor: c })} />
+          <ColorSwatches ariaLabel="Couleur de l'effet" colors={SEQ_COLORS} value={step.effectColor || (step.effect === "flash" ? "#ff2d3a" : seq.theme.accent)} onChange={(c) => patch({ effectColor: c })} />
         )}
       </Section>
       <Section key={`${step.id}:Positions`} title="Positions" defaultOpen={false}>

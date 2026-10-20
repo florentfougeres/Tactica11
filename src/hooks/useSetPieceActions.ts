@@ -51,6 +51,9 @@ export function useSetPieceActions(lineup: Lineup, setLineup: LineupUpdater) {
   const setOpponentColor = (id: string, color: string) =>
     updateSetPiece(id, (sp) => ({ ...sp, opponentColor: color }));
 
+  const setOpponentColor2 = (id: string, color: string | undefined) =>
+    updateSetPiece(id, (sp) => ({ ...sp, opponentColor2: color }));
+
   const duplicateSetPiece = (id: string) => {
     const src = lineup.setPieces.find((sp) => sp.id === id);
     if (!src) return;
@@ -223,6 +226,7 @@ export function useSetPieceActions(lineup: Lineup, setLineup: LineupUpdater) {
     deleteSetPiece,
     setSetPieceType,
     setOpponentColor,
+    setOpponentColor2,
     moveBall,
     addToken,
     removeToken,

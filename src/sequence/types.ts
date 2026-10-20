@@ -102,9 +102,11 @@ export type DiscMode = "role" | "number" | "none";
 
 export interface SeqTheme {
   homeColor: string;
+  homeColor2?: string; // second colour: two-colour discs (see colors.ts)
   homeText: string;
   homeGk: string;
   awayColor: string;
+  awayColor2?: string;
   awayText: string;
   awayGk: string;
   accent: string;

@@ -39,24 +39,6 @@
   color: rgba(15, 20, 28, 0.92);
   text-transform: uppercase;
 }
-/* opponent colour swatches (shown in the toolbar colour popover) */
-.opp-swatch {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  padding: 0;
-  transition: transform 0.12s, border-color 0.12s;
-}
-.opp-swatch:hover {
-  transform: scale(1.12);
-}
-.opp-swatch.is-active {
-  border-color: #fff;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5);
-}
-
 /* base-phase locked hint */
 /* phase toggle + hint, floating at the top of the pitch */
 .phase-bar {
@@ -221,3 +203,4 @@
   color: var(--text-dim);
   font-weight: 600;
 }
+

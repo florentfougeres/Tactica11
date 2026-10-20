@@ -77,11 +77,6 @@
   letter-spacing: 1px;
   color: var(--text-dim);
 }
-.opp-colors-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
 /* mirror / reset actions for the current phase */
 .pitch-ctl__actions {
   display: flex;

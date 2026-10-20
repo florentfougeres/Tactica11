@@ -1,12 +1,10 @@
 import { useRef, useState } from "react";
-import type { Phase } from "../types";
 import type { View } from "./ViewTabs";
 import { useDismiss } from "../hooks/useDismiss";
 import ShareMenu, { type ShareItem } from "./ShareMenu";
 
 interface Props {
   view: View;
-  phase: Phase;
   name: string;
   compos: { id: string; name: string }[];
   currentId: string;
@@ -45,7 +43,6 @@ interface Props {
 
 export default function TopBar({
   view,
-  phase,
   name,
   compos,
   currentId,
@@ -100,15 +97,8 @@ export default function TopBar({
       ? [
           { label: "Image (vue actuelle)", ext: ".png", onClick: onExportPng },
           { label: copied ? "Lien copié ✓" : "Copier le lien (cette compo)", ext: "URL", onClick: copyLink, keepOpen: true },
-          // Studio is the poster-style share visual; it works from the base
-          // positions only.
-          {
-            label: "Créer un visuel (Studio)",
-            ext: phase !== "base" ? "Base" : "poster",
-            onClick: onStudio,
-            disabled: phase !== "base",
-            title: phase !== "base" ? "Disponible en phase Base" : undefined,
-          },
+          // Studio is the poster-style share visual of the phase shown.
+          { label: "Créer un visuel (Studio)", ext: "poster", onClick: onStudio },
         ]
       : (share ?? null);
 
@@ -338,6 +328,26 @@ export default function TopBar({
           </>
         )}
 
+        {view === "pitch" && (
+          <button
+            type="button"
+            className="btn studio-btn"
+            onClick={onStudio}
+            title="Studio : visuel de la compo à partager (image)"
+            aria-label="Studio : visuel de la compo à partager"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M8 3 L4 6 L6 9 L8 7 L8 20 L16 20 L16 7 L18 9 L20 6 L16 3 C14 5 10 5 8 3 Z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="studio-btn__label">Studio</span>
+          </button>
+        )}
         {shareItems && <ShareMenu items={shareItems} />}
         <button
           className="btn btn--icon"

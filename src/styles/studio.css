@@ -11,21 +11,25 @@
     radial-gradient(1200px 600px at 15% -10%, rgba(33, 208, 122, 0.1), transparent 60%),
     linear-gradient(180deg, var(--bg-1), var(--bg-0));
 }
+/* In the panel's header, so it never overlaps the poster or its buttons. */
+.studio-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 .studio-exit {
-  position: fixed;
-  top: 14px;
-  right: 16px;
-  z-index: 420;
-  padding: 8px 14px;
+  padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid var(--panel-border);
-  background: rgba(13, 18, 26, 0.8);
+  background: rgba(var(--overlay-rgb), 0.06);
   color: var(--text);
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+}
+.studio-exit:hover {
+  border-color: rgba(33, 208, 122, 0.5);
 }
 .studio-panel {
   flex: 0 0 300px;
@@ -74,62 +78,6 @@
   background: rgba(33, 208, 122, 0.18);
   color: var(--accent);
 }
-.studio-swatch-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.studio-swatch-field__label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  color: var(--text-dim);
-}
-.studio-swatch-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.studio-swatch {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  padding: 0;
-  transition: transform 0.12s, border-color 0.12s;
-}
-.studio-swatch:hover {
-  transform: scale(1.12);
-}
-.studio-swatch.is-active {
-  border-color: #fff;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5);
-}
-.studio-swatch--custom {
-  position: relative;
-  display: inline-block;
-  overflow: hidden;
-  background: conic-gradient(
-    from 180deg,
-    #f4c531,
-    #e0533a,
-    #3f8fe0,
-    #23b083,
-    #e0a7d8,
-    #f4c531
-  );
-}
-.studio-swatch--custom input[type="color"] {
-  position: absolute;
-  inset: -4px;
-  width: calc(100% + 8px);
-  height: calc(100% + 8px);
-  padding: 0;
-  border: none;
-  opacity: 0;
-  cursor: pointer;
-}
 .studio-input {
   width: 100%;
   min-width: 0;
@@ -154,212 +102,43 @@
   justify-content: center;
   gap: 16px;
 }
-.studio-canvas {
+
+/* The poster (studio/StudioPoster): an SVG at its own ratio, as large as
+   the stage allows, with the board's "pivoter" button in its corner. */
+.studio-frame {
   position: relative;
-  overflow: hidden;
-  border-radius: var(--radius);
-  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-  /* The caption (see .studio-caption below), when present, is a real row
-     that makes the canvas taller — never space stolen or overlaid from the
-     pitch. Without a caption, .studio-canvas__field-wrap is the only child
-     and the canvas's height comes out exactly equal to it (zero slack). */
-  display: flex;
-  flex-direction: column;
-}
-/* Only two formats, each matched to the pitch's own true ratio (68:105, or
-   its inverse) — not an arbitrary social-media preset. Nothing to letterbox
-   against, so the pitch fills the poster edge to edge by construction instead
-   of floating in padding around a mismatched frame. */
-/* Width is the free variable; height comes out of it via the field's own
-   ratio (105:68 tall in portrait) plus whatever the caption row adds — so a
-   "vh" width candidate has to be pre-divided by that ratio, or the resulting
-   height silently blows past the viewport and .studio-canvas's overflow:
-   hidden crops the bottom of the pitch off (not just letterboxing). Budget
-   ~78vh for the field itself (leaving ~14vh of the ~92vh cap for a caption)
-   and convert that to the matching width via the real 68:105 ratio. */
-.studio-canvas--portrait {
-  width: min(calc(78vh * 68 / 105), 62vw, 820px);
-  max-height: 92vh;
-}
-.studio-canvas--landscape {
-  /* Landscape's own ratio (68:105 → height is 65% of width) makes this far
-     less prone to the same blow-up, but bound it the same principled way
-     rather than trusting vw alone on very wide/short viewports. */
-  width: min(62vw, calc(78vh * 105 / 68), 1150px);
-  max-height: 90vh;
-}
-.studio-canvas__bg-grass {
-  position: absolute;
-  inset: 0;
-}
-.studio-caption {
-  position: relative;
-  flex: 0 0 auto;
-  z-index: 1;
-  padding: 3% 6%;
-  background: linear-gradient(
-    to bottom,
-    rgba(6, 12, 8, 0.55) 0%,
-    rgba(6, 12, 8, 0.28) 60%,
-    transparent 100%
-  );
-  text-align: center;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
-  pointer-events: none;
-}
-.studio-canvas__field-wrap {
-  position: relative;
-  flex: 0 0 auto;
-  width: 100%;
-  /* Fixes this row's own height directly from its width — the pitch's true
-     ratio — so it's never at the mercy of how much room a caption row above
-     it took: this box is always exactly pitch-shaped, full stop. */
-  aspect-ratio: 68 / 105;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5%;
-  container-type: size;
-  perspective: 2000px;
-}
-.studio-canvas--landscape .studio-canvas__field-wrap {
-  aspect-ratio: 105 / 68;
-}
-.studio-canvas__field {
-  position: relative;
-  /* Same "contain" technique as .pitch: derive height from the container's
-     query units against the real 68:105 ratio, capped by both axes, since
-     aspect-ratio + max-width/max-height alone doesn't reliably auto-contain.
-     With the wrap above already matched to this same ratio, this is mostly a
-     safety net for the sub-pixel mismatch that % padding on both axes (always
-     resolved against the container's WIDTH, even for top/bottom) introduces. */
-  --field-ar: calc(68 / 105);
-  aspect-ratio: var(--field-ar);
-  height: min(100cqh, calc(100cqw / var(--field-ar)));
-  width: auto;
+  min-width: 0;
+  min-height: 0;
   max-width: 100%;
-  max-height: 100%;
-  transition: transform 0.2s;
-  /* Lets tokens (see .studio-canvas--3d .studio-token below) live in the same
-     3D space as this tilted plane instead of being flattened into it. */
-  transform-style: preserve-3d;
+  max-height: calc(100% - 64px);
 }
-.studio-canvas__field--landscape {
-  --field-ar: calc(105 / 68);
+.studio-frame--portrait {
+  aspect-ratio: 1080 / 1350;
+  height: calc(100% - 64px);
 }
-/* "3D": tilt the whole plane into a broadcast-style low-angle perspective.
-   Kept deliberately modest (not scaled up to fill every last pixel) so the
-   full pitch — all four corners — always stays inside the frame. */
-.studio-canvas--3d .studio-canvas__field-wrap {
-  padding: 4%;
-}
-/* The tilt (rotateX) is purely visual — it doesn't shrink field-wrap's own
-   LAYOUT height, which is still reserved for the untilted, full-height pitch.
-   So the tilted pitch's actual on-screen footprint ends up shorter than the
-   box built around it, leaving empty grass between the caption and the
-   visible pitch. Pull the box up (and shrink the canvas by the same amount,
-   since this is the last flex child) by roughly that foreshortened sliver —
-   a % of field-wrap's own height, expressed against width since CSS resolves
-   margin percentages against the container's width even on the block axis.
-   Portrait's box is much taller relative to its width than landscape's, so
-   the two need different corrections for the same visual gap. */
-.studio-canvas--3d.studio-canvas--portrait .studio-canvas__field-wrap {
-  margin-top: -32%;
-}
-.studio-canvas--3d.studio-canvas--landscape .studio-canvas__field-wrap {
-  margin-top: -14%;
-}
-.studio-canvas--3d .studio-canvas__field {
-  --tilt: 38deg;
-  transform: rotateX(var(--tilt)) scale(1.12);
-  transform-origin: 50% 100%;
-  box-shadow: 0 50px 70px -30px rgba(0, 0, 0, 0.7);
-}
-/* Billboard effect: each token counter-rotates by the exact inverse of the
-   field's tilt, so it renders flat/circular and fully readable — like a
-   sprite standing upright on a tilted pitch — while still inheriting its
-   correct 3D position (and perspective depth/scale) from the parent. */
-.studio-canvas--3d .studio-token {
-  transform: translate(-50%, -50%) rotateX(calc(-1 * var(--tilt)));
-}
-.studio-token {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  container-type: inline-size;
-}
-.studio-token__disc {
-  position: relative;
+.studio-frame--landscape {
+  aspect-ratio: 1600 / 1000;
   width: 100%;
-  aspect-ratio: 1 / 1;
 }
-.studio-token__circle {
-  position: absolute;
-  inset: 14%;
-  border-radius: 50%;
-  box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.7),
-    inset 0 0 0 2px rgba(255, 255, 255, 0.5);
-}
-.jersey-shape {
+.studio-poster {
   display: block;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
+  border-radius: 14px;
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.8);
 }
-.studio-token__number {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  /* Scales with the token's own rendered width, so it tracks the "Taille des
-     jetons" slider automatically instead of needing a separate control. */
-  font-size: 26cqw;
-  pointer-events: none;
+.studio-frame .pitch-rotate {
+  top: 12px;
+  right: 12px;
 }
-/* The jersey artwork fills its full box down to the hem, leaving a lot of
-   empty fabric below the chest number — pull the label up into that space
-   instead of leaving it stranded far below the number. Circles don't need
-   this: the badge number already sits close to the disc's true edge. */
-.studio-token--jersey .studio-token__labels {
-  margin-top: -10cqw;
-}
-.studio-token__labels {
+.studio-choice {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  line-height: 1.2;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
-  white-space: nowrap;
-  /* font-size set inline per the "Police" slider (nameFontSize) */
+  gap: 6px;
 }
-.studio-token__name {
-  font-weight: 800;
-  font-size: 1.05em;
-  max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.studio-token__role {
-  font-weight: 600;
-  font-size: 0.85em;
-  letter-spacing: 0.5px;
-  opacity: 0.85;
-}
-.studio-caption__title {
-  margin: 0;
-  font-size: clamp(14px, 2.4vw, 22px);
-  font-weight: 800;
+.studio-choice__label {
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.3px;
-}
-.studio-caption__subtitle {
-  margin: 2px 0 0;
-  font-size: clamp(10px, 1.6vw, 14px);
-  font-weight: 600;
-  opacity: 0.85;
+  color: var(--text-dim);
 }

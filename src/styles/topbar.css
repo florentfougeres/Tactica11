@@ -290,3 +290,28 @@
   letter-spacing: 0.8px;
   color: var(--text-dim);
 }
+
+/* Studio (Compo): visible entry to the lineup poster, next to Partager. */
+.studio-btn {
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+.studio-btn svg {
+  display: block;
+  flex: none;
+}
+/* Tight top bar: icon only (the tooltip still names it). */
+@media (max-width: 1180px) {
+  .studio-btn {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+  .studio-btn__label {
+    display: none;
+  }
+}

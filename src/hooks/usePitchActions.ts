@@ -164,6 +164,9 @@ export function usePitchActions({
   const setOpponentColor = (color: string) =>
     setLineup((l) => ({ ...l, opponentColor: color }));
 
+  const setOpponentColor2 = (color: string | undefined) =>
+    setLineup((l) => ({ ...l, opponentColor2: color }));
+
   // Pixel → pitch-percent helper for a drop point. Returns null if outside.
   // Conversion is relative to the field of play (.pitch__field, which excludes
   // the grass margin) and respects the current orientation.
@@ -282,6 +285,7 @@ export function usePitchActions({
     moveOpponent,
     setOpponentLabel,
     setOpponentColor,
+    setOpponentColor2,
     handlePlayerDrop,
     handleBenchDrop,
     removeStarter,

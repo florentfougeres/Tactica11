@@ -5,7 +5,6 @@ import type {
   Sequence,
   Team,
 } from "../../../sequence/types";
-import { SEQ_COLORS } from "../../../sequence/types";
 import type { ActorInfo } from "../../../sequence/SequenceStage";
 
 export { default as Switch } from "../../Switch";
@@ -42,21 +41,3 @@ export interface Props {
 }
 
 export const sec = (ms: number) => Math.round(ms / 100) / 10;
-
-export function Swatches({ value, onPick, colors = SEQ_COLORS }: { value: string; onPick: (c: string) => void; colors?: string[] }) {
-  return (
-    <div className="seq-swatches">
-      {colors.map((c) => (
-        <button
-          key={c}
-          type="button"
-          className={`opp-swatch ${c.toLowerCase() === value.toLowerCase() ? "is-active" : ""}`}
-          style={{ background: c }}
-          onClick={() => onPick(c)}
-          aria-label={`Couleur ${c}`}
-        />
-      ))}
-      <input type="color" className="seq-color" value={value} onChange={(e) => onPick(e.target.value)} aria-label="Couleur personnalisée" />
-    </div>
-  );
-}

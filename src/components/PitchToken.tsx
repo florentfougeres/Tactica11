@@ -1,19 +1,8 @@
-import { useEffect, useRef } from "react";
-import {
-  animate,
-  motion,
-  useMotionValue,
-  type PanInfo,
-} from "framer-motion";
+import { motion, type PanInfo } from "framer-motion";
 import type { Orient, Phase, Player, Pos, Slot } from "../types";
-import { posToPx, pxToPos } from "../types";
+import { useTokenMotion } from "../hooks/useTokenMotion";
 
 export const TOKEN_SIZE = 54;
-
-interface Size {
-  w: number;
-  h: number;
-}
 
 interface Props {
   slot: Slot;
@@ -24,7 +13,7 @@ interface Props {
   frozen: boolean; // mid-transition preview → no drag / select
   showNumbers: boolean; // base-only: shirt number becomes the main disc label
   instant: boolean; // follow the slider 1:1 instead of springing
-  size: Size;
+  size: { w: number; h: number };
   orient: Orient;
   selected: boolean;
   onSelect: (slotId: string | null) => void;
@@ -55,36 +44,16 @@ export default function PitchToken({
   onDragMove,
 }: Props) {
   const isBase = phase === "base";
-  const half = TOKEN_SIZE / 2;
-  const center = posToPx(pos, size, orient);
-  const targetX = center.x - half;
-  const targetY = center.y - half;
-
-  const x = useMotionValue(targetX);
-  const y = useMotionValue(targetY);
-  const dragging = useRef(false);
-  // Set on drag start, checked by onClick to swallow the click a drag emits on
-  // release (otherwise it would toggle the selection off right after dropping).
-  const moved = useRef(false);
-
-  // Animate to the target position whenever the phase / formation / stored
-  // position changes — unless the user is actively dragging this token.
-  useEffect(() => {
-    if (dragging.current || size.w === 0) return;
-    if (instant) {
-      // scrubbing the slider → track it in real time (no spring lag)
-      x.set(targetX);
-      y.set(targetY);
-      return;
-    }
-    const spring = { type: "spring" as const, stiffness: 360, damping: 30, mass: 0.7 };
-    const ax = animate(x, targetX, spring);
-    const ay = animate(y, targetY, spring);
-    return () => {
-      ax.stop();
-      ay.stop();
-    };
-  }, [targetX, targetY, size.w, x, y, instant]);
+  // Follows the phase / formation / stored position with a spring, except
+  // while dragged; `moved` swallows the click a drag emits on release
+  // (otherwise it would toggle the selection off right after dropping).
+  const { x, y, moved, center, endDrag, snapBack, dropPos, dragHandlers } = useTokenMotion({
+    pos,
+    size,
+    orient,
+    tokenSize: TOKEN_SIZE,
+    instant,
+  });
 
   const empty = !starter;
   // Base phase: drag = move the player to another slot / bench (shape is locked,
@@ -108,7 +77,7 @@ export default function PitchToken({
   const discSecondary = swapLabels ? effectiveRole : (number ?? null);
 
   function handleDragEnd(_e: unknown, info: PanInfo) {
-    dragging.current = false;
+    endDrag();
     onDragActiveChange(false);
     if (!canDrag) return;
     if (isBase) {
@@ -116,19 +85,12 @@ export default function PitchToken({
       // back to its formation spot. (We can't use dragSnapToOrigin — our layout
       // origin is 0,0 since position is driven entirely by the x/y values.)
       onPlayerDrop(slot.id, info.point);
-      const spring = { type: "spring" as const, stiffness: 360, damping: 30, mass: 0.7 };
-      animate(x, targetX, spring);
-      animate(y, targetY, spring);
+      snapBack();
       return;
     }
-    const cx = x.get() + half;
-    const cy = y.get() + half;
-    const insidePitch =
-      cx >= -half && cx <= size.w + half && cy >= -half && cy <= size.h + half;
-    if (insidePitch) {
-      const p = pxToPos(cx, cy, size, orient);
-      onMove(slot.id, { x: clampPct(p.x), y: clampPct(p.y) });
-    }
+    const p = dropPos();
+    if (p) onMove(slot.id, { x: clampPct(p.x), y: clampPct(p.y) });
+    else snapBack(); // dropped off the pitch
   }
 
   return (
@@ -141,9 +103,7 @@ export default function PitchToken({
       dragMomentum={false}
       dragElastic={0.12}
       whileDrag={{ scale: 1.18, zIndex: 50 }}
-      onPointerDown={() => {
-        moved.current = false;
-      }}
+      onPointerDown={dragHandlers.onPointerDown}
       onClick={() => {
         // A drag emits a click on release — ignore it so the selection (and its
         // heatmap) survives the drop instead of toggling off.
@@ -155,14 +115,13 @@ export default function PitchToken({
         if (!empty || isBase) onSelect(selected ? null : slot.id);
       }}
       onDragStart={() => {
-        dragging.current = true;
-        moved.current = true;
+        dragHandlers.onDragStart();
         onDragActiveChange(true);
         // Outside base, dragging a player reveals/keeps its influence zone.
         if (!isBase) onSelect(slot.id);
       }}
       onDrag={() => {
-        if (!isBase) onDragMove(slot.id, { x: x.get() + half, y: y.get() + half });
+        if (!isBase) onDragMove(slot.id, center());
       }}
       onDragEnd={handleDragEnd}
     >

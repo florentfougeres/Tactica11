@@ -164,6 +164,7 @@ export function migrateLineup(
     slots,
     opponents: parsed.opponents ?? [],
     opponentColor: parsed.opponentColor,
+    opponentColor2: parsed.opponentColor2,
     drawings: parsed.drawings,
     setPieces: (parsed.setPieces ?? [])
       .filter((sp) => sp && sp.id)
@@ -300,7 +301,19 @@ const STUDIO_SETTINGS_KEY = "tactica11.studio";
 export function loadStudioSettings(): StudioSettings {
   try {
     const raw = localStorage.getItem(STUDIO_SETTINGS_KEY);
-    if (raw) return { ...DEFAULT_STUDIO_SETTINGS, ...JSON.parse(raw) };
+    if (raw) {
+      // Before the poster redesign: background "2d" | "3d", labelColor.
+      const { background, labelColor: _old, ...rest } = JSON.parse(raw) as Partial<StudioSettings> & {
+        background?: string;
+        labelColor?: string;
+      };
+      void _old;
+      return {
+        ...DEFAULT_STUDIO_SETTINGS,
+        ...(background === "2d" ? { camera: "flat" as const } : {}),
+        ...rest,
+      };
+    }
   } catch {
     // fall through to defaults
   }

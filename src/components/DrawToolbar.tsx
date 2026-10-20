@@ -80,7 +80,7 @@ export default function DrawToolbar({
         <button
           key={c}
           type="button"
-          className={`draw-bar__swatch ${c === color ? "is-active" : ""}`}
+          className={`swatch ${c === color ? "is-active" : ""}`}
           style={{ background: c }}
           onClick={() => onColor(c)}
           title="Couleur du tracé"

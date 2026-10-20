@@ -5,10 +5,11 @@ import type {
   SeqAnnotation,
   Team,
 } from "../../../sequence/types";
-import { ANN_LABEL, ARROW_KINDS, isArrow } from "../../../sequence/types";
+import { ANN_LABEL, ARROW_KINDS, SEQ_COLORS, isArrow } from "../../../sequence/types";
 import FmSelect from "../../FmSelect";
 
-import { Switch, Swatches, type Props } from "./shared";
+import { Switch, type Props } from "./shared";
+import ColorSwatches from "../../ColorSwatches";
 
 export default function SelectionTab(props: Props) {
   const { seq, step, stepIndex, selActors, selAnn, info, actions, editable, onAddActor, onDeleteSelection, onSelectActors } = props;
@@ -273,7 +274,7 @@ function AnnotationForm({ seq, step, ann, actions, focusLabel, onSelectAnn, info
       )}
       <div className="seq-field">
         <span>Couleur</span>
-        <Swatches value={ann.color} onPick={(c) => patch({ color: c })} />
+        <ColorSwatches ariaLabel="Couleur du dessin" colors={SEQ_COLORS} value={ann.color} onChange={(c) => patch({ color: c })} />
       </div>
       <div className="seq-field-row">
         <div className="seq-field">

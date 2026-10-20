@@ -194,12 +194,6 @@ select.seq-input {
   color: var(--text-dim);
   font-weight: 500;
 }
-.seq-swatches {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-}
 .seq-color {
   width: 26px;
   height: 22px;

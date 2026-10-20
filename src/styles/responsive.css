@@ -29,11 +29,10 @@
    Fingers need bigger targets than a mouse: swatches, the roster's rows,
    the timeline checkbox and the small toolbar buttons were 13–24px. */
 @media (pointer: coarse) {
-  .opp-swatch,
-  .studio-swatch,
-  .draw-bar__swatch {
+  .swatch,
+  .draw-bar .swatch {
+    flex-basis: 30px;
     width: 30px;
-    height: 30px;
   }
   .seq-color {
     width: 36px;

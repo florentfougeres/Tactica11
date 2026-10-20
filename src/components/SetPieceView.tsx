@@ -196,6 +196,8 @@ export default function SetPieceView({
         onToggle={onOpponentMode}
         color={current.opponentColor}
         onColor={(c) => sp.setOpponentColor(current.id, c)}
+        color2={current.opponentColor2}
+        onColor2={(c) => sp.setOpponentColor2(current.id, c)}
         onAdd={() => sp.addOpponent(current.id)}
       />
     </div>

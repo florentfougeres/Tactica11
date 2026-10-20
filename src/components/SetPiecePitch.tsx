@@ -177,6 +177,7 @@ export default function SetPiecePitch({
                   variant="opponent"
                   label={o.label}
                   color={setPiece.opponentColor ?? DEFAULT_OPPONENT_COLOR}
+                  color2={setPiece.opponentColor2}
                   pos={lerpPos(o.positions.start, o.positions.mid, o.positions.end)}
                   size={size}
                   orient={ORIENT}

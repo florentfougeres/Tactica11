@@ -6,6 +6,7 @@ import type { ReactNode, Ref } from "react";
 import type { Pos } from "../types";
 import { PitchTurf } from "../components/PitchTurf";
 import Ball from "../components/Ball";
+import { contrastColor, darken, isDark } from "../colors";
 import PositionalGrid from "../components/PositionalGrid";
 import type { AnnFrame, FrameState } from "./engine";
 import { anchorPos } from "./engine";
@@ -48,14 +49,6 @@ const PALETTE: Record<SeqLook, Palette> = {
     accentText: (a) => darken(a, 0.38),
   },
 };
-
-function darken(hex: string, k: number) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
-  if (!m) return hex;
-  const n = parseInt(m[1], 16);
-  const c = (v: number) => Math.round(v * (1 - k)).toString(16).padStart(2, "0");
-  return `#${c((n >> 16) & 255)}${c((n >> 8) & 255)}${c(n & 255)}`;
-}
 
 export interface ActorInfo {
   disc: string;
@@ -392,7 +385,10 @@ export default function SequenceStage({
     const focus = frame.focus[a.id] ?? 0;
     const opacity = 1 - 0.72 * frame.dim * (1 - focus);
     const home = a.team === "home";
-    const fill = a.gk ? (home ? T.homeGk : T.awayGk) : home ? T.homeColor : T.awayColor;
+    const kit2 = home ? T.homeColor2 : T.awayColor2;
+    const fill = a.gk
+      ? home ? T.homeGk : T.awayGk
+      : kit2 ? `url(#${pid(home ? "kit-home" : "kit-away")})` : home ? T.homeColor : T.awayColor;
     const textColor = a.gk ? "#0b0f14" : home ? T.homeText : T.awayText;
     const inf = info[a.id] ?? { disc: "", name: "" };
     const sel = overlay?.selectedActors?.has(a.id);
@@ -428,6 +424,11 @@ export default function SequenceStage({
             fontWeight={700}
             fontSize={fs}
             fill={discText}
+            // On a two-colour disc the text straddles both halves: a halo
+            // keeps it readable on either.
+            {...(kit2 && focus <= 0.5 && !a.gk
+              ? { stroke: contrastColor(discText), strokeWidth: fs * 0.16, strokeOpacity: 0.85, paintOrder: "stroke" }
+              : {})}
           >
             {inf.disc}
           </text>
@@ -475,6 +476,18 @@ export default function SequenceStage({
       style={{ touchAction: "none", userSelect: "none" }}
     >
       <defs>
+        {/* Two-colour discs: left half main colour, right half the second. */}
+        {[
+          ["home", T.homeColor, T.homeColor2],
+          ["away", T.awayColor, T.awayColor2],
+        ].map(([team, c1, c2]) =>
+          c2 ? (
+            <linearGradient key={team} id={pid(`kit-${team}`)} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0.5" stopColor={c1} />
+              <stop offset="0.5" stopColor={c2} />
+            </linearGradient>
+          ) : null,
+        )}
         <radialGradient id={pid("bg")} cx="50%" cy="38%" r="75%">
           <stop offset="0%" stopColor={PAL.bg[0]} />
           <stop offset="65%" stopColor={PAL.bg[1]} />
@@ -715,16 +728,6 @@ const SEL_GLOW = {
 function centroid(pts: P[]): P {
   const s = pts.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
   return { x: s.x / pts.length, y: s.y / pts.length };
-}
-
-function isDark(hex: string) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
-  if (!m) return false;
-  const n = parseInt(m[1], 16);
-  const r = (n >> 16) & 255;
-  const g = (n >> 8) & 255;
-  const b = n & 255;
-  return 0.299 * r + 0.587 * g + 0.114 * b < 110;
 }
 
 function Pill({
