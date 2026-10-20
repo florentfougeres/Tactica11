@@ -23,6 +23,7 @@ import SequenceInspector from "./SequenceInspector";
 import SequencePreview from "./SequencePreview";
 import SequenceExportDialog from "./SequenceExportDialog";
 import "./sequence.css";
+import RotatePitchButton from "../RotatePitchButton";
 
 export type SeqTool = "select" | AnnKind | "camera";
 
@@ -836,17 +837,6 @@ function SequenceEditor({
           <div className="seq-toolbar__group">
             <button
               type="button"
-              className="seq-tool"
-              onClick={() => actions.patchSeq(seq.id, { orient: seq.orient === "portrait" ? "landscape" : "portrait" })}
-              title={seq.orient === "portrait" ? "Passer le terrain en paysage" : "Passer le terrain en vertical"}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                {seq.orient === "portrait" ? <rect x="7" y="3" width="10" height="18" rx="2" /> : <rect x="3" y="7" width="18" height="10" rx="2" />}
-              </svg>
-              <span>{seq.orient === "portrait" ? "Vertical" : "Paysage"}</span>
-            </button>
-            <button
-              type="button"
               className={`seq-tool ${seq.showGrid ? "is-active" : ""}`}
               onClick={() => actions.patchSeq(seq.id, { showGrid: !seq.showGrid })}
               title="Afficher la grille positionnelle (couloirs et zones, comme sur l'onglet Compo) — visible aussi dans la vidéo"
@@ -895,6 +885,10 @@ function SequenceEditor({
           ref={wrapRef}
           className={`seq-stage-wrap ${editable ? "" : "is-locked"} seq-stage-wrap--${tool}`}
         >
+          <RotatePitchButton
+            orient={seq.orient}
+            onToggle={() => actions.patchSeq(seq.id, { orient: seq.orient === "portrait" ? "landscape" : "portrait" })}
+          />
           <div
             className="seq-stage-inner"
             style={{ transform: `translate(${offX}px, ${offY}px) scale(${scale})`, width: L.W, height: L.H }}
