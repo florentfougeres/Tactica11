@@ -56,8 +56,8 @@ const TOOL_HINT: Record<SeqTool, string> = {
   dribble: "Glisser : course avec ballon",
   deep: "Glisser : appel en profondeur",
   press: "Glisser : déplacement défensif / pressing",
-  zone: "Cliquer pour poser les sommets · Entrée ou clic sur le 1er point pour fermer · Échap pour annuler",
-  space: "Cliquer pour poser les sommets de l'espace libre · Entrée pour fermer",
+  zone: "Glisser pour un rectangle · ou cliquer pour poser les sommets · Entrée ou clic sur le 1er point pour fermer · Échap pour annuler",
+  space: "Glisser pour un rectangle · ou cliquer pour poser les sommets de l'espace libre · Entrée pour fermer",
   playerZone: "Cliquer sur 3 joueurs ou plus · Entrée pour fermer. La zone suit les joueurs",
   playerLine: "Cliquer sur des joueurs dans l'ordre · Entrée pour terminer",
   marking: "Cliquer sur un joueur puis sur son vis-à-vis",
@@ -75,6 +75,7 @@ type Drag =
   | { type: "marquee"; a: Pos; add: boolean }
   | { type: "arrow"; kind: ArrowKind; a: Anchor }
   | { type: "line"; a: Pos }
+  | { type: "rect"; kind: "zone" | "space"; a: Pos; moved: boolean }
   | { type: "camera"; f0: { x: number; y: number }; cam0: Camera }
   | { type: "pan"; c0: { x: number; y: number }; pan0: { x: number; y: number } };
 
@@ -461,6 +462,11 @@ function SequenceEditor({
       setDraft(newAnn(tool as AnnKind, [a, { pos: p }]));
       return;
     }
+    // Zone / space: drag = regular rectangle; a plain click starts a free polygon.
+    if ((tool === "zone" || tool === "space") && !draft) {
+      dragRef.current = { type: "rect", kind: tool, a: p, moved: false };
+      return;
+    }
     if (tool === "line") {
       dragRef.current = { type: "line", a: p };
       setDraft(newAnn("line", [{ pos: p }, { pos: p }]));
@@ -531,6 +537,13 @@ function SequenceEditor({
       case "arrow":
         setDraft((dr) => (dr ? { ...dr, anchors: [d.a, { pos: p }] } : dr));
         return;
+      case "rect": {
+        if (!d.moved && Math.hypot(p.x - d.a.x, p.y - d.a.y) < 1) return;
+        d.moved = true;
+        const a = d.a;
+        setDraft(newAnn(d.kind, [{ pos: a }, { pos: { x: p.x, y: a.y } }, { pos: p }, { pos: { x: a.x, y: p.y } }]));
+        return;
+      }
       case "line": {
         const b = e.shiftKey ? { x: p.x, y: d.a.y } : p;
         setDraft((dr) => (dr ? { ...dr, anchors: [{ pos: d.a }, { pos: b }] } : dr));
@@ -595,6 +608,11 @@ function SequenceEditor({
       setDraft(null);
       if (sameActor || !ap || !bp || Math.hypot(ap.x - bp.x, ap.y - bp.y) < 2) return;
       commitAnn({ ...draft, anchors: [a, end] });
+      return;
+    }
+    if (d?.type === "rect") {
+      if (d.moved && draft && draft.anchors.length === 4) commitAnn(draft);
+      setDraft(d.moved ? null : newAnn(d.kind, [{ pos: d.a }]));
       return;
     }
     if (d?.type === "line") {
