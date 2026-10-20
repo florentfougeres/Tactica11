@@ -509,6 +509,10 @@ export default function App() {
     </div>
   );
 
+  // Séquence (with a sequence to edit) puts the view tabs above its inspector,
+  // so the pitch can use the row they'd otherwise take.
+  const seqTabsInside = view === "sequence" && (lineup.sequences?.length ?? 0) > 0;
+
   return (
     <div className={`app ${presenting ? "app--present" : ""}`}>
       {presenting && (
@@ -569,7 +573,7 @@ export default function App() {
         onImportProject={openProjectFile}
       />
 
-      {!presenting && (
+      {!presenting && !seqTabsInside && (
         <div className="view-row">
           <ViewTabs view={view} onView={setView} />
           {view === "pitch" && (
@@ -597,6 +601,7 @@ export default function App() {
           />
         ) : view === "sequence" ? (
           <SequenceView
+            tabs={seqTabsInside ? <ViewTabs view={view} onView={setView} /> : undefined}
             lineup={lineup}
             players={project.players}
             look={theme}

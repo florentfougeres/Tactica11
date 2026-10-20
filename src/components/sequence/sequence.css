@@ -780,3 +780,13 @@ select.seq-input {
 .seq-toolbar--icons .seq-toolbar__label {
   display: none;
 }
+.seq-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+.seq-side > .seq-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+}

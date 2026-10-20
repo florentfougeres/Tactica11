@@ -36,6 +36,7 @@ interface Props {
   actions: SequenceActions;
   seqId: string | null;
   onSeqId: (id: string | null) => void;
+  tabs?: React.ReactNode; // app view tabs, shown above the inspector (frees the row above the pitch)
 }
 
 const TOOL_GROUPS: { label: string; tools: SeqTool[] }[] = [
@@ -81,7 +82,7 @@ const CARRY_KEY = "tactica11.seqCarryGraphics";
 
 const clampPct = (v: number) => Math.min(104, Math.max(-4, v));
 
-export default function SequenceView({ lineup, players, look, playerById, actions, seqId, onSeqId }: Props) {
+export default function SequenceView({ lineup, players, look, playerById, actions, seqId, onSeqId, tabs }: Props) {
   const sequences = lineup.sequences ?? [];
   const seq: Sequence | null = sequences.find((q) => q.id === seqId) ?? sequences[0] ?? null;
   // A freshly created / duplicated sequence opens with its name field focused.
@@ -105,6 +106,7 @@ export default function SequenceView({ lineup, players, look, playerById, action
       onCreated={openCreated}
       autoRename={renameId === seq.id}
       onRenameDone={() => setRenameId(null)}
+      tabs={tabs}
     />
   );
 }
@@ -146,7 +148,9 @@ function SequenceEditor({
   onCreated,
   autoRename,
   onRenameDone,
+  tabs,
 }: {
+  tabs?: React.ReactNode;
   seq: Sequence;
   lineup: Lineup;
   players: Player[];
@@ -789,6 +793,8 @@ function SequenceEditor({
 
   return (
     <>
+      <div className="seq-side">
+      {tabs}
       <SequenceInspector
         seq={seq}
         sequences={lineup.sequences ?? []}
@@ -821,6 +827,7 @@ function SequenceEditor({
         }}
         onDeleteSelection={deleteSelection}
       />
+      </div>
 
       <div className="seq-main">
         {topSlot && (
