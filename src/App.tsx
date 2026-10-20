@@ -90,11 +90,6 @@ export default function App() {
   // Base-only display toggle: swap which label rides the main disc (role vs
   // shirt number). Purely a view preference, not persisted with the lineup.
   const [showNumbers, setShowNumbers] = useState(false);
-  // Drawing layer: free-hand annotations stored per phase on the lineup. Tool /
-  // colour are ephemeral view state; the strokes themselves are persisted.
-  const [drawMode, setDrawMode] = useState(false);
-  const [drawTool, setDrawTool] = useState<DrawTool>("arrow");
-  const [drawColor, setDrawColor] = useState<string>(DEFAULT_DRAW_COLOR);
 
   // Set-piece editor: compo-scoped (see useSetPieceActions) — edits go through
   // setLineup, so they ride the main undo/redo stack. Its own ephemeral view
@@ -473,19 +468,6 @@ export default function App() {
         </label>
       )}
 
-      <label className="pitch-ctl__row">
-        <span>Dessin</span>
-        <span className="switch">
-          <input
-            type="checkbox"
-            checked={drawMode}
-            onChange={(e) => setDrawMode(e.target.checked)}
-          />
-          <span className="switch__track" />
-          <span className="switch__thumb" />
-        </span>
-      </label>
-
       {phase !== "base" && (
         <>
           <label className="pitch-ctl__row">
@@ -590,6 +572,7 @@ export default function App() {
       {!presenting && (
         <div className="view-row">
           <ViewTabs view={view} onView={setView} />
+          {view === "sequence" && <div id="seq-tools-slot" className="view-row__seqtools" />}
           {view === "pitch" && (
             <div className="view-row__phase">
               <PhaseToggle phase={phase} onPhase={handlePhase} />
@@ -693,14 +676,15 @@ export default function App() {
               opponentColor={lineup.opponentColor ?? DEFAULT_OPPONENT_COLOR}
               onMoveOpponent={moveOpponent}
               onLabelOpponent={setOpponentLabel}
-              drawMode={drawMode}
-              drawTool={drawTool}
-              drawColor={drawColor}
+              /* Drawing moved to the Séquence tab: the Compo board no longer draws. */
+              drawMode={false}
+              drawTool="arrow"
+              drawColor={DEFAULT_DRAW_COLOR}
               drawColors={DRAW_COLORS}
-              drawings={lineup.drawings?.[phase] ?? []}
+              drawings={[]}
               onAddDrawing={addDrawing}
-              onDrawTool={setDrawTool}
-              onDrawColor={setDrawColor}
+              onDrawTool={() => {}}
+              onDrawColor={() => {}}
               onUndoDrawing={undoDrawing}
               onClearDrawings={clearDrawings}
             />

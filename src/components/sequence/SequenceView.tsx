@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Lineup, Phase, Player, Pos } from "../../types";
 import { pxToPos } from "../../types";
 import type { SequenceActions } from "../../hooks/useSequenceActions";
@@ -163,6 +164,13 @@ function SequenceEditor({
   const spans = useMemo(() => stepSpans(seq.steps), [seq.steps]);
   const duration = useMemo(() => totalDuration(seq.steps), [seq.steps]);
   const pb = useSequencePlayback(duration);
+  // The toolbars live in the app chrome (tabs row + top bar), via portals.
+  const [toolsSlot, setToolsSlot] = useState<HTMLElement | null>(null);
+  const [topSlot, setTopSlot] = useState<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    setToolsSlot(document.getElementById("seq-tools-slot"));
+    setTopSlot(document.getElementById("seq-topbar-slot"));
+  }, []);
   const head = playheadAt(seq.steps, pb.time);
   const stepIndex = head.index;
   const step = seq.steps[stepIndex];
@@ -230,7 +238,7 @@ function SequenceEditor({
     return m;
   }, [seq.actors, seq.discMode, lineup.slots, playerById]);
 
-  const frame = useMemo(() => frameAt(seq, pb.time), [seq, pb.time]);
+  const frame = useMemo(() => frameAt(seq, pb.time, pb.playing), [seq, pb.time, pb.playing]);
 
   // ----- go to a step (after it's been created / moved) -----
   // Jump to a step once it exists in the (re-rendered) sequence — by id, so
@@ -817,8 +825,9 @@ function SequenceEditor({
       />
 
       <div className="seq-main">
-        <div className="seq-toolbar glass" role="toolbar" aria-label="Outils">
-          {TOOL_GROUPS.map((g, gi) => (
+        {toolsSlot && createPortal(
+        <div className="seq-toolbar seq-toolbar--tabs" role="toolbar" aria-label="Outils">
+          {TOOL_GROUPS.slice(0, -1).map((g, gi) => (
             <div key={gi} className="seq-toolbar__group">
               {g.label && <span className="seq-toolbar__label">{g.label}</span>}
               {g.tools.map((t) => (
@@ -836,7 +845,25 @@ function SequenceEditor({
               ))}
             </div>
           ))}
-          <div className="seq-toolbar__spacer" />
+        </div>
+        , toolsSlot)}
+        {topSlot && createPortal(
+        <div className="seq-toolbar seq-toolbar--top" role="toolbar" aria-label="Vue et export">
+          <div className="seq-toolbar__group">
+            {(["camera"] as SeqTool[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                className={`seq-tool seq-tool--${t} ${tool === t ? "is-active" : ""}`}
+                onClick={() => setTool(t)}
+                title={`${TOOL_LABEL[t]}${TOOL_KEY[t] ? ` (${TOOL_KEY[t]})` : ""} — ${TOOL_HINT[t]}`}
+                aria-pressed={tool === t}
+              >
+                <ToolIcon tool={t} />
+                <span>{TOOL_LABEL[t]}</span>
+              </button>
+            ))}
+          </div>
           <div className="seq-toolbar__group">
             <button
               type="button"
@@ -875,6 +902,8 @@ function SequenceEditor({
             )}
           </div>
         </div>
+
+        , topSlot)}
 
         <div className="seq-hint">
           {pb.playing

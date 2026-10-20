@@ -323,6 +323,9 @@ export default function TopBar({
         </div>
       )}
 
+      {/* Séquence portals its camera/view/export buttons in here. */}
+      {view === "sequence" && <div id="seq-topbar-slot" className="topbar__seq" />}
+
       <div className="topbar__actions">
         {/* Undo/redo cover the active compo's whole edit history — pitch
             positions/opponents/drawings AND its set pieces share one stack —

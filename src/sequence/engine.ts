@@ -188,7 +188,12 @@ export function chaptersOf(steps: SeqStep[]) {
   return out;
 }
 
-export function frameAt(seq: Sequence, t: number): FrameState {
+// How long arrows of the first step take to draw themselves in (nothing
+// travels into step 1, so they'd otherwise just pop up).
+const FIRST_STEP_DRAW_MS = 900;
+
+// live=false (paused editor) shows step 1 fully drawn instead of animating it.
+export function frameAt(seq: Sequence, t: number, live = true): FrameState {
   const steps = seq.steps;
   const duration = totalDuration(steps);
   const head = playheadAt(steps, t);
@@ -248,8 +253,10 @@ export function frameAt(seq: Sequence, t: number): FrameState {
     const inFrom = annVisibleAt(ann, idx, head.from);
     let visibility = 0;
     let progress = 1;
-    if (head.holding) visibility = inTo ? 1 : 0;
-    else if (inFrom && inTo) visibility = 1;
+    if (head.holding) {
+      visibility = inTo ? 1 : 0;
+      if (inTo && live && head.index === 0) progress = Math.min(1, Math.max(0, t) / FIRST_STEP_DRAW_MS);
+    }    else if (inFrom && inTo) visibility = 1;
     else if (inTo) {
       visibility = Math.min(1, head.p * 2.5);
       progress = head.e;

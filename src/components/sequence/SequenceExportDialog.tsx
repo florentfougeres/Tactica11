@@ -30,7 +30,7 @@ export default function SequenceExportDialog({
   onClose: () => void;
 }) {
   const L = useMemo(() => frameLayout(seq), [seq]);
-  const thumb = frameAt(seq, time);
+  const thumb = frameAt(seq, time, false);
   const thumbH = 220;
   const thumbW = (L.W / L.H) * thumbH;
   const [scale, setScale] = useState(1);

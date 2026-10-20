@@ -698,3 +698,28 @@ select.seq-input {
   border-color: var(--accent);
   font-weight: 600;
 }
+
+/* Toolbars portalled into the app chrome. */
+.view-row__seqtools,
+.topbar__seq {
+  min-width: 0;
+  display: flex;
+}
+.topbar__seq {
+  flex: 1;
+  justify-content: flex-end;
+}
+.seq-toolbar--tabs,
+.seq-toolbar--top {
+  padding: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.seq-toolbar--tabs .seq-tool > span,
+.seq-toolbar--top .seq-tool--camera > span {
+  display: none;
+}
+.view-row:has(.view-row__seqtools) {
+  grid-template-columns: auto minmax(0, 1fr);
+}
