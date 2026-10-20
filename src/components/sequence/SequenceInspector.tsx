@@ -220,16 +220,6 @@ function StepTab({
         <span>Nom</span>
         <input className="seq-input" value={step.name ?? ""} placeholder={`Étape ${stepIndex + 1}`} onChange={(e) => patch({ name: e.target.value })} />
       </label>
-      <label className="seq-field">
-        <span>Sous-titre / commentaire <em className="seq-hint-inline">(visible à l'aperçu et à l'export)</em></span>
-        <textarea className="seq-input" rows={3} value={step.caption ?? ""} placeholder="Ce que dit la voix off à ce moment…" onChange={(e) => patch({ caption: e.target.value })} />
-      </label>
-      <Switch label="Karaoké (mot par mot)" checked={!!step.karaoke} onChange={(v) => patch({ karaoke: v })} />
-      <label className="seq-field">
-        <span>Nouveau chapitre ici <em className="seq-hint-inline">(à l'export)</em></span>
-        <input className="seq-input" value={step.chapter ?? ""} placeholder="ex. LE DILEMME" onChange={(e) => patch({ chapter: e.target.value })} />
-      </label>
-
       <div className="seq-field-row">
         <label className="seq-field">
           <span>Transition (s)</span>
@@ -346,6 +336,18 @@ function StepTab({
           Supprimer l'étape
         </button>
       </div>
+      <details className="seq-collapse" open={!!(step.caption || step.chapter) || undefined}>
+        <summary className="seq-form__title">Sous-titre et chapitre</summary>
+        <label className="seq-field" title="Visible à l'aperçu et à l'export">
+          <span>Sous-titre / commentaire</span>
+          <textarea className="seq-input" rows={3} value={step.caption ?? ""} placeholder="Ce que dit la voix off à ce moment…" onChange={(e) => patch({ caption: e.target.value })} />
+        </label>
+        <Switch label="Karaoké (mot par mot)" checked={!!step.karaoke} onChange={(v) => patch({ karaoke: v })} />
+        <label className="seq-field" title="Visible à l'export">
+          <span>Nouveau chapitre ici</span>
+          <input className="seq-input" value={step.chapter ?? ""} placeholder="ex. LE DILEMME" onChange={(e) => patch({ chapter: e.target.value })} />
+        </label>
+      </details>
     </div>
   );
 }

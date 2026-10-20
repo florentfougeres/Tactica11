@@ -790,3 +790,30 @@ select.seq-input {
   flex: 1 1 auto;
   min-height: 0;
 }
+
+/* Collapsible, less used section at the bottom of a tab. */
+.seq-collapse {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--panel-border);
+  padding-top: 6px;
+}
+.seq-collapse > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.seq-collapse > summary::-webkit-details-marker {
+  display: none;
+}
+.seq-collapse > summary::before {
+  content: "▸";
+  display: inline-block;
+  transition: transform 0.15s;
+}
+.seq-collapse[open] > summary {
+  margin-bottom: 10px;
+}
+.seq-collapse[open] > summary::before {
+  transform: rotate(90deg);
+}
