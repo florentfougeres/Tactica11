@@ -38,6 +38,8 @@ interface Props {
   onHelp: () => void;
   theme: "dark" | "light";
   onToggleTheme: () => void;
+  // Séquence renders its tools into this element (see SeqTopTools).
+  onSeqSlot?: (el: HTMLDivElement | null) => void;
 }
 
 export default function TopBar({
@@ -74,6 +76,7 @@ export default function TopBar({
   onHelp,
   theme,
   onToggleTheme,
+  onSeqSlot,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const fmRef = useRef<HTMLDivElement>(null);
@@ -307,7 +310,7 @@ export default function TopBar({
       )}
 
       {/* Séquence portals its camera/view/export buttons in here. */}
-      {view === "sequence" && <div id="seq-topbar-slot" className="topbar__seq" />}
+      {view === "sequence" && <div ref={onSeqSlot} className="topbar__seq" />}
 
       <div className="topbar__actions">
         {/* Undo/redo cover the active compo's whole edit history — pitch

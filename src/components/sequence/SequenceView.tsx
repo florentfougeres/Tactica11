@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Lineup, Phase, Player, Pos } from "../../types";
 import type { SequenceActions } from "../../hooks/useSequenceActions";
 import { useSequencePlayback } from "../../hooks/useSequencePlayback";
@@ -29,6 +29,7 @@ interface Props {
   actions: SequenceActions;
   seqId: string | null;
   onSeqId: (id: string | null) => void;
+  toolbarSlot?: HTMLElement | null; // top-bar element the toolbar is portalled into
   tabs?: React.ReactNode; // app view tabs, shown above the inspector (frees the row above the pitch)
 }
 
@@ -36,7 +37,7 @@ interface Props {
 const CARRY_KEY = "tactica11.seqCarryGraphics";
 
 
-export default function SequenceView({ lineup, players, look, playerById, actions, seqId, onSeqId, tabs }: Props) {
+export default function SequenceView({ lineup, players, look, playerById, actions, seqId, onSeqId, tabs, toolbarSlot }: Props) {
   const sequences = lineup.sequences ?? [];
   const seq: Sequence | null = sequences.find((q) => q.id === seqId) ?? sequences[0] ?? null;
   // A freshly created / duplicated sequence opens with its name field focused.
@@ -61,6 +62,7 @@ export default function SequenceView({ lineup, players, look, playerById, action
       autoRename={renameId === seq.id}
       onRenameDone={() => setRenameId(null)}
       tabs={tabs}
+      toolbarSlot={toolbarSlot}
     />
   );
 }
@@ -103,8 +105,10 @@ function SequenceEditor({
   autoRename,
   onRenameDone,
   tabs,
+  toolbarSlot,
 }: {
   tabs?: React.ReactNode;
+  toolbarSlot?: HTMLElement | null;
   seq: Sequence;
   lineup: Lineup;
   players: Player[];
@@ -123,11 +127,6 @@ function SequenceEditor({
   const duration = useMemo(() => totalDuration(seq.steps), [seq.steps]);
   // Open on step 1 itself (after its intro), ready to edit.
   const pb = useSequencePlayback(duration, spans[0]?.arrive ?? 0);
-  // The toolbars live in the app chrome (top bar), via portals.
-  const [topSlot, setTopSlot] = useState<HTMLElement | null>(null);
-  useLayoutEffect(() => {
-    setTopSlot(document.getElementById("seq-topbar-slot"));
-  }, []);
   // Step last picked (timeline, arrows…): breaks ties between steps that
   // land on the same instant (no hold, then no transition).
   const [pickedStep, setPickedStep] = useState<number | undefined>(undefined);
@@ -434,9 +433,9 @@ function SequenceEditor({
       </div>
 
       <div className="seq-main">
-        {topSlot && (
+        {toolbarSlot && (
           <SeqTopTools
-            slot={topSlot}
+            slot={toolbarSlot}
             tool={tool}
             onTool={setTool}
             showGrid={!!seq.showGrid}

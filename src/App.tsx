@@ -475,6 +475,8 @@ export default function App() {
 
   // Séquence (with a sequence to edit) puts the view tabs above its inspector,
   // so the pitch can use the row they'd otherwise take.
+  // Top-bar element the Séquence toolbar is portalled into.
+  const [seqSlot, setSeqSlot] = useState<HTMLDivElement | null>(null);
   const seqTabsInside = view === "sequence" && (lineup.sequences?.length ?? 0) > 0;
 
   return (
@@ -511,6 +513,7 @@ export default function App() {
         onHelp={openOnboarding}
         theme={theme}
         onToggleTheme={toggleTheme}
+        onSeqSlot={setSeqSlot}
         compos={project.lineups.map((l) => ({ id: l.id, name: l.name }))}
         currentId={lineup.id}
         projectName={project.name}
@@ -565,6 +568,7 @@ export default function App() {
           />
         ) : view === "sequence" ? (
           <SequenceView
+            toolbarSlot={seqSlot}
             tabs={seqTabsInside ? <ViewTabs view={view} onView={setView} /> : undefined}
             lineup={lineup}
             players={project.players}
