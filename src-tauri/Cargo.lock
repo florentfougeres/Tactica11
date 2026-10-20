@@ -3003,7 +3003,7 @@ dependencies = [
 
 [[package]]
 name = "tactica11"
-version = "0.18.0"
+version = "0.19.0"
 dependencies = [
  "tauri",
  "tauri-build",
