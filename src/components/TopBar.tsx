@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { FORMATIONS } from "../formations";
 import type { Phase } from "../types";
 import type { View } from "./ViewTabs";
+import { useDismiss } from "../hooks/useDismiss";
 
 interface Props {
   view: View;
@@ -37,24 +38,6 @@ interface Props {
   onHelp: () => void;
   theme: "dark" | "light";
   onToggleTheme: () => void;
-}
-
-function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: PointerEvent) => {
-      if (!ref.current?.contains(e.target as Node)) close();
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-    };
-    document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open, close, ref]);
 }
 
 export default function TopBar({
@@ -103,10 +86,10 @@ export default function TopBar({
   const [projectOpen, setProjectOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useDismiss(fmOpen, () => setFmOpen(false), fmRef);
-  useDismiss(exportOpen, () => setExportOpen(false), exportRef);
-  useDismiss(compoOpen, () => setCompoOpen(false), compoRef);
-  useDismiss(projectOpen, () => setProjectOpen(false), projectRef);
+  useDismiss(fmOpen, () => setFmOpen(false), [fmRef]);
+  useDismiss(exportOpen, () => setExportOpen(false), [exportRef]);
+  useDismiss(compoOpen, () => setCompoOpen(false), [compoRef]);
+  useDismiss(projectOpen, () => setProjectOpen(false), [projectRef]);
 
   const copyLink = () => {
     onCopyLink();

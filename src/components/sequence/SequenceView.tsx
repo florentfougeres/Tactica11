@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useDismiss } from "../../hooks/useDismiss";
 import type { Lineup, Phase, Player, Pos } from "../../types";
 import { pxToPos } from "../../types";
 import type { SequenceActions } from "../../hooks/useSequenceActions";
@@ -1100,25 +1101,7 @@ function ToolMenu({ button, title, active, children }: { button: React.ReactNode
     const r = btnRef.current.getBoundingClientRect();
     setPos({ left: Math.max(8, Math.min(r.left, window.innerWidth - 220)), top: r.bottom + 6 });
   }, [open]);
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: PointerEvent) => {
-      const t = e.target as Node;
-      if (!btnRef.current?.contains(t) && !menuRef.current?.contains(t)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    const close = () => setOpen(false);
-    document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
-    window.addEventListener("resize", close);
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
-      window.removeEventListener("resize", close);
-    };
-  }, [open]);
+  useDismiss(open, () => setOpen(false), [btnRef, menuRef], { floating: true });
   return (
     <>
       <button

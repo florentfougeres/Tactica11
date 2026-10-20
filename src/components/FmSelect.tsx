@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useDismiss } from "../hooks/useDismiss";
 
 export interface FmOption<V extends string> {
   value: V;
@@ -51,31 +52,9 @@ export default function FmSelect<V extends string>({
   }, [open]);
 
   // Close on outside click, Escape, scroll or resize; keep the active option in view.
+  useDismiss(open, () => setOpen(false), [btnRef, menuRef], { floating: true });
   useEffect(() => {
-    if (!open) return;
-    const onDown = (e: PointerEvent) => {
-      const t = e.target as Node;
-      if (!btnRef.current?.contains(t) && !menuRef.current?.contains(t)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    const onScroll = (e: Event) => {
-      if (menuRef.current?.contains(e.target as Node)) return;
-      setOpen(false);
-    };
-    const onResize = () => setOpen(false);
-    document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", onResize);
-    menuRef.current?.querySelector(".is-active")?.scrollIntoView({ block: "nearest" });
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onResize);
-    };
+    if (open) menuRef.current?.querySelector(".is-active")?.scrollIntoView({ block: "nearest" });
   }, [open, rect]);
 
   return (
