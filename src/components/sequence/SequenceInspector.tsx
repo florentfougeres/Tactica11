@@ -242,7 +242,7 @@ function StepTab({
           Mettre en avant la sélection
         </button>
         <button type="button" className="pitch-ctl__btn" disabled={!step.focusIds?.length} onClick={() => patch({ focusIds: [] })}>
-          Retirer
+          Tout retirer
         </button>
       </div>
       <Switch label="Atténuer les autres joueurs" checked={!!step.dimOthers} onChange={(v) => patch({ dimOthers: v })} />
@@ -416,9 +416,27 @@ function SelectionTab(props: Props) {
         </>
       )}
       <div className="seq-btn-row">
-        <button type="button" className="pitch-ctl__btn" disabled={!editable} onClick={() => actions.patchStep(seq.id, stepIndex, { focusIds: ids })}>
-          Mettre en avant
-        </button>
+        {(() => {
+          // Toggle: highlighted players can be un-highlighted from here too.
+          const focused = new Set(step.focusIds ?? []);
+          const allFocused = ids.every((i) => focused.has(i));
+          return (
+            <button
+              type="button"
+              className={`pitch-ctl__btn ${allFocused ? "is-on" : ""}`}
+              disabled={!editable}
+              onClick={() =>
+                actions.patchStep(seq.id, stepIndex, {
+                  focusIds: allFocused
+                    ? [...focused].filter((i) => !ids.includes(i))
+                    : [...new Set([...focused, ...ids])],
+                })
+              }
+            >
+              {allFocused ? "Retirer la mise en avant" : "Mettre en avant"}
+            </button>
+          );
+        })()}
         <button type="button" className="pitch-ctl__btn" onClick={() => onSelectActors(new Set())}>
           Désélectionner
         </button>

@@ -659,3 +659,7 @@ select.seq-input {
 .seq-carry + .seq-tbtn--add {
   margin-left: 6px;
 }
+.pitch-ctl__btn.is-on {
+  border-color: #f4c531;
+  color: #f4c531;
+}
