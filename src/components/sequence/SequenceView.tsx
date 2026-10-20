@@ -164,11 +164,9 @@ function SequenceEditor({
   const spans = useMemo(() => stepSpans(seq.steps), [seq.steps]);
   const duration = useMemo(() => totalDuration(seq.steps), [seq.steps]);
   const pb = useSequencePlayback(duration);
-  // The toolbars live in the app chrome (tabs row + top bar), via portals.
-  const [toolsSlot, setToolsSlot] = useState<HTMLElement | null>(null);
+  // The toolbars live in the app chrome (top bar), via portals.
   const [topSlot, setTopSlot] = useState<HTMLElement | null>(null);
   useLayoutEffect(() => {
-    setToolsSlot(document.getElementById("seq-tools-slot"));
     setTopSlot(document.getElementById("seq-topbar-slot"));
   }, []);
   const head = playheadAt(seq.steps, pb.time);
@@ -825,7 +823,7 @@ function SequenceEditor({
       />
 
       <div className="seq-main">
-        {toolsSlot && createPortal(
+        {topSlot && createPortal(
         <div className="seq-toolbar seq-toolbar--tabs" role="toolbar" aria-label="Outils">
           {TOOL_GROUPS.slice(0, -1).map((g, gi) => (
             <div key={gi} className="seq-toolbar__group">
@@ -846,7 +844,7 @@ function SequenceEditor({
             </div>
           ))}
         </div>
-        , toolsSlot)}
+        , topSlot)}
         {topSlot && createPortal(
         <div className="seq-toolbar seq-toolbar--top" role="toolbar" aria-label="Vue et export">
           <div className="seq-toolbar__group">

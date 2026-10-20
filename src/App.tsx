@@ -572,7 +572,6 @@ export default function App() {
       {!presenting && (
         <div className="view-row">
           <ViewTabs view={view} onView={setView} />
-          {view === "sequence" && <div id="seq-tools-slot" className="view-row__seqtools" />}
           {view === "pitch" && (
             <div className="view-row__phase">
               <PhaseToggle phase={phase} onPhase={handlePhase} />

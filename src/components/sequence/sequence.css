@@ -699,15 +699,13 @@ select.seq-input {
   font-weight: 600;
 }
 
-/* Toolbars portalled into the app chrome. */
-.view-row__seqtools,
-.topbar__seq {
-  min-width: 0;
-  display: flex;
-}
+/* Toolbars portalled into the app's top bar. */
 .topbar__seq {
   flex: 1;
+  min-width: 0;
+  display: flex;
   justify-content: flex-end;
+  gap: 6px;
 }
 .seq-toolbar--tabs,
 .seq-toolbar--top {
@@ -715,11 +713,4 @@ select.seq-input {
   flex-wrap: nowrap;
   overflow-x: auto;
   scrollbar-width: none;
-}
-.seq-toolbar--tabs .seq-tool > span,
-.seq-toolbar--top .seq-tool--camera > span {
-  display: none;
-}
-.view-row:has(.view-row__seqtools) {
-  grid-template-columns: auto minmax(0, 1fr);
 }
