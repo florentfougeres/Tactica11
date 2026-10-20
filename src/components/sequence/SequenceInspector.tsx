@@ -659,6 +659,14 @@ function SettingsTab({ seq, actions, safeZones, onSafeZones }: Props) {
       </label>
       <Switch label="Noms des joueurs" checked={seq.showNames} onChange={(v) => patch({ showNames: v })} />
       <Switch label="Grille positionnelle" checked={!!seq.showGrid} onChange={(v) => patch({ showGrid: v })} />
+      <label className="seq-field">
+        <span>Taille des disques — nous ×{(seq.homeDiscScale ?? 1).toFixed(2)}</span>
+        <input type="range" min={0.6} max={1.8} step={0.05} value={seq.homeDiscScale ?? 1} onChange={(e) => patch({ homeDiscScale: Number(e.target.value) })} />
+      </label>
+      <label className="seq-field">
+        <span>Taille des disques — adversaires ×{(seq.awayDiscScale ?? 1).toFixed(2)}</span>
+        <input type="range" min={0.6} max={1.8} step={0.05} value={seq.awayDiscScale ?? 1} onChange={(e) => patch({ awayDiscScale: Number(e.target.value) })} />
+      </label>
       <Switch label="Texte dans les disques" checked={seq.showNumbers} onChange={(v) => patch({ showNumbers: v })} />
       {seq.showNumbers && (
         <div className="seg">

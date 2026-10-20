@@ -11,7 +11,7 @@ import type {
   SeqAnnotation,
   Sequence,
 } from "../../sequence/types";
-import { ANN_LABEL, ARROW_KINDS, DEFAULT_CAMERA, defaultAnnColor, isArrow } from "../../sequence/types";
+import { ANN_LABEL, ARROW_KINDS, DEFAULT_CAMERA, defaultAnnColor, discScale, isArrow } from "../../sequence/types";
 import { frameAt, playheadAt, stepSpans, totalDuration } from "../../sequence/engine";
 import type { AnnFrame } from "../../sequence/engine";
 import { frameLayout, toLocal } from "../../sequence/layout";
@@ -270,14 +270,14 @@ function SequenceEditor({
   const hitActor = (p: Pos): string | null => {
     const c = toLocal(L, p);
     let best: string | null = null;
-    let bd = R * 1.15;
+    let bd = Infinity;
     // Later actors draw on top → test them first.
     for (const a of [...seq.actors].reverse()) {
       const ap = frame.positions[a.id];
       if (!ap) continue;
       const q = toLocal(L, ap);
       const d = Math.hypot(q.x - c.x, q.y - c.y);
-      if (d < bd) {
+      if (d < R * discScale(seq, a) * 1.15 && d < bd) {
         bd = d;
         best = a.id;
       }

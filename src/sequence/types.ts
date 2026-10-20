@@ -116,6 +116,8 @@ export interface Sequence {
   showNames: boolean;
   showNumbers: boolean;
   showGrid?: boolean; // juego de posición zones, as on the Terrain tab
+  homeDiscScale?: number; // disc size of our team, 1 = default
+  awayDiscScale?: number; // disc size of the opponents, 1 = default
   theme: SeqTheme;
   actors: SeqActor[];
   steps: SeqStep[];
@@ -196,6 +198,13 @@ export const SEQ_COLORS = [
   "#b388ff",
   "#0b0f14",
 ];
+
+// Disc size multiplier of an actor (per team).
+export function discScale(seq: Pick<Sequence, "homeDiscScale" | "awayDiscScale">, actor: SeqActor | undefined): number {
+  if (!actor) return 1;
+  const v = actor.team === "home" ? seq.homeDiscScale : seq.awayDiscScale;
+  return v && Number.isFinite(v) ? v : 1;
+}
 
 export const isArrow = (k: AnnKind): k is ArrowKind =>
   (ARROW_KINDS as string[]).includes(k);

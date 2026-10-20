@@ -11,7 +11,7 @@ import { anchorPos } from "./engine";
 import type { FrameLayout } from "./layout";
 import { cameraTransform, toLocal } from "./layout";
 import type { SeqActor, Sequence } from "./types";
-import { isArrow } from "./types";
+import { discScale, isArrow } from "./types";
 
 // The stage follows the app's light / dark theme ("cinéma sombre" / "clair").
 export type SeqLook = "dark" | "light";
@@ -194,7 +194,11 @@ export default function SequenceStage({
   const PAL = PALETTE[look];
   const T = seq.theme;
   const u = L.u;
-  const R = 3.2 * u; // disc radius
+  const R = 3.2 * u; // base disc radius (ball, hit areas)
+  const actorById = new Map(seq.actors.map((a) => [a.id, a]));
+  // Radius of one actor's disc (per-team size slider).
+  const rOf = (id: string) => R * discScale(seq, actorById.get(id));
+  const rAnchor = (an: { actorId: string } | { pos: Pos }) => ("actorId" in an ? rOf(an.actorId) : R);
   const pw = L.pitch.w;
   const ph = L.pitch.h;
   const loc = (p: Pos) => toLocal(L, p);
@@ -262,8 +266,8 @@ export default function SequenceStage({
       if (pts.length < 2) return null;
       const [a, b] = pts;
       const c = ann.control ? loc(ann.control) : null;
-      const trimA = "actorId" in ann.anchors[0] ? R * 1.15 : 0;
-      const trimB = ann.anchors[1] && "actorId" in ann.anchors[1] ? R * 1.25 : 0;
+      const trimA = "actorId" in ann.anchors[0] ? rAnchor(ann.anchors[0]) * 1.15 : 0;
+      const trimB = ann.anchors[1] && "actorId" in ann.anchors[1] ? rAnchor(ann.anchors[1]) * 1.25 : 0;
       const k = ann.kind;
       const w = (k === "deep" ? 0.95 : k === "pass" ? 0.55 : k === "press" ? 0.8 : 0.68) * u;
       const line = arrowPoints(a, b, c, trimA, trimB, progress, k === "dribble" ? 0.75 * u : 0);
@@ -362,7 +366,7 @@ export default function SequenceStage({
 
     if (ann.kind === "circle") {
       if (!pts.length) return null;
-      const r = R * 1.55 * (ann.size ?? 1);
+      const r = rAnchor(ann.anchors[0]) * 1.55 * (ann.size ?? 1);
       return (
         <g key={ann.id} {...common}>
           {sel && <circle cx={pts[0].x} cy={pts[0].y} r={r} {...SEL_GLOW} strokeWidth={1.8 * u} />}
@@ -402,7 +406,7 @@ export default function SequenceStage({
       const x = pts[0].x;
       const scale = ann.size ?? 1;
       // Just above the disc (the player's name sits below it).
-      const y = onActor ? pts[0].y - R - 1.4 * u - 1.8 * u * scale : pts[0].y;
+      const y = onActor ? pts[0].y - rAnchor(ann.anchors[0]) - 1.4 * u - 1.8 * u * scale : pts[0].y;
       return (
         <g key={ann.id} {...common}>
           <Pill
@@ -425,6 +429,7 @@ export default function SequenceStage({
   const actorNode = (a: SeqActor) => {
     const p = pos[a.id];
     if (!p) return null;
+    const R = rOf(a.id); // this disc's own radius (shadows the base one)
     const c = loc(p);
     const focus = frame.focus[a.id] ?? 0;
     const opacity = 1 - 0.72 * frame.dim * (1 - focus);
@@ -575,11 +580,12 @@ export default function SequenceStage({
         {frame.ghosts.map((g) => {
           const a = loc(g.from);
           const b = loc(g.to);
-          const line = arrowPoints(a, b, null, R * 1.05, R * 1.25, 1, 0);
+          const rg = rOf(g.actorId);
+          const line = arrowPoints(a, b, null, rg * 1.05, rg * 1.25, 1, 0);
           const hd = head(line, u * 1.8);
           return (
             <g key={`ghost-${g.actorId}`} opacity={g.opacity * 0.85}>
-              <circle cx={a.x} cy={a.y} r={R} fill="none" stroke="#ffffff" strokeOpacity={0.7} strokeWidth={0.3 * u} strokeDasharray={`${f(u * 0.8)} ${f(u * 0.7)}`} />
+              <circle cx={a.x} cy={a.y} r={rg} fill="none" stroke="#ffffff" strokeOpacity={0.7} strokeWidth={0.3 * u} strokeDasharray={`${f(u * 0.8)} ${f(u * 0.7)}`} />
               {line.length > 1 && (
                 <>
                   <polyline points={poly(line)} fill="none" stroke={T.accent} strokeWidth={0.4 * u} strokeDasharray={`${f(u * 1)} ${f(u * 0.9)}`} strokeLinecap="round" />
@@ -616,6 +622,7 @@ export default function SequenceStage({
               const p = pos[an.actorId];
               if (!p) return;
               const c = loc(p);
+              const R = rOf(an.actorId);
               n += 1;
               hs.push(
                 <g key={`r${i}`} pointerEvents="none">
