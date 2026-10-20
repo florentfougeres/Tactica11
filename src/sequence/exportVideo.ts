@@ -3,7 +3,7 @@
 // (no real-time capture), so the file is smooth whatever the machine speed.
 import { createElement } from "react";
 import type { Sequence } from "./types";
-import type { ActorInfo } from "./SequenceStage";
+import type { ActorInfo, SeqLook } from "./SequenceStage";
 import SequenceStage from "./SequenceStage";
 import { frameAt, totalDuration } from "./engine";
 import { frameLayout } from "./layout";
@@ -33,10 +33,11 @@ interface RenderOpts {
   seq: Sequence;
   info: Record<string, ActorInfo>;
   background: "normal" | "chroma";
+  look: SeqLook;
   scale: number;
 }
 
-async function makeRenderer({ seq, info, background, scale }: RenderOpts) {
+async function makeRenderer({ seq, info, background, look, scale }: RenderOpts) {
   const { renderToStaticMarkup } = await import("react-dom/server");
   const L = frameLayout(seq);
   // Encoders want even dimensions.
@@ -56,6 +57,7 @@ async function makeRenderer({ seq, info, background, scale }: RenderOpts) {
         layout: L,
         info,
         background,
+        look,
         idPrefix: "x",
         pixelSize: { w: W, h: H },
       }),

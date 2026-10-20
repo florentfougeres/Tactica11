@@ -9,14 +9,13 @@ import type {
   ArrowKind,
   Camera,
   SeqAnnotation,
-  SeqPreset,
   Sequence,
 } from "../../sequence/types";
 import { ANN_LABEL, ARROW_KINDS, DEFAULT_CAMERA, defaultAnnColor, isArrow } from "../../sequence/types";
 import { frameAt, playheadAt, stepSpans, totalDuration } from "../../sequence/engine";
 import type { AnnFrame } from "../../sequence/engine";
 import { frameLayout, toLocal } from "../../sequence/layout";
-import SequenceStage, { type ActorInfo } from "../../sequence/SequenceStage";
+import SequenceStage, { type ActorInfo, type SeqLook } from "../../sequence/SequenceStage";
 import { sid } from "../../sequence/create";
 import { canExportVideo, exportStepPng } from "../../sequence/exportVideo";
 import SequenceTimeline from "./SequenceTimeline";
@@ -30,6 +29,7 @@ export type SeqTool = "select" | AnnKind | "camera";
 interface Props {
   lineup: Lineup;
   players: Player[];
+  look: SeqLook; // follows the app theme
   playerById: (id: string | null) => Player | null;
   actions: SequenceActions;
   seqId: string | null;
@@ -79,7 +79,7 @@ const CARRY_KEY = "tactica11.seqCarryGraphics";
 
 const clampPct = (v: number) => Math.min(104, Math.max(-4, v));
 
-export default function SequenceView({ lineup, players, playerById, actions, seqId, onSeqId }: Props) {
+export default function SequenceView({ lineup, players, look, playerById, actions, seqId, onSeqId }: Props) {
   const sequences = lineup.sequences ?? [];
   const seq: Sequence | null = sequences.find((q) => q.id === seqId) ?? sequences[0] ?? null;
 
@@ -90,6 +90,7 @@ export default function SequenceView({ lineup, players, playerById, actions, seq
       seq={seq}
       lineup={lineup}
       players={players}
+      look={look}
       playerById={playerById}
       actions={actions}
       onSeqId={onSeqId}
@@ -98,8 +99,7 @@ export default function SequenceView({ lineup, players, playerById, actions, seq
 }
 
 function SequenceEmpty({ actions, onSeqId }: { actions: SequenceActions; onSeqId: (id: string) => void }) {
-  const [preset, setPreset] = useState<SeqPreset>("cinema");
-  const create = (phase: Phase) => onSeqId(actions.createSeq(phase, preset));
+  const create = (phase: Phase) => onSeqId(actions.createSeq(phase));
   return (
     <div className="seq-empty glass">
       <h2>Mode Séquence</h2>
@@ -108,16 +108,6 @@ function SequenceEmpty({ actions, onSeqId }: { actions: SequenceActions; onSeqId
         et déplacements, ajoute des annotations, puis lis l'animation ou exporte-la en vidéo pour
         TikTok, Reels ou YouTube.
       </p>
-      <div className="seq-empty__row">
-        <span>Style</span>
-        <div className="seg">
-          {(["cinema", "sober"] as SeqPreset[]).map((p) => (
-            <button key={p} type="button" className={`seg__btn ${preset === p ? "is-active" : ""}`} onClick={() => setPreset(p)}>
-              {p === "cinema" ? "Cinéma (sombre)" : "Tactique sobre"}
-            </button>
-          ))}
-        </div>
-      </div>
       <p className="seq-empty__label">Créer une séquence à partir de la compo :</p>
       <div className="seq-empty__actions">
         <button type="button" className="btn btn--primary" onClick={() => create("base")}>
@@ -138,6 +128,7 @@ function SequenceEditor({
   seq,
   lineup,
   players,
+  look,
   playerById,
   actions,
   onSeqId,
@@ -145,6 +136,7 @@ function SequenceEditor({
   seq: Sequence;
   lineup: Lineup;
   players: Player[];
+  look: SeqLook;
   playerById: (id: string | null) => Player | null;
   actions: SequenceActions;
   onSeqId: (id: string | null) => void;
@@ -756,6 +748,7 @@ function SequenceEditor({
         seq,
         info,
         background: "normal",
+        look,
         scale: 1,
         time: pb.time,
         suffix: step.name || `etape-${stepIndex + 1}`,
@@ -895,6 +888,7 @@ function SequenceEditor({
               frame={frame}
               layout={L}
               info={info}
+              look={look}
               idPrefix="ed"
               svgRef={svgRef}
               cameraRef={camRef}
@@ -948,8 +942,8 @@ function SequenceEditor({
         />
       </div>
 
-      {preview && <SequencePreview seq={seq} info={info} onClose={() => setPreview(false)} />}
-      {exportOpen && <SequenceExportDialog seq={seq} info={info} onClose={() => setExportOpen(false)} />}
+      {preview && <SequencePreview seq={seq} info={info} look={look} onClose={() => setPreview(false)} />}
+      {exportOpen && <SequenceExportDialog seq={seq} info={info} look={look} onClose={() => setExportOpen(false)} />}
     </>
   );
 }

@@ -3,12 +3,11 @@ import type {
   BallState,
   SeqActor,
   SeqAnnotation,
-  SeqPreset,
   SeqStep,
   Sequence,
   Team,
 } from "../sequence/types";
-import { PRESET_THEMES } from "../sequence/types";
+import { DEFAULT_THEME } from "../sequence/types";
 import { createSequence, duplicateStep, sid } from "../sequence/create";
 
 type SetLineup = (u: Lineup | ((l: Lineup) => Lineup)) => void;
@@ -31,9 +30,9 @@ export function useSequenceActions(lineup: Lineup, setLineup: SetLineup) {
     }));
 
   // --- sequences ---
-  const createSeq = (phase: Phase, preset: SeqPreset): string => {
+  const createSeq = (phase: Phase): string => {
     const n = sequences.length + 1;
-    const q = createSequence(lineup, phase, `Séquence ${n}`, preset);
+    const q = createSequence(lineup, phase, `Séquence ${n}`);
     setLineup((l) => ({ ...l, sequences: [...(l.sequences ?? []), q] }));
     return q.id;
   };
@@ -57,8 +56,7 @@ export function useSequenceActions(lineup: Lineup, setLineup: SetLineup) {
   const patchSeq = (id: string, patch: Partial<Sequence>) =>
     update(id, (q) => ({ ...q, ...patch }));
 
-  const setPreset = (id: string, preset: SeqPreset) =>
-    update(id, (q) => ({ ...q, preset, theme: { ...PRESET_THEMES[preset] } }));
+  const resetTheme = (id: string) => update(id, (q) => ({ ...q, theme: { ...DEFAULT_THEME } }));
 
   // --- steps ---
   // Insert a copy of step `index` right after it (the "next step" gesture).
@@ -249,7 +247,7 @@ export function useSequenceActions(lineup: Lineup, setLineup: SetLineup) {
     duplicateSeq,
     deleteSeq,
     patchSeq,
-    setPreset,
+    resetTheme,
     addStep,
     deleteStep,
     moveStep,

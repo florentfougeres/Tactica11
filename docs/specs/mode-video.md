@@ -410,7 +410,9 @@ Livré :
   sous-titres avec karaoké.
 - Caméra par étape (outil caméra, zoom, « cadrer la sélection »), zoom / déplacement de la vue
   d'édition (molette, ±, Espace+glisser).
-- Formats 9:16 / 16:9 / 1:1, zones masquées TikTok/Reels, presets cinéma / sobre.
+- Formats 9:16 / 16:9 / 1:1 (terrain vertical ou paysage), zones masquées TikTok/Reels.
+- Style cinéma unique qui suit le thème de l'app : cinéma sombre / cinéma clair (le style
+  « tactique sobre » a été retiré, jugé inutile).
 - Lecture (début, préc., suiv., vitesse, boucle, scrub), aperçu plein écran sans interface.
 - Export PNG de l'instant affiché ; export **MP4** (1080p ou 4K, 30/60 i/s, fond vert), bouton
   masqué si le navigateur n'a pas WebCodecs.

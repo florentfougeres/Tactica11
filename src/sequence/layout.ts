@@ -42,7 +42,7 @@ export const FORMAT_SIZE: Record<SeqFormat, { W: number; H: number }> = {
 // The drawn grass apron extends 5% beyond the pitch lines on every side.
 const APRON = 1.1;
 
-type LayoutInput = Pick<Sequence, "format" | "orient" | "preset" | "title" | "subtitle" | "steps">;
+type LayoutInput = Pick<Sequence, "format" | "orient" | "title" | "subtitle" | "steps">;
 
 function fit(availW: number, availH: number, ratio: number) {
   const boxW = Math.max(1, Math.min(availW, availH * ratio));
@@ -56,18 +56,18 @@ export function frameLayout(seq: LayoutInput): FrameLayout {
   const short = Math.min(W, H);
   const pad = Math.round(short * 0.03);
   const base = short * 0.028;
-  const cinema = seq.preset === "cinema";
-  const captionFs = short * (cinema ? 0.042 : 0.048);
+  const captionFs = short * 0.042;
   const ratio = orient === "portrait" ? 68 / 105 : 105 / 68; // pitch w / h
 
-  const hasHeader = cinema || !!seq.title?.trim() || !!seq.subtitle?.trim();
+  // The header always carries the progress bar.
+  const hasHeader = true;
   const hasCaption = (seq.steps ?? []).some((s) => s.caption?.trim());
   const vertical = seq.format === "9:16";
   const captionOverlay = vertical;
   const capH = hasCaption && !captionOverlay ? captionFs * 1.35 * 2 + pad * 1.5 : 0;
 
   // --- option 1: header band on top ---
-  const headH = hasHeader ? pad + base * (cinema ? 4.4 : 3.9) : 0;
+  const headH = hasHeader ? pad + base * 4.4 : 0;
   const topAvailW = W - 2 * pad;
   const topAvailH = H - headH - capH - (hasHeader ? pad * 0.6 : pad) - pad;
   const top = fit(topAvailW, topAvailH, ratio);

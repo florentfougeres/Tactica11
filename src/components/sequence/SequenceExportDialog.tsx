@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Sequence } from "../../sequence/types";
-import type { ActorInfo } from "../../sequence/SequenceStage";
+import type { ActorInfo, SeqLook } from "../../sequence/SequenceStage";
 import { ExportCancelled, ExportUnsupported, exportVideo } from "../../sequence/exportVideo";
 import { totalDuration } from "../../sequence/engine";
 import { FORMAT_SIZE } from "../../sequence/layout";
@@ -10,10 +10,12 @@ type Status = { kind: "idle" } | { kind: "running"; p: number } | { kind: "done"
 export default function SequenceExportDialog({
   seq,
   info,
+  look,
   onClose,
 }: {
   seq: Sequence;
   info: Record<string, ActorInfo>;
+  look: SeqLook;
   onClose: () => void;
 }) {
   const [scale, setScale] = useState(1);
@@ -43,6 +45,7 @@ export default function SequenceExportDialog({
         seq,
         info,
         background,
+        look,
         scale,
         fps,
         signal: ctrl.signal,
@@ -68,7 +71,8 @@ export default function SequenceExportDialog({
         <h2>Exporter en vidéo</h2>
         <p className="seq-muted">
           MP4 au format {seq.format}, {seconds.toFixed(1)} s. Chaque image est calculée une par une :
-          l'export prend un peu de temps mais la vidéo est parfaitement fluide.
+          l'export prend un peu de temps mais la vidéo est parfaitement fluide. Rendu{" "}
+          {look === "dark" ? "cinéma sombre" : "cinéma clair"}, comme le thème actuel de l'app.
         </p>
 
         <div className="seq-field">

@@ -8,9 +8,8 @@ import type {
   SeqAnnotation,
   SeqStep,
   Sequence,
-  SeqPreset,
 } from "./types";
-import { DEFAULT_CAMERA, PRESET_THEMES, defaultAnnColor } from "./types";
+import { DEFAULT_CAMERA, DEFAULT_THEME, defaultAnnColor } from "./types";
 
 export const sid = (prefix: string) =>
   `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
@@ -37,7 +36,6 @@ export function createSequence(
   lineup: Lineup,
   phase: Phase,
   name: string,
-  preset: SeqPreset = "cinema",
 ): Sequence {
   const actors: SeqActor[] = [];
   const positions: Record<string, Pos> = {};
@@ -75,7 +73,7 @@ export function createSequence(
   first.name = "Situation initiale";
   first.holdMs = 1500;
 
-  const theme = { ...PRESET_THEMES[preset] };
+  const theme = { ...DEFAULT_THEME };
   const annotations: SeqAnnotation[] = [];
   (lineup.drawings?.[phase] ?? []).forEach((d) => {
     const kind =
@@ -100,7 +98,6 @@ export function createSequence(
     name,
     format: "9:16",
     orient: "portrait",
-    preset,
     title: lineup.name,
     subtitle: lineup.formation,
     showNames: true,
@@ -132,7 +129,6 @@ export function duplicateStep(step: SeqStep): SeqStep {
 
 // Defensive normalisation of a stored / imported sequence.
 export function migrateSequence(q: Sequence): Sequence {
-  const preset: SeqPreset = q.preset === "sober" ? "sober" : "cinema";
   const actors = (q.actors ?? []).filter((a) => a && a.id);
   const ids = new Set(actors.map((a) => a.id));
   const steps = (q.steps ?? []).map((s) => ({
@@ -148,8 +144,10 @@ export function migrateSequence(q: Sequence): Sequence {
     easing: s.easing === "linear" ? ("linear" as const) : ("easeInOut" as const),
   }));
   const stepIds = new Set(steps.map((s) => s.id));
+  const { preset: _legacy, ...rest } = q as Sequence & { preset?: string };
+  void _legacy;
   return {
-    ...q,
+    ...rest,
     format: q.format === "16:9" || q.format === "1:1" ? q.format : "9:16",
     // Older sequences: 9:16 was always vertical, 16:9 always horizontal,
     // 1:1 carried its own `squareOrient`.
@@ -159,12 +157,12 @@ export function migrateSequence(q: Sequence): Sequence {
         : q.format === "16:9" || (q as { squareOrient?: string }).squareOrient === "landscape"
           ? "landscape"
           : "portrait",
-    preset,
     title: q.title ?? "",
     subtitle: q.subtitle ?? "",
     showNames: q.showNames ?? true,
     showNumbers: q.showNumbers ?? true,
-    theme: { ...PRESET_THEMES[preset], ...(q.theme ?? {}) },
+    // Sequences made with the retired "sober" style get the default colours.
+    theme: (q as { preset?: string }).preset === "sober" ? { ...DEFAULT_THEME } : { ...DEFAULT_THEME, ...(q.theme ?? {}) },
     actors,
     steps,
     annotations: (q.annotations ?? []).filter(

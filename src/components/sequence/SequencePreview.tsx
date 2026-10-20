@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Sequence } from "../../sequence/types";
 import { frameAt, totalDuration } from "../../sequence/engine";
 import { frameLayout } from "../../sequence/layout";
-import SequenceStage, { type ActorInfo } from "../../sequence/SequenceStage";
+import SequenceStage, { type ActorInfo, type SeqLook } from "../../sequence/SequenceStage";
 import { useSequencePlayback } from "../../hooks/useSequencePlayback";
 
 // Fullscreen preview: exactly what the audience will see — the stage alone,
@@ -10,10 +10,12 @@ import { useSequencePlayback } from "../../hooks/useSequencePlayback";
 export default function SequencePreview({
   seq,
   info,
+  look,
   onClose,
 }: {
   seq: Sequence;
   info: Record<string, ActorInfo>;
+  look: SeqLook;
   onClose: () => void;
 }) {
   const L = useMemo(() => frameLayout(seq), [seq]);
@@ -51,7 +53,7 @@ export default function SequencePreview({
   return (
     <div className="seq-preview" ref={wrapRef} role="dialog" aria-label="Aperçu de la séquence">
       <div className="seq-preview__stage" style={{ width: L.W * scale, height: L.H * scale }} onClick={pb.toggle}>
-        <SequenceStage seq={seq} frame={frame} layout={L} info={info} idPrefix="pv" className="seq-preview__svg" />
+        <SequenceStage seq={seq} frame={frame} layout={L} info={info} look={look} idPrefix="pv" className="seq-preview__svg" />
       </div>
       <div className="seq-preview__bar">
         <button type="button" className="seq-tbtn" onClick={() => { pb.setTime(0); pb.play(); }} title="Rejouer">

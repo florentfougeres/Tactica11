@@ -13,6 +13,58 @@ import { cameraTransform, toLocal } from "./layout";
 import type { SeqActor, Sequence } from "./types";
 import { isArrow } from "./types";
 
+// The stage follows the app's light / dark theme ("cinéma sombre" / "clair").
+export type SeqLook = "dark" | "light";
+
+interface Palette {
+  bg: [string, string, string];
+  grassA: string;
+  grassB: string;
+  line: string;
+  gridLine: string;
+  gridTint: string;
+  ink: string; // header / caption text
+  inkStroke: string;
+  shade: string; // backing gradients behind header / captions
+  accentText: (accent: string) => string;
+}
+
+const PALETTE: Record<SeqLook, Palette> = {
+  dark: {
+    bg: ["#173823", "#0b1d12", "#050c08"],
+    grassA: "#1b3a24",
+    grassB: "#1f4229",
+    line: "rgba(255,255,255,0.42)",
+    gridLine: "rgba(255,255,255,0.28)",
+    gridTint: "rgba(244,197,49,0.08)",
+    ink: "#ffffff",
+    inkStroke: "#05080b",
+    shade: "#000000",
+    accentText: (a) => a,
+  },
+  light: {
+    bg: ["#fbfcf8", "#eef2ea", "#dde5d8"],
+    grassA: "#3f8b53",
+    grassB: "#46945b",
+    line: "rgba(255,255,255,0.72)",
+    gridLine: "rgba(255,255,255,0.42)",
+    gridTint: "rgba(255,255,255,0.12)",
+    ink: "#0b0f14",
+    inkStroke: "#ffffff",
+    shade: "#ffffff",
+    // The bright gold accent is unreadable as text on a light background.
+    accentText: (a) => darken(a, 0.38),
+  },
+};
+
+function darken(hex: string, k: number) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  const c = (v: number) => Math.round(v * (1 - k)).toString(16).padStart(2, "0");
+  return `#${c((n >> 16) & 255)}${c((n >> 8) & 255)}${c(n & 255)}`;
+}
+
 export interface ActorInfo {
   disc: string;
   name: string;
@@ -33,6 +85,7 @@ interface Props {
   layout: FrameLayout;
   info: Record<string, ActorInfo>;
   background?: "normal" | "chroma";
+  look?: SeqLook;
   idPrefix?: string;
   overlay?: StageOverlay;
   cameraRef?: Ref<SVGGElement>;
@@ -124,6 +177,7 @@ export default function SequenceStage({
   layout: L,
   info,
   background = "normal",
+  look = "dark",
   idPrefix = "seq",
   overlay,
   cameraRef,
@@ -136,7 +190,7 @@ export default function SequenceStage({
   onDoubleClick,
   onWheel,
 }: Props) {
-  const cinema = seq.preset === "cinema";
+  const PAL = PALETTE[look];
   const T = seq.theme;
   const u = L.u;
   const R = 3.2 * u; // disc radius
@@ -147,11 +201,10 @@ export default function SequenceStage({
   const pid = (s: string) => `${idPrefix}-${s}`;
 
   // ----- colours of the board -----
-  const bg =
-    background === "chroma" ? "#00b140" : cinema ? `url(#${pid("bg")})` : "#1f8f4a";
-  const grassA = cinema ? "#1b3a24" : "#35b964";
-  const grassB = cinema ? "#1f4229" : "#3cc46c";
-  const lineColor = cinema ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.9)";
+  const bg = background === "chroma" ? "#00b140" : `url(#${pid("bg")})`;
+  const grassA = PAL.grassA;
+  const grassB = PAL.grassB;
+  const lineColor = PAL.line;
 
   // ----- grass stripes (pitch-local) -----
   // Stripes cover the grass apron (pitch + 5% margin), clipped to its
@@ -379,8 +432,8 @@ export default function SequenceStage({
     const textColor = a.gk ? "#0b0f14" : home ? T.homeText : T.awayText;
     const inf = info[a.id] ?? { disc: "", name: "" };
     const sel = overlay?.selectedActors?.has(a.id);
-    const discFill = focus > 0.5 && cinema ? T.accent : fill;
-    const discText = focus > 0.5 && cinema ? "#0b0f14" : textColor;
+    const discFill = focus > 0.5 ? T.accent : fill;
+    const discText = focus > 0.5 ? "#0b0f14" : textColor;
     const fs = inf.disc.length > 2 ? R * 0.72 : R * 0.92;
     const showName = seq.showNames && inf.name;
     return (
@@ -421,8 +474,8 @@ export default function SequenceStage({
             y={c.y + R + 1.9 * u}
             text={inf.name.toUpperCase()}
             fs={1.65 * u}
-            bg={focus > 0.5 && cinema ? T.accent : "rgba(8,12,18,0.82)"}
-            fg={focus > 0.5 && cinema ? "#0b0f14" : "#ffffff"}
+            bg={focus > 0.5 ? T.accent : "rgba(8,12,18,0.82)"}
+            fg={focus > 0.5 ? "#0b0f14" : "#ffffff"}
             upper
           />
         )}
@@ -458,22 +511,22 @@ export default function SequenceStage({
     >
       <defs>
         <radialGradient id={pid("bg")} cx="50%" cy="38%" r="75%">
-          <stop offset="0%" stopColor="#173823" />
-          <stop offset="65%" stopColor="#0b1d12" />
-          <stop offset="100%" stopColor="#050c08" />
+          <stop offset="0%" stopColor={PAL.bg[0]} />
+          <stop offset="65%" stopColor={PAL.bg[1]} />
+          <stop offset="100%" stopColor={PAL.bg[2]} />
         </radialGradient>
         <linearGradient id={pid("top")} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#000" stopOpacity={cinema ? 0.75 : 0.35} />
-          <stop offset="100%" stopColor="#000" stopOpacity={0} />
+          <stop offset="0%" stopColor={PAL.shade} stopOpacity={0.75} />
+          <stop offset="100%" stopColor={PAL.shade} stopOpacity={0} />
         </linearGradient>
         <linearGradient id={pid("left")} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#000" stopOpacity={cinema ? 0.55 : 0.25} />
-          <stop offset="80%" stopColor="#000" stopOpacity={cinema ? 0.35 : 0.12} />
-          <stop offset="100%" stopColor="#000" stopOpacity={0} />
+          <stop offset="0%" stopColor={PAL.shade} stopOpacity={0.55} />
+          <stop offset="80%" stopColor={PAL.shade} stopOpacity={0.35} />
+          <stop offset="100%" stopColor={PAL.shade} stopOpacity={0} />
         </linearGradient>
         <linearGradient id={pid("bottom")} x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0%" stopColor="#000" stopOpacity={cinema ? 0.7 : 0.3} />
-          <stop offset="100%" stopColor="#000" stopOpacity={0} />
+          <stop offset="0%" stopColor={PAL.shade} stopOpacity={0.7} />
+          <stop offset="100%" stopColor={PAL.shade} stopOpacity={0} />
         </linearGradient>
         <radialGradient id={pid("flash")} cx="50%" cy="50%" r="72%">
           <stop offset="45%" stopColor={frame.effect?.color ?? "#ff2d3a"} stopOpacity={0} />
@@ -489,13 +542,13 @@ export default function SequenceStage({
           <rect x={apron.x} y={apron.y} width={apron.w} height={apron.h} rx={u * 2} />
         </clipPath>
         <g data-bg="1" clipPath={`url(#${pid("apron")})`}>{stripes}</g>
-        <PitchMarkings orient={L.orient} frame={{ x: 0, y: 0, w: pw, h: ph }} line={lineColor} lineWidth={cinema ? 0.28 : 0.4} />
+        <PitchMarkings orient={L.orient} frame={{ x: 0, y: 0, w: pw, h: ph }} line={lineColor} lineWidth={0.28} />
         {seq.showGrid && (
           <PositionalGrid
             orient={L.orient}
             frame={{ x: 0, y: 0, w: pw, h: ph }}
-            line={cinema ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.45)"}
-            tint={cinema ? "rgba(244,197,49,0.08)" : "rgba(255,255,255,0.12)"}
+            line={PAL.gridLine}
+            tint={PAL.gridTint}
           />
         )}
         {goals.map((g, i) => (
@@ -506,7 +559,7 @@ export default function SequenceStage({
             width={g.w}
             height={g.h}
             fill="rgba(255,255,255,0.18)"
-            stroke={cinema ? "rgba(255,255,255,0.8)" : "#ffffff"}
+            stroke="rgba(255,255,255,0.8)"
             strokeWidth={0.4 * u}
           />
         ))}
@@ -630,8 +683,8 @@ export default function SequenceStage({
         />
       )}
 
-      <Header seq={seq} frame={frame} L={L} />
-      <Caption seq={seq} frame={frame} L={L} />
+      <Header seq={seq} frame={frame} L={L} pal={PAL} />
+      <Caption seq={seq} frame={frame} L={L} pal={PAL} />
 
       {frame.effect?.kind === "flash" && frame.effect.strength > 0 && (
         <rect x={0} y={0} width={L.W} height={L.H} fill={`url(#${pid("flash")})`} opacity={frame.effect.strength} pointerEvents="none" />
@@ -779,11 +832,11 @@ function Pill({
   );
 }
 
-function Header({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameLayout }) {
+function Header({ seq, frame, L, pal }: { seq: Sequence; frame: FrameState; L: FrameLayout; pal: Palette }) {
   const box = L.header;
   if (!box) return null;
-  const cinema = seq.preset === "cinema";
   const T = seq.theme;
+  const accentText = pal.accentText(T.accent);
   const base = L.base;
   const title = seq.title.trim();
   const sub = seq.subtitle.trim();
@@ -796,14 +849,14 @@ function Header({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameL
   if (box.mode === "side") {
     // Left column: title, subtitle, then the chapters as a vertical list,
     // each with its own progress bar (current one in the accent colour).
-    const titleFs = base * (cinema ? 1.25 : 1.6);
+    const titleFs = base * 1.25;
     const titleLines = title ? wrap(title.toUpperCase().split(/\s+/), titleFs, box.w, true) : [];
     const words = title.toUpperCase().split(/\s+/);
     let y = box.y + titleFs;
     const nodes: ReactNode[] = [];
     titleLines.forEach((li, k) => {
       nodes.push(
-        <text key={`t${k}`} x={box.x} y={y} fontFamily={FONT} fontWeight={900} fontSize={titleFs} fill="#ffffff" letterSpacing={cinema ? base * 0.06 : undefined} stroke={cinema ? undefined : "#0b0f14"} strokeWidth={cinema ? undefined : base * 0.16} paintOrder="stroke">
+        <text key={`t${k}`} x={box.x} y={y} fontFamily={FONT} fontWeight={900} fontSize={titleFs} fill={pal.ink} letterSpacing={base * 0.06}>
           {li.map((i) => words[i]).join(" ")}
         </text>,
       );
@@ -812,20 +865,20 @@ function Header({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameL
     if (sub) {
       y += base * 0.2;
       nodes.push(
-        <text key="sub" x={box.x} y={y} fontFamily={FONT} fontWeight={800} fontSize={base * 0.95} fill={T.accent} stroke={cinema ? undefined : "#0b0f14"} strokeWidth={cinema ? undefined : base * 0.12} paintOrder="stroke" letterSpacing={base * 0.05}>
+        <text key="sub" x={box.x} y={y} fontFamily={FONT} fontWeight={800} fontSize={base * 0.95} fill={accentText} letterSpacing={base * 0.05}>
           {sub.toUpperCase()}
         </text>,
       );
       y += base * 1.2;
     }
-    if (cinema) {
+    {
       y += base * 0.9;
       chapters.forEach((c, i) => {
         const cur = i === frame.chapterIndex || (frame.chapterIndex < 0 && chapters.length === 1);
         const fill = fillOf(c);
         if (c.title) {
           nodes.push(
-            <text key={`c${i}`} x={box.x} y={y} fontFamily={FONT} fontWeight={800} fontSize={base * 0.72} fill={cur ? T.accent : "#ffffff"} fillOpacity={cur ? 1 : 0.55} letterSpacing={base * 0.07}>
+            <text key={`c${i}`} x={box.x} y={y} fontFamily={FONT} fontWeight={800} fontSize={base * 0.72} fill={cur ? accentText : pal.ink} fillOpacity={cur ? 1 : 0.55} letterSpacing={base * 0.07}>
               {c.title.toUpperCase()}
             </text>,
           );
@@ -833,7 +886,7 @@ function Header({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameL
         }
         nodes.push(
           <g key={`b${i}`}>
-            <rect x={box.x} y={y} width={box.w} height={base * 0.22} rx={base * 0.11} fill="#ffffff" fillOpacity={0.16} />
+            <rect x={box.x} y={y} width={box.w} height={base * 0.22} rx={base * 0.11} fill={pal.ink} fillOpacity={0.16} />
             {fill > 0 && <rect x={box.x} y={y} width={box.w * fill} height={base * 0.22} rx={base * 0.11} fill={T.accent} />}
           </g>,
         );
@@ -845,23 +898,6 @@ function Header({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameL
 
   // ----- top band -----
   const pad = box.x;
-  if (!cinema) {
-    return (
-      <g pointerEvents="none">
-        {title && (
-          <text x={pad} y={box.y + base * 1.6} fontFamily={FONT} fontWeight={900} fontSize={base * 1.9} fill="#ffffff" stroke="#0b0f14" strokeWidth={base * 0.18} paintOrder="stroke">
-            {title.toUpperCase()}
-          </text>
-        )}
-        {sub && (
-          <text x={pad} y={box.y + base * (title ? 3.1 : 1.2)} fontFamily={FONT} fontWeight={700} fontSize={base * 1.05} fill={T.accent} stroke="#0b0f14" strokeWidth={base * 0.12} paintOrder="stroke">
-            {sub}
-          </text>
-        )}
-      </g>
-    );
-  }
-
   // Cinema: brand line, segmented progress bar (one segment per chapter, or
   // a single bar), current chapter label.
   const barY = box.y + base * 1.6;
@@ -873,7 +909,7 @@ function Header({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameL
   return (
     <g pointerEvents="none">
       {title && (
-        <text x={pad} y={box.y + base * 0.9} fontFamily={FONT} fontWeight={900} fontSize={base * 1.05} fill="#ffffff" letterSpacing={base * 0.08}>
+        <text x={pad} y={box.y + base * 0.9} fontFamily={FONT} fontWeight={900} fontSize={base * 1.05} fill={pal.ink} letterSpacing={base * 0.08}>
           {title.toUpperCase()}
         </text>
       )}
@@ -882,7 +918,7 @@ function Header({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameL
         const x = pad + i * (segW + gap);
         return (
           <g key={i}>
-            <rect x={x} y={barY} width={segW} height={base * 0.24} rx={base * 0.12} fill="#ffffff" fillOpacity={0.18} />
+            <rect x={x} y={barY} width={segW} height={base * 0.24} rx={base * 0.12} fill={pal.ink} fillOpacity={0.18} />
             {fill > 0 && <rect x={x} y={barY} width={segW * fill} height={base * 0.24} rx={base * 0.12} fill={T.accent} />}
           </g>
         );
@@ -890,7 +926,7 @@ function Header({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameL
       {chapterTitle && (
         <g>
           <rect x={pad} y={barY + base * 0.95} width={base * 0.5} height={base * 0.5} fill={T.accent} />
-          <text x={pad + base * 0.85} y={barY + base * 1.42} fontFamily={FONT} fontWeight={800} fontSize={base * 0.78} fill={T.accent} letterSpacing={base * 0.08}>
+          <text x={pad + base * 0.85} y={barY + base * 1.42} fontFamily={FONT} fontWeight={800} fontSize={base * 0.78} fill={accentText} letterSpacing={base * 0.08}>
             {chapterTitle.toUpperCase()}
           </text>
         </g>
@@ -916,12 +952,11 @@ function wrap(words: string[], fs: number, maxW: number, upper: boolean) {
   return lines;
 }
 
-function Caption({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameLayout }) {
+function Caption({ seq, frame, L, pal }: { seq: Sequence; frame: FrameState; L: FrameLayout; pal: Palette }) {
   const cap = frame.caption;
   if (!cap) return null;
-  const cinema = seq.preset === "cinema";
-  const T = seq.theme;
-  const upper = !cinema;
+  const accent = pal.accentText(seq.theme.accent);
+  const upper = false;
   const words = cap.text.split(/\s+/).filter(Boolean).map((w) => (upper ? w.toUpperCase() : w));
   const box = L.caption;
   if (!box) return null;
@@ -946,12 +981,12 @@ function Caption({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: Frame
           dy="0.32em"
           textAnchor="middle"
           fontFamily={FONT}
-          fontWeight={cinema ? 800 : 900}
+          fontWeight={800}
           fontSize={fs}
-          fill="#ffffff"
-          stroke="#05080b"
-          strokeOpacity={cinema ? 0.7 : 1}
-          strokeWidth={fs * (cinema ? 0.12 : 0.16)}
+          fill={pal.ink}
+          stroke={pal.inkStroke}
+          strokeOpacity={0.75}
+          strokeWidth={fs * 0.12}
           strokeLinejoin="round"
           paintOrder="stroke"
         >
@@ -959,7 +994,7 @@ function Caption({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: Frame
             const spoken = cap.karaoke && i < current;
             const isCur = cap.karaoke && i === current;
             return (
-              <tspan key={i} fill={isCur ? T.accent : spoken && cinema ? T.accent : "#ffffff"} fillOpacity={spoken && cinema ? 0.85 : 1}>
+              <tspan key={i} fill={isCur || spoken ? accent : pal.ink} fillOpacity={spoken && !isCur ? 0.85 : 1}>
                 {(n ? " " : "") + words[i]}
               </tspan>
             );

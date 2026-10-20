@@ -4,7 +4,6 @@ import type { SequenceActions } from "../../hooks/useSequenceActions";
 import type {
   AnnKind,
   SeqAnnotation,
-  SeqPreset,
   SeqStep,
   Sequence,
   StepEffect,
@@ -91,7 +90,7 @@ export default function SequenceInspector(props: Props) {
 
   const create = (phase: Phase) => {
     setNewOpen(false);
-    onSeqId(actions.createSeq(phase, seq.preset));
+    onSeqId(actions.createSeq(phase));
   };
 
   return (
@@ -628,16 +627,9 @@ function SettingsTab({ seq, actions, safeZones, onSafeZones }: Props) {
       </div>
       {seq.format === "9:16" && <Switch label="Zones masquées par TikTok/Reels" checked={safeZones} onChange={onSafeZones} />}
 
-      <div className="seq-field">
-        <span>Style</span>
-        <div className="seg">
-          {(["cinema", "sober"] as SeqPreset[]).map((p) => (
-            <button key={p} type="button" className={`seg__btn ${seq.preset === p ? "is-active" : ""}`} onClick={() => actions.setPreset(id, p)}>
-              {p === "cinema" ? "Cinéma" : "Sobre"}
-            </button>
-          ))}
-        </div>
-      </div>
+      <p className="seq-muted">
+        Le rendu suit le thème de l'app : cinéma sombre en mode sombre, cinéma clair en mode clair.
+      </p>
 
       <label className="seq-field">
         <span>Titre (en-tête)</span>
@@ -692,6 +684,11 @@ function SettingsTab({ seq, actions, safeZones, onSafeZones }: Props) {
       <div className="seq-field">
         <span>Accent (mise en avant, sous-titres)</span>
         <Swatches value={seq.theme.accent} onPick={(c) => theme("accent", c)} />
+      </div>
+      <div className="seq-btn-row">
+        <button type="button" className="pitch-ctl__btn" onClick={() => actions.resetTheme(id)}>
+          Couleurs par défaut
+        </button>
       </div>
     </div>
   );

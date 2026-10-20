@@ -10,9 +10,6 @@ import type { Pos } from "../types";
 // Output frame of the composition. 9:16 is the TikTok / Reels / Shorts default.
 export type SeqFormat = "9:16" | "16:9" | "1:1";
 
-// "sober" = flat, bright, tactical board; "cinema" = dark premium look with
-// gold accent, chapters + progress bar, karaoke captions and camera moves.
-export type SeqPreset = "sober" | "cinema";
 
 export type Team = "home" | "away";
 
@@ -114,7 +111,6 @@ export interface Sequence {
   format: SeqFormat;
   orient: "portrait" | "landscape"; // pitch orientation (vertical / horizontal)
   discMode?: "number" | "role"; // what our discs show: shirt number or position
-  preset: SeqPreset;
   title: string; // header line (brand / topic)
   subtitle: string;
   showNames: boolean;
@@ -126,27 +122,16 @@ export interface Sequence {
   annotations: SeqAnnotation[];
 }
 
-export const PRESET_THEMES: Record<SeqPreset, SeqTheme> = {
-  // Style "L'Instant Football": white vs black discs, gold accent.
-  cinema: {
-    homeColor: "#f2f2ee",
-    homeText: "#0b0f14",
-    homeGk: "#9fd8ff",
-    awayColor: "#1b2129",
-    awayText: "#f2f2ee",
-    awayGk: "#5b6675",
-    accent: "#f4c531",
-  },
-  // Style "Kick Off": bright board, blue vs red discs, yellow accent.
-  sober: {
-    homeColor: "#6fb6f0",
-    homeText: "#ffffff",
-    homeGk: "#f4a72b",
-    awayColor: "#e8383d",
-    awayText: "#ffffff",
-    awayGk: "#3ee06a",
-    accent: "#ffe94a",
-  },
+// Default colours: white vs black discs, gold accent ("L'Instant Football").
+// The board itself follows the app's light / dark theme (see SequenceStage).
+export const DEFAULT_THEME: SeqTheme = {
+  homeColor: "#f2f2ee",
+  homeText: "#0b0f14",
+  homeGk: "#9fd8ff",
+  awayColor: "#1b2129",
+  awayText: "#f2f2ee",
+  awayGk: "#5b6675",
+  accent: "#f4c531",
 };
 
 export const ARROW_LABEL: Record<ArrowKind, string> = {

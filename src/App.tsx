@@ -617,6 +617,7 @@ export default function App() {
           <SequenceView
             lineup={lineup}
             players={project.players}
+            look={theme}
             playerById={playerById}
             actions={sequenceActions}
             seqId={seqId}
