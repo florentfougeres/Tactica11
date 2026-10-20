@@ -673,22 +673,6 @@ function SettingsTab({ seq, actions }: Props) {
   const theme = (k: keyof Sequence["theme"], v: string) => patch({ theme: { ...seq.theme, [k]: v } });
   return (
     <div className="seq-form">
-      <label className="seq-field">
-        <span>Nom de la séquence</span>
-        <input className="seq-input" value={seq.name} onChange={(e) => patch({ name: e.target.value })} />
-      </label>
-
-      <div className="seq-field">
-        <span>Terrain</span>
-        <div className="seg">
-          {(["portrait", "landscape"] as const).map((o) => (
-            <button key={o} type="button" className={`seg__btn ${seq.orient === o ? "is-active" : ""}`} onClick={() => patch({ orient: o })}>
-              {o === "portrait" ? "Vertical" : "Paysage"}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <p className="seq-muted">
         Le rendu suit le thème de l'app : cinéma sombre en mode sombre, cinéma clair en mode clair.
         Le format (9:16, 16:9, 1:1) se choisit à l'aperçu et à l'export ; le titre, les chapitres
