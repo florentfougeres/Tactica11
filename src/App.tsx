@@ -76,7 +76,11 @@ export default function App() {
   const { onboardOpen, openOnboarding, closeOnboarding } = useOnboarding();
   const { theme, toggleTheme } = useTheme();
   const [influenceMode, setInfluenceMode] = useState<InfluenceMode>("none");
-  const [orient, setOrient] = useState<Orient>("portrait");
+  // Follow the screen: a portrait pitch on a landscape screen left ~40% of
+  // the width empty. The rotate button still switches by hand.
+  const [orient, setOrient] = useState<Orient>(() =>
+    window.innerWidth > window.innerHeight ? "landscape" : "portrait",
+  );
   const [activePreset, setActivePreset] = useState<string | null>(null);
   // Opponent-placement mode (attack/defense only): shows + lets you drag the
   // opposing discs. Ephemeral view state; the discs themselves are persisted.
@@ -602,18 +606,30 @@ export default function App() {
           />
         ) : (
           <>
-            <Bench
-              ref={benchRef}
-              players={benchPlayers}
-              rosterSize={project.players.length}
-              onRename={renamePlayer}
-              onSetNumber={setPlayerNumber}
-              onRemove={removePlayer}
-              onDropToPitch={handleBenchDrop}
-              onDragStateChange={setBenchDragging}
-              canDrag={phase === "base"}
-              footer={pitchControls}
-            />
+            {/* The list of available players only matters in Base (the only
+                phase where they can be dragged on). In Attaque / Défense the
+                column holds that phase's controls instead of an inert list. */}
+            {phase === "base" ? (
+              <Bench
+                ref={benchRef}
+                players={benchPlayers}
+                rosterSize={project.players.length}
+                onRename={renamePlayer}
+                onSetNumber={setPlayerNumber}
+                onRemove={removePlayer}
+                onDropToPitch={handleBenchDrop}
+                onDragStateChange={setBenchDragging}
+                canDrag
+                footer={pitchControls}
+              />
+            ) : (
+              <aside className="bench glass phase-panel">
+                <header className="panel__header">
+                  <h2>{phase === "attack" ? "Attaque" : "Défense"}</h2>
+                </header>
+                <div className="phase-panel__body">{pitchControls}</div>
+              </aside>
+            )}
 
             <Pitch
               ref={pitchRef}
