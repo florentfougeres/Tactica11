@@ -62,6 +62,10 @@ utilise la version web / PWA.
 
 ## Fonctionnalités
 
+- **Projet de démo** (effectif du Real Madrid) ouvert au premier lancement et
+  disponible dans le menu **Projet** : compo 4-3-3 avec phases attaque/défense
+  et adversaires, plan B en 4-2-3-1, corner et coup franc, et quatre séquences
+  animées (sortie à 3, renversement, latéral intérieur, pressing haut).
 - **Formations** prêtes à l'emploi : 4-3-3 (et faux 9), 4-2-3-1, 4-4-2,
   4-4-2 losange, 3-5-2, 3-4-3, 3-4-2-1, 4-5-1, 5-3-2, 5-2-3, 5-4-1.
 - **Phases de jeu** : base, **attaque** et **défense**, chaque emplacement

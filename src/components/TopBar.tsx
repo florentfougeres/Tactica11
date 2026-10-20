@@ -31,6 +31,7 @@ interface Props {
   onCopyLink: () => void;
   onSaveProject: () => void;
   onImportProject: (file: File) => void;
+  onOpenDemo: () => void;
   onPresent: () => void;
   onStudio: () => void;
   onHelp: () => void;
@@ -69,6 +70,7 @@ export default function TopBar({
   onCopyLink,
   onSaveProject,
   onImportProject,
+  onOpenDemo,
   onPresent,
   onStudio,
   onHelp,
@@ -174,6 +176,15 @@ export default function TopBar({
                 }}
               >
                 Ouvrir…
+              </button>
+              <button
+                className="compo-menu__action"
+                onClick={() => {
+                  onOpenDemo();
+                  setProjectOpen(false);
+                }}
+              >
+                Projet de démo
               </button>
               <button
                 className="compo-menu__action"

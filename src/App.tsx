@@ -200,6 +200,7 @@ export default function App() {
     readProjectToImport,
     openAsNewProject,
     importIntoProject,
+    openDemoProject,
   } = useProjectActions({
     projects,
     setProjects,
@@ -540,6 +541,7 @@ export default function App() {
         share={share}
         onCopyLink={copyShareLink}
         onSaveProject={saveProject}
+        onOpenDemo={openDemoProject}
         onImportProject={async (file) =>
           setProjectToImport(await readProjectToImport(file))
         }

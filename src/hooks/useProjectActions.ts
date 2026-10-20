@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { Lineup, Project } from "../types";
+import { createDemoProject } from "../demo";
 import {
   createDefaultLineup,
   createDefaultProject,
@@ -231,6 +232,9 @@ export function useProjectActions({
     setSelectedSlot(null);
   };
 
+  // A fresh copy of the built-in demo, next to the user's projects.
+  const openDemoProject = () => openAsNewProject(createDemoProject());
+
   // Add picked compos (with their chosen set pieces / sequences) to the
   // current project, then open the first one.
   const importIntoProject = (source: Project, options: ProjectImportOptions) => {
@@ -263,5 +267,6 @@ export function useProjectActions({
     readProjectToImport,
     openAsNewProject,
     importIntoProject,
+    openDemoProject,
   };
 }

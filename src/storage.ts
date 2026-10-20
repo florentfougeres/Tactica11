@@ -22,6 +22,7 @@ import {
 import { buildSlots } from "./formations";
 import { migrateSequence } from "./sequence/create";
 import { saveFile } from "./download";
+import { createDemoProject } from "./demo";
 
 // Influence used to be a single flat ZoneRadii (shared across phases). Convert
 // that to the per-phase shape, applying the old zone to both attack and defense.
@@ -273,8 +274,12 @@ export function loadLibrary(): Library {
     // fall through to a fresh library
   }
 
-  const def = createDefaultProject();
-  return { projects: [def], currentProjectId: def.id };
+  // Very first launch: open on the demo project, with an empty one beside it.
+  const demo = createDemoProject();
+  return {
+    projects: [demo, createDefaultProject()],
+    currentProjectId: demo.id,
+  };
 }
 
 export function saveLibrary(lib: Library): void {
