@@ -100,7 +100,8 @@ interface Props {
   onWheel?: (e: React.WheelEvent<SVGSVGElement>) => void;
 }
 
-const FONT = "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif";
+// Exactly the app's font stack (index.css), so the board reads like the Terrain tab.
+const FONT = "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 
 // Text width estimate (no DOM measuring: the export renders to static markup).
 const textW = (s: string, fs: number, upper = false) =>
@@ -434,7 +435,7 @@ export default function SequenceStage({
     const sel = overlay?.selectedActors?.has(a.id);
     const discFill = focus > 0.5 ? T.accent : fill;
     const discText = focus > 0.5 ? "#0b0f14" : textColor;
-    const fs = inf.disc.length > 2 ? R * 0.72 : R * 0.92;
+    const fs = inf.disc.length > 2 ? R * 0.62 : R * 0.74;
     const showName = seq.showNames && inf.name;
     return (
       <g key={a.id} data-actor={a.id} opacity={opacity} style={overlay?.editable ? { cursor: "grab" } : undefined}>
@@ -461,7 +462,7 @@ export default function SequenceStage({
             dy="0.35em"
             textAnchor="middle"
             fontFamily={FONT}
-            fontWeight={800}
+            fontWeight={700}
             fontSize={fs}
             fill={discText}
           >
@@ -471,12 +472,13 @@ export default function SequenceStage({
         {showName && (
           <Pill
             x={c.x}
-            y={c.y + R + 1.9 * u}
-            text={inf.name.toUpperCase()}
-            fs={1.65 * u}
-            bg={focus > 0.5 ? T.accent : "rgba(8,12,18,0.82)"}
+            y={c.y + R + 2.3 * u}
+            text={inf.name}
+            fs={2.15 * u}
+            bg={focus > 0.5 ? T.accent : "rgba(8,12,18,0.8)"}
             fg={focus > 0.5 ? "#0b0f14" : "#ffffff"}
-            upper
+            weight={600}
+            round
           />
         )}
       </g>
@@ -800,6 +802,8 @@ function Pill({
   fg,
   upper = false,
   outline,
+  weight = 700,
+  round = false,
 }: {
   x: number;
   y: number;
@@ -809,19 +813,21 @@ function Pill({
   fg: string;
   upper?: boolean;
   outline?: string;
+  weight?: number;
+  round?: boolean; // fully rounded, like the Terrain tab's name pills
 }) {
-  const w = textW(text, fs, upper) + fs * 1.1;
-  const h = fs * 1.55;
+  const w = textW(text, fs, upper) + fs * (round ? 1.4 : 1.1);
+  const h = fs * (round ? 1.5 : 1.55);
   return (
     <g pointerEvents="none">
-      <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={fs * 0.32} fill={bg} stroke={outline} strokeWidth={outline ? fs * 0.12 : undefined} />
+      <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={round ? h / 2 : fs * 0.32} fill={bg} stroke={outline} strokeWidth={outline ? fs * 0.12 : undefined} />
       <text
         x={x}
         y={y}
         dy="0.36em"
         textAnchor="middle"
         fontFamily={FONT}
-        fontWeight={800}
+        fontWeight={weight}
         fontSize={fs}
         fill={fg}
         letterSpacing={upper ? fs * 0.04 : undefined}
