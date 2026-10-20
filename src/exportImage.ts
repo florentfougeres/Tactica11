@@ -1,4 +1,5 @@
 import { toPng } from "html-to-image";
+import { saveFile } from "./download";
 
 // Nodes that are UI chrome (phase toggle, hints, the management popover) and
 // shouldn't appear in the exported picture.
@@ -27,11 +28,12 @@ export async function exportPitchPng(
     filter,
   });
 
-  const a = document.createElement("a");
-  a.href = dataUrl;
   const tail = suffix ? `-${safeName(suffix)}` : "";
-  a.download = `${safeName(name)}${tail}.png`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  // Decode the data URL locally (a fetch of data: would be blocked by the CSP).
+  const [head, b64] = dataUrl.split(",");
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const blob = new Blob([bytes], { type: head.match(/data:([^;]+)/)?.[1] ?? "image/png" });
+  await saveFile(blob, `${safeName(name)}${tail}.png`);
 }

@@ -21,6 +21,7 @@ import {
 } from "./types";
 import { buildSlots } from "./formations";
 import { migrateSequence } from "./sequence/create";
+import { saveFile } from "./download";
 
 // Influence used to be a single flat ZoneRadii (shared across phases). Convert
 // that to the per-phase shape, applying the old zone to both attack and defense.
@@ -320,15 +321,8 @@ export function exportProject(project: Project): void {
   const blob = new Blob([JSON.stringify(file, null, 2)], {
     type: "application/json",
   });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
   const safeName = project.name.trim().replace(/[^\w-]+/g, "_") || "projet";
-  a.href = url;
-  a.download = `${safeName}.tactica11-projet.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  void saveFile(blob, `${safeName}.tactica11-projet.json`);
 }
 
 export async function importProject(file: File): Promise<Project> {

@@ -10,6 +10,9 @@ export default defineConfig(() => ({
   base: process.env.DEPLOY_TARGET === 'gh-pages' ? '/Tactica11/' : '/',
   plugins: [
     react(),
+    // The macOS app (Tauri sets TAURI_ENV_PLATFORM) is already offline and
+    // installed: no service worker / web manifest there.
+    !process.env.TAURI_ENV_PLATFORM &&
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'icons.svg'],

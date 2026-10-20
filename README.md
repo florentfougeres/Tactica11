@@ -37,6 +37,24 @@ Fonctionne ensuite hors-ligne, tout est stocké localement sur l'appareil.
 > permanente, installe depuis une URL d'hébergeur stable (Netlify, etc.),
 > pas depuis `npm run preview`.
 
+## App macOS (Apple Silicon)
+
+À chaque release GitHub, un `.dmg` pour Mac Apple Silicon (macOS 13.3 ou plus
+récent) est attaché à la release (workflow `release-macos.yml`, app
+[Tauri](https://tauri.app) qui embarque exactement la même app web). Les
+exports (PNG, vidéo, projet) y passent par une fenêtre « Enregistrer sous ».
+
+L'app n'est pas signée par Apple : au premier lancement macOS peut la dire
+« endommagée » ou d'un « développeur non identifié ». Après l'avoir glissée
+dans Applications :
+
+```bash
+xattr -cr /Applications/Tactica11.app
+```
+
+(ou clic droit sur l'app → **Ouvrir** → **Ouvrir**). Sur Linux et Windows,
+utilise la version web / PWA.
+
 ## Capture d'écran
 
 ![Capture d'écran](./public/screenshot.png)
@@ -94,6 +112,13 @@ npm run preview  # prévisualiser le build
 npm run lint     # oxlint
 ```
 
+Pour l'app macOS (nécessite Rust et un Mac) :
+
+```bash
+npm run app:dev    # fenêtre Tauri branchée sur le serveur de dev
+npm run app:build  # génère le .dmg dans src-tauri/target/release/bundle/dmg/
+```
+
 > ⚠️ La base est `/` partout (dev, `preview`, Netlify/Vercel/Cloudflare Pages),
 > sauf sur GitHub Pages (`/Tactica11/`) où le workflow CI passe
 > `DEPLOY_TARGET=gh-pages` au build — voir `vite.config.ts`.
@@ -106,6 +131,7 @@ npm run lint     # oxlint
 - **lz-string** (liens partageables compressés), **html-to-image** (export PNG),
   **papaparse** (import CSV)
 - **vite-plugin-pwa** (mode hors-ligne / installation)
+- **mediabunny** (export vidéo MP4), **Tauri 2** (app macOS)
 - Stockage local (`localStorage`) + **export / import `.json`**
 
 ## Modèle de données

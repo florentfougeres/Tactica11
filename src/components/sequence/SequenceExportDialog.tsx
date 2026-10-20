@@ -4,6 +4,7 @@ import SequenceStage from "../../sequence/SequenceStage";
 import { frameAt } from "../../sequence/engine";
 import { frameLayout } from "../../sequence/layout";
 import FormatPicker from "./FormatPicker";
+import { isDesktopApp } from "../../download";
 import type { ActorInfo, SeqLook } from "../../sequence/SequenceStage";
 import { ExportCancelled, ExportUnsupported, exportVideo } from "../../sequence/exportVideo";
 import { totalDuration } from "../../sequence/engine";
@@ -55,7 +56,7 @@ export default function SequenceExportDialog({
     abortRef.current = ctrl;
     setStatus({ kind: "running", p: 0 });
     try {
-      await exportVideo({
+      const saved = await exportVideo({
         seq,
         info,
         background,
@@ -65,7 +66,7 @@ export default function SequenceExportDialog({
         signal: ctrl.signal,
         onProgress: (p) => setStatus({ kind: "running", p }),
       });
-      setStatus({ kind: "done" });
+      setStatus(saved ? { kind: "done" } : { kind: "idle" });
     } catch (e) {
       if (e instanceof ExportCancelled) setStatus({ kind: "idle" });
       else if (e instanceof ExportUnsupported)
@@ -154,7 +155,7 @@ export default function SequenceExportDialog({
             <span>{Math.round(status.p * 100)} %</span>
           </div>
         )}
-        {status.kind === "done" && <p className="seq-ok">Vidéo exportée — regarde dans tes téléchargements.</p>}
+        {status.kind === "done" && <p className="seq-ok">{isDesktopApp() ? "Vidéo enregistrée." : "Vidéo exportée — regarde dans tes téléchargements."}</p>}
         {status.kind === "error" && <p className="seq-err">{status.msg}</p>}
 
         <div className="modal__actions">

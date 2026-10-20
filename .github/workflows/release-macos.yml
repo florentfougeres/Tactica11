@@ -1,0 +1,42 @@
+name: Release macOS (.dmg)
+
+# Builds the Tauri desktop app for Apple Silicon. On a published GitHub
+# release the .dmg is attached to it; a manual run (Actions → Run workflow)
+# only builds it and keeps it as a workflow artifact.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  dmg:
+    runs-on: macos-14 # Apple Silicon (arm64)
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - run: npm ci
+
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Empty on manual runs → build only, nothing uploaded to a release.
+          releaseId: ${{ github.event.release.id }}
+          uploadWorkflowArtifacts: true
+          args: --target aarch64-apple-darwin --bundles dmg

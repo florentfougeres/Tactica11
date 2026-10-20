@@ -7,6 +7,7 @@ import type { ActorInfo, SeqLook } from "./SequenceStage";
 import SequenceStage from "./SequenceStage";
 import { frameAt, totalDuration } from "./engine";
 import { frameLayout } from "./layout";
+import { saveFile } from "../download";
 
 export class ExportCancelled extends Error {}
 export class ExportUnsupported extends Error {}
@@ -18,16 +19,6 @@ function safeName(name: string): string {
   return name.trim().replace(/[^\p{L}\p{N}_-]+/gu, "_") || "sequence";
 }
 
-function download(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-}
 
 interface RenderOpts {
   seq: Sequence;
@@ -82,7 +73,7 @@ export async function exportStepPng(opts: RenderOpts & { time: number; suffix: s
   await draw(opts.time);
   const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/png"));
   if (!blob) throw new Error("PNG");
-  download(blob, `${safeName(opts.seq.name)}-${safeName(opts.suffix)}.png`);
+  await saveFile(blob, `${safeName(opts.seq.name)}-${safeName(opts.suffix)}.png`);
 }
 
 export async function exportVideo(
@@ -91,7 +82,7 @@ export async function exportVideo(
     onProgress: (p: number) => void;
     signal: AbortSignal;
   },
-): Promise<void> {
+): Promise<boolean> {
   const mb = await import("mediabunny");
   const { canvas, draw, W, H } = await makeRenderer(opts);
 
@@ -128,5 +119,5 @@ export async function exportVideo(
   }
   const buf = (output.target as InstanceType<typeof mb.BufferTarget>).buffer;
   if (!buf) throw new Error("Export vide");
-  download(new Blob([buf], { type: "video/mp4" }), `${safeName(opts.seq.name)}.mp4`);
+  return saveFile(new Blob([buf], { type: "video/mp4" }), `${safeName(opts.seq.name)}.mp4`);
 }
