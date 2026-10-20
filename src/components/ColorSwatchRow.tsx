@@ -32,7 +32,7 @@ export default function ColorSwatchRow({ value, colors, onChange, label }: Props
           type="color"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          aria-label={`${label} — couleur personnalisée`}
+          aria-label={`${label} : couleur personnalisée`}
         />
       </label>
     </div>

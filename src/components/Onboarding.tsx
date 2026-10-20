@@ -16,7 +16,7 @@ const STEPS: Step[] = [
   {
     icon: "⬡",
     title: "Bienvenue sur Tactica11",
-    body: "Construisez vos compos et mises en place tactiques de football, directement dans le navigateur — rien à installer, tout reste sur votre appareil.",
+    body: "Construisez vos compos et mises en place tactiques de football, directement dans le navigateur. Rien à installer, tout reste sur votre appareil.",
   },
   {
     icon: "📋",

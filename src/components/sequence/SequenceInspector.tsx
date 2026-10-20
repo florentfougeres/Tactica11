@@ -221,12 +221,12 @@ function StepTab({
         <input className="seq-input" value={step.name ?? ""} placeholder={`Étape ${stepIndex + 1}`} onChange={(e) => patch({ name: e.target.value })} />
       </label>
       <label className="seq-field">
-        <span>Sous-titre / commentaire <em className="seq-hint-inline">— visible à l'aperçu et à l'export</em></span>
+        <span>Sous-titre / commentaire <em className="seq-hint-inline">(visible à l'aperçu et à l'export)</em></span>
         <textarea className="seq-input" rows={3} value={step.caption ?? ""} placeholder="Ce que dit la voix off à ce moment…" onChange={(e) => patch({ caption: e.target.value })} />
       </label>
       <Switch label="Karaoké (mot par mot)" checked={!!step.karaoke} onChange={(v) => patch({ karaoke: v })} />
       <label className="seq-field">
-        <span>Nouveau chapitre ici <em className="seq-hint-inline">— à l'export</em></span>
+        <span>Nouveau chapitre ici <em className="seq-hint-inline">(à l'export)</em></span>
         <input className="seq-input" value={step.chapter ?? ""} placeholder="ex. LE DILEMME" onChange={(e) => patch({ chapter: e.target.value })} />
       </label>
 
@@ -707,11 +707,11 @@ function SettingsTab({ seq, actions }: Props) {
         </div>
       )}
       <label className="seq-field">
-        <span>Taille des disques — nous ×{(seq.homeDiscScale ?? 1).toFixed(2)}</span>
+        <span>Taille des disques, nous ×{(seq.homeDiscScale ?? 1).toFixed(2)}</span>
         <input type="range" min={0.6} max={1.8} step={0.05} value={seq.homeDiscScale ?? 1} onChange={(e) => patch({ homeDiscScale: Number(e.target.value) })} />
       </label>
       <label className="seq-field">
-        <span>Taille des disques — adversaires ×{(seq.awayDiscScale ?? 1).toFixed(2)}</span>
+        <span>Taille des disques, adversaires ×{(seq.awayDiscScale ?? 1).toFixed(2)}</span>
         <input type="range" min={0.6} max={1.8} step={0.05} value={seq.awayDiscScale ?? 1} onChange={(e) => patch({ awayDiscScale: Number(e.target.value) })} />
       </label>
       <div className="seq-field">

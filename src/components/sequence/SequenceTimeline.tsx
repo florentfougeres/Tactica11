@@ -177,7 +177,7 @@ export default function SequenceTimeline({
                 if (e.altKey) onSeek(sp.start + frac * len);
                 else onSelectStep(i);
               }}
-              title={`${s.name || `Étape ${i + 1}`} — transition ${(sp.arrive - sp.start) / 1000}s, maintien ${s.holdMs / 1000}s (glisser pour réordonner, Alt+clic pour se placer)`}
+              title={`${s.name || `Étape ${i + 1}`} : transition ${(sp.arrive - sp.start) / 1000}s, maintien ${s.holdMs / 1000}s (glisser pour réordonner, Alt+clic pour se placer)`}
             >
               {trFrac > 0 && <span className="seq-block__tr" style={{ width: `${trFrac * 100}%` }} />}
               <span className="seq-block__label">

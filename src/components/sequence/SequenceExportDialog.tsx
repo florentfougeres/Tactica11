@@ -155,7 +155,7 @@ export default function SequenceExportDialog({
             <span>{Math.round(status.p * 100)} %</span>
           </div>
         )}
-        {status.kind === "done" && <p className="seq-ok">{isDesktopApp() ? "Vidéo enregistrée." : "Vidéo exportée — regarde dans tes téléchargements."}</p>}
+        {status.kind === "done" && <p className="seq-ok">{isDesktopApp() ? "Vidéo enregistrée." : "Vidéo exportée, regarde dans tes téléchargements."}</p>}
         {status.kind === "error" && <p className="seq-err">{status.msg}</p>}
 
         <div className="modal__actions">

@@ -58,7 +58,7 @@ const TOOL_HINT: Record<SeqTool, string> = {
   press: "Glisser : déplacement défensif / pressing",
   zone: "Cliquer pour poser les sommets · Entrée ou clic sur le 1er point pour fermer · Échap pour annuler",
   space: "Cliquer pour poser les sommets de l'espace libre · Entrée pour fermer",
-  playerZone: "Cliquer sur 3 joueurs ou plus · Entrée pour fermer — la zone suit les joueurs",
+  playerZone: "Cliquer sur 3 joueurs ou plus · Entrée pour fermer. La zone suit les joueurs",
   playerLine: "Cliquer sur des joueurs dans l'ordre · Entrée pour terminer",
   marking: "Cliquer sur un joueur puis sur son vis-à-vis",
   circle: "Cliquer sur un joueur ou un point",
@@ -924,7 +924,7 @@ function SequenceEditor({
   );
 }
 
-const toolTitle = (t: SeqTool) => `${TOOL_LABEL[t]}${TOOL_KEY[t] ? ` (${TOOL_KEY[t]})` : ""} — ${TOOL_HINT[t]}`;
+const toolTitle = (t: SeqTool) => `${TOOL_LABEL[t]}${TOOL_KEY[t] ? ` (${TOOL_KEY[t]})` : ""} : ${TOOL_HINT[t]}`;
 
 const GRID_ICON = (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
@@ -989,7 +989,7 @@ function SeqTopTools(p: TopToolsProps) {
   const groups = TOOL_GROUPS.slice(0, -1);
   const gridBtn = (cls: string) => (
     <button type="button" className={`${cls} ${p.showGrid ? "is-active" : ""}`} onClick={p.onGrid} aria-pressed={p.showGrid}
-      title="Afficher la grille positionnelle (couloirs et zones, comme sur l'onglet Compo) — visible aussi dans la vidéo">
+      title="Afficher la grille positionnelle (couloirs et zones, comme sur l'onglet Compo), visible aussi dans la vidéo">
       {GRID_ICON}
       <span>Grille</span>
     </button>
