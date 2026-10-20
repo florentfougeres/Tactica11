@@ -1,5 +1,5 @@
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import type { Drawing, Lineup, Orient, Phase, Pos, ZoneRadii } from "../types";
+import type { Lineup, Orient, Phase, Pos, ZoneRadii } from "../types";
 import { pxToPos } from "../types";
 import { buildSlots } from "../formations";
 import { createOpponents } from "../storage";
@@ -164,23 +164,6 @@ export function usePitchActions({
   const setOpponentColor = (color: string) =>
     setLineup((l) => ({ ...l, opponentColor: color }));
 
-  // --- drawings (per phase) ---
-  const addDrawing = (d: Drawing) =>
-    setLineup((l) => ({
-      ...l,
-      drawings: { ...l.drawings, [phase]: [...(l.drawings?.[phase] ?? []), d] },
-    }));
-
-  const undoDrawing = () =>
-    setLineup((l) => {
-      const cur = l.drawings?.[phase] ?? [];
-      if (!cur.length) return l;
-      return { ...l, drawings: { ...l.drawings, [phase]: cur.slice(0, -1) } };
-    });
-
-  const clearDrawings = () =>
-    setLineup((l) => ({ ...l, drawings: { ...l.drawings, [phase]: [] } }));
-
   // Pixel → pitch-percent helper for a drop point. Returns null if outside.
   // Conversion is relative to the field of play (.pitch__field, which excludes
   // the grass margin) and respects the current orientation.
@@ -299,9 +282,6 @@ export function usePitchActions({
     moveOpponent,
     setOpponentLabel,
     setOpponentColor,
-    addDrawing,
-    undoDrawing,
-    clearDrawings,
     handlePlayerDrop,
     handleBenchDrop,
     removeStarter,

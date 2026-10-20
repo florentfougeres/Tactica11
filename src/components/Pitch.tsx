@@ -1,8 +1,6 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
-  DrawTool,
-  Drawing,
   InfluenceMode,
   Opponent,
   Orient,
@@ -21,8 +19,6 @@ import PitchToken, { TOKEN_SIZE } from "./PitchToken";
 import OpponentToken from "./OpponentToken";
 import HeatmapOverlay from "./HeatmapOverlay";
 import InfluenceHandles from "./InfluenceHandles";
-import DrawingLayer from "./DrawingLayer";
-import DrawToolbar from "./DrawToolbar";
 interface Props {
   slots: Slot[];
   phase: Phase;
@@ -57,16 +53,6 @@ interface Props {
   opponentColor: string;
   onMoveOpponent: (id: string, pos: { x: number; y: number }) => void;
   onLabelOpponent: (id: string, label: string) => void;
-  drawMode: boolean;
-  drawTool: DrawTool;
-  drawColor: string;
-  drawColors: string[];
-  drawings: Drawing[];
-  onAddDrawing: (d: Drawing) => void;
-  onDrawTool: (t: DrawTool) => void;
-  onDrawColor: (c: string) => void;
-  onUndoDrawing: () => void;
-  onClearDrawings: () => void;
 }
 
 const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
@@ -101,16 +87,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     opponentColor,
     onMoveOpponent,
     onLabelOpponent,
-    drawMode,
-    drawTool,
-    drawColor,
-    drawColors,
-    drawings,
-    onAddDrawing,
-    onDrawTool,
-    onDrawColor,
-    onUndoDrawing,
-    onClearDrawings,
   },
   ref,
 ) {
@@ -226,18 +202,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           <div className="pitch__grass" />
           <PitchMarkings orient={orient} />
           {showGrid && <PositionalGrid orient={orient} />}
-
-          {size.w > 0 && (
-            <DrawingLayer
-              size={size}
-              orient={orient}
-              drawings={drawings}
-              active={drawMode}
-              tool={drawTool}
-              color={drawColor}
-              onCommit={onAddDrawing}
-            />
-          )}
 
           {showTeam &&
             size.w > 0 &&
@@ -377,19 +341,6 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
 
       </div>
 
-      {drawMode && (
-        <DrawToolbar
-          tool={drawTool}
-          color={drawColor}
-          colors={drawColors}
-          canUndo={drawings.length > 0}
-          canClear={drawings.length > 0}
-          onTool={onDrawTool}
-          onColor={onDrawColor}
-          onUndo={onUndoDrawing}
-          onClear={onClearDrawings}
-        />
-      )}
     </div>
   );
 });

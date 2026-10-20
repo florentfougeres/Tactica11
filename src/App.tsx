@@ -12,7 +12,6 @@ import type {
 import {
   DEFAULT_DRAW_COLOR,
   DEFAULT_OPPONENT_COLOR,
-  DRAW_COLORS,
   OPPONENT_COLORS,
 } from "./types";
 import { loadLibrary } from "./storage";
@@ -263,9 +262,6 @@ export default function App() {
     moveOpponent,
     setOpponentLabel,
     setOpponentColor,
-    addDrawing,
-    undoDrawing,
-    clearDrawings,
     handlePlayerDrop,
     handleBenchDrop,
     removeStarter,
@@ -680,17 +676,6 @@ export default function App() {
               opponentColor={lineup.opponentColor ?? DEFAULT_OPPONENT_COLOR}
               onMoveOpponent={moveOpponent}
               onLabelOpponent={setOpponentLabel}
-              /* Drawing moved to the Séquence tab: the Compo board no longer draws. */
-              drawMode={false}
-              drawTool="arrow"
-              drawColor={DEFAULT_DRAW_COLOR}
-              drawColors={DRAW_COLORS}
-              drawings={[]}
-              onAddDrawing={addDrawing}
-              onDrawTool={() => {}}
-              onDrawColor={() => {}}
-              onUndoDrawing={undoDrawing}
-              onClearDrawings={clearDrawings}
             />
           </>
         )}
