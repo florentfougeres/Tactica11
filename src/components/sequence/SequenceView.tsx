@@ -841,14 +841,6 @@ function SequenceEditor({
           />
         )}
 
-        <div className="seq-hint">
-          {pb.playing
-            ? "Lecture en cours — pause (Espace) pour modifier."
-            : !head.holding
-              ? "Entre deux étapes — sélectionne une étape pour la modifier."
-              : TOOL_HINT[tool]}
-        </div>
-
         <div
           ref={wrapRef}
           className={`seq-stage-wrap ${editable ? "" : "is-locked"} seq-stage-wrap--${tool}`}
@@ -954,23 +946,25 @@ interface TopToolsProps {
 // arrow/shape groups collapse into dropdowns and view/export go into a "⋯"
 // menu (Aperçu stays visible); they expand again once there's room.
 function SeqTopTools(p: TopToolsProps) {
-  const [compact, setCompact] = useState(false);
-  const fullW = useRef(0);
+  // 0 = icons + labels, 1 = icons only, 2 = dropdown menus. Step down while
+  // the tools overflow; step back up once the width the previous level
+  // needed is available again.
+  const [level, setLevel] = useState(0);
+  const widths = useRef<number[]>([]);
   useLayoutEffect(() => {
     const el = p.slot;
     const check = () => {
-      if (!compact) {
-        if (el.scrollWidth > el.clientWidth + 1) {
-          fullW.current = el.scrollWidth;
-          setCompact(true);
-        }
-      } else if (el.clientWidth >= fullW.current) setCompact(false);
+      if (level < 2 && el.scrollWidth > el.clientWidth + 1) {
+        widths.current[level] = el.scrollWidth;
+        setLevel(level + 1);
+      } else if (level > 0 && el.clientWidth >= widths.current[level - 1]) setLevel(level - 1);
     };
     check();
     const ro = new ResizeObserver(check);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [p.slot, compact]);
+  }, [p.slot, level]);
+  const compact = level === 2;
 
   const toolBtn = (t: SeqTool, inMenu = false) => (
     <button
@@ -1038,7 +1032,7 @@ function SeqTopTools(p: TopToolsProps) {
         </div>
       </div>
     ) : (
-      <div className="seq-toolbar seq-toolbar--top" role="toolbar" aria-label="Outils">
+      <div className={`seq-toolbar seq-toolbar--top ${level ? "seq-toolbar--icons" : ""}`} role="toolbar" aria-label="Outils">
         {groups.map((g, gi) => (
           <div key={gi} className="seq-toolbar__group">
             {g.label && <span className="seq-toolbar__label">{g.label}</span>}

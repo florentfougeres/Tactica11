@@ -312,11 +312,9 @@ select.seq-input {
   filter: brightness(1.08);
   background: linear-gradient(150deg, var(--accent), var(--accent-2));
 }
-/* Labels collapse to icons on narrower screens. */
-@media (max-width: 1720px) {
-  .seq-toolbar__group .seq-tool > span {
-    display: none;
-  }
+/* Labels collapse to icons when the top bar runs out of room. */
+.seq-toolbar--icons .seq-tool > span {
+  display: none;
 }
 
 .seq-hint {
@@ -699,7 +697,11 @@ select.seq-input {
   font-weight: 600;
 }
 
-/* Toolbars portalled into the app's top bar. */
+/* Toolbars portalled into the app's top bar. The name field stops growing so
+   the slot gets all the free space: its width is then the room available. */
+.topbar:has(.topbar__seq) .topbar__field--name {
+  flex-grow: 0;
+}
 .topbar__seq {
   flex: 1;
   min-width: 0;
@@ -768,4 +770,13 @@ select.seq-input {
   align-items: center;
   justify-content: space-between;
   padding: 2px 4px;
+}
+.topbar:has(.topbar__seq) .topbar__field--name {
+  max-width: 200px;
+}
+.seq-toolbar--top .seq-tool {
+  padding: 6px;
+}
+.seq-toolbar--icons .seq-toolbar__label {
+  display: none;
 }
