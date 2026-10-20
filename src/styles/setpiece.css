@@ -1,11 +1,13 @@
 /* ---------- set-piece board (corners / coups francs) ---------- */
 .pitch--half {
-  /* Extra room at the top (vs. the plain 1.94%) so the goal can sit in the
-     grass margin, outside the field of play, without being clipped by this
-     element's overflow:hidden. --ar grows to match, so the field itself
-     keeps its proportions instead of being squeezed by the taller box. */
-  --ar: calc(68 / 54.6);
-  padding: 5% 1.5% 1.94% 1.5%;
+  /* Same grass margin as the full pitch (PitchTurf's apron), the goal sitting
+     in the one above the goal line: 3.4 m on the sides and under the halfway
+     cut, 5.25 m on top. Box = 74.8 × 61.15 m (field 68 × 52.5). */
+  --ar: calc(74.8 / 61.15);
+}
+.pitch--half .pitch__field {
+  /* sides 3.4/74.8 of the width; top 5.25/61.15, bottom 3.4/61.15 of the height */
+  inset: 8.585% 4.545% 5.56%;
 }
 .sp-pitch-col {
   width: 100%;
@@ -31,7 +33,7 @@
   display: flex;
   cursor: grab;
   touch-action: none;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.7));
+  /* no CSS shadow: the ball (components/Ball) draws its own, as in Séquence */
 }
 
 .sp-marker {

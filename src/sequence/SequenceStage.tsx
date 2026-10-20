@@ -4,7 +4,8 @@
 // this component to static markup frame by frame) are guaranteed identical.
 import type { ReactNode, Ref } from "react";
 import type { Pos } from "../types";
-import PitchMarkings from "../components/PitchMarkings";
+import { PitchTurf } from "../components/PitchTurf";
+import Ball from "../components/Ball";
 import PositionalGrid from "../components/PositionalGrid";
 import type { AnnFrame, FrameState } from "./engine";
 import { anchorPos } from "./engine";
@@ -18,9 +19,6 @@ export type SeqLook = "dark" | "light";
 
 interface Palette {
   bg: [string, string, string];
-  grassA: string;
-  grassB: string;
-  line: string;
   gridLine: string;
   gridTint: string;
   ink: string; // header / caption text
@@ -32,9 +30,6 @@ interface Palette {
 const PALETTE: Record<SeqLook, Palette> = {
   dark: {
     bg: ["#173823", "#0b1d12", "#050c08"],
-    grassA: "#1b3a24",
-    grassB: "#1f4229",
-    line: "rgba(255,255,255,0.42)",
     gridLine: "rgba(255,255,255,0.28)",
     gridTint: "rgba(244,197,49,0.08)",
     ink: "#ffffff",
@@ -44,9 +39,6 @@ const PALETTE: Record<SeqLook, Palette> = {
   },
   light: {
     bg: ["#fbfcf8", "#eef2ea", "#dde5d8"],
-    grassA: "#3f8b53",
-    grassB: "#46945b",
-    line: "rgba(255,255,255,0.72)",
     gridLine: "rgba(255,255,255,0.42)",
     gridTint: "rgba(255,255,255,0.12)",
     ink: "#0b0f14",
@@ -211,45 +203,6 @@ export default function SequenceStage({
 
   // ----- colours of the board -----
   const bg = background === "chroma" ? "#00b140" : `url(#${pid("bg")})`;
-  const grassA = PAL.grassA;
-  const grassB = PAL.grassB;
-  const lineColor = PAL.line;
-
-  // ----- grass stripes (pitch-local) -----
-  // Stripes cover the grass apron (pitch + 5% margin), clipped to its
-  // rounded corners.
-  const apron = { x: -pw * 0.05, y: -ph * 0.05, w: pw * 1.1, h: ph * 1.1 };
-  const stripes: ReactNode[] = [];
-  const nStripes = 12;
-  const portrait = L.orient === "portrait";
-  for (let i = 0; i < nStripes; i++) {
-    const s = (portrait ? apron.h : apron.w) / nStripes;
-    stripes.push(
-      <rect
-        key={i}
-        x={portrait ? apron.x : apron.x + i * s}
-        y={portrait ? apron.y + i * s : apron.y}
-        width={portrait ? apron.w : s + 0.5}
-        height={portrait ? s + 0.5 : apron.h}
-        fill={i % 2 ? grassA : grassB}
-      />,
-    );
-  }
-
-  // ----- goals (outside the goal lines, real 7.32 m) -----
-  const goalW = (7.32 / 68) * (L.orient === "portrait" ? pw : ph);
-  const goalD = (2.2 / 105) * (L.orient === "portrait" ? ph : pw);
-  const goals =
-    L.orient === "portrait"
-      ? [
-          { x: pw / 2 - goalW / 2, y: -goalD, w: goalW, h: goalD },
-          { x: pw / 2 - goalW / 2, y: ph, w: goalW, h: goalD },
-        ]
-      : [
-          { x: pw, y: ph / 2 - goalW / 2, w: goalD, h: goalW },
-          { x: -goalD, y: ph / 2 - goalW / 2, w: goalD, h: goalW },
-        ];
-
   // ----- annotations -----
   const annNode = (af: AnnFrame, draft = false): ReactNode => {
     const { ann, visibility, progress } = af;
@@ -556,11 +509,7 @@ export default function SequenceStage({
       )}
       <g clipPath={chrome ? `url(#${pid("area")})` : undefined}>
       <g ref={cameraRef} transform={cameraTransform(L, frame.camera)}>
-        <clipPath id={pid("apron")}>
-          <rect x={apron.x} y={apron.y} width={apron.w} height={apron.h} rx={u * 2} />
-        </clipPath>
-        <g data-bg="1" clipPath={`url(#${pid("apron")})`}>{stripes}</g>
-        <PitchMarkings orient={L.orient} frame={{ x: 0, y: 0, w: pw, h: ph }} line={lineColor} lineWidth={0.28} />
+        <PitchTurf orient={L.orient} look={look} w={pw} h={ph} clipId={pid("apron")} />
         {seq.showGrid && (
           <PositionalGrid
             orient={L.orient}
@@ -569,18 +518,6 @@ export default function SequenceStage({
             tint={PAL.gridTint}
           />
         )}
-        {goals.map((g, i) => (
-          <rect
-            key={i}
-            x={g.x}
-            y={g.y}
-            width={g.w}
-            height={g.h}
-            fill="rgba(255,255,255,0.18)"
-            stroke="rgba(255,255,255,0.8)"
-            strokeWidth={0.4 * u}
-          />
-        ))}
 
         {/* zones under everything else */}
         {frame.annotations
@@ -635,7 +572,7 @@ export default function SequenceStage({
         {actorsSorted.map(actorNode)}
 
         {/* ball */}
-        <Ball x={ballC.x} y={ballC.y} r={R * 0.5} u={u} id={pid("ball")} editable={overlay?.editable} />
+        <Ball x={ballC.x} y={ballC.y} r={R * 0.5} id={pid("ball")} editable={overlay?.editable} />
 
         {/* labels on top of the players */}
         {frame.annotations.filter((af) => af.ann.kind === "label").map((af) => annNode(af))}
@@ -774,57 +711,6 @@ const SEL_GLOW = {
   strokeLinejoin: "round" as const,
   pointerEvents: "none" as const,
 };
-
-// Classic black-and-white football: central pentagon, five clipped side
-// patches and seams, with a soft shading and drop shadow.
-function Ball({ x, y, r, u, id, editable }: { x: number; y: number; r: number; u: number; id: string; editable?: boolean }) {
-  const pent = (cx: number, cy: number, rad: number, rot: number) =>
-    Array.from({ length: 5 }, (_, k) => {
-      const a = ((rot + k * 72 - 90) * Math.PI) / 180;
-      return `${f(cx + rad * Math.cos(a))},${f(cy + rad * Math.sin(a))}`;
-    }).join(" ");
-  const core = r * 0.36;
-  const patches = Array.from({ length: 5 }, (_, k) => {
-    const a = ((k * 72 - 90 + 36) * Math.PI) / 180;
-    return { cx: x + r * 0.98 * Math.cos(a), cy: y + r * 0.98 * Math.sin(a), rot: k * 72 + 36 };
-  });
-  const seams = Array.from({ length: 5 }, (_, k) => {
-    const a = ((k * 72 - 90) * Math.PI) / 180;
-    return {
-      x1: x + core * Math.cos(a),
-      y1: y + core * Math.sin(a),
-      x2: x + r * 0.78 * Math.cos(a),
-      y2: y + r * 0.78 * Math.sin(a),
-    };
-  });
-  return (
-    <g data-ball="1" style={editable ? { cursor: "grab" } : undefined}>
-      <defs>
-        <radialGradient id={`${id}-shade`} cx="38%" cy="32%" r="75%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="70%" stopColor="#e9ecef" />
-          <stop offset="100%" stopColor="#b9c0c8" />
-        </radialGradient>
-        <clipPath id={`${id}-clip`}>
-          <circle cx={x} cy={y} r={r} />
-        </clipPath>
-      </defs>
-      <ellipse cx={x + r * 0.15} cy={y + r * 0.95} rx={r * 0.9} ry={r * 0.32} fill="#000" fillOpacity={0.35} />
-      <circle cx={x} cy={y} r={r} fill={`url(#${id}-shade)`} />
-      <g clipPath={`url(#${id}-clip)`} fill="#14181d">
-        <polygon points={pent(x, y, core, 0)} />
-        {patches.map((p, k) => (
-          <polygon key={k} points={pent(p.cx, p.cy, core * 0.95, p.rot)} />
-        ))}
-        {seams.map((sm, k) => (
-          <line key={k} x1={sm.x1} y1={sm.y1} x2={sm.x2} y2={sm.y2} stroke="#14181d" strokeWidth={0.12 * u} />
-        ))}
-      </g>
-      <circle cx={x} cy={y} r={r} fill="none" stroke="#0b0f14" strokeWidth={0.16 * u} />
-      <ellipse cx={x - r * 0.35} cy={y - r * 0.42} rx={r * 0.22} ry={r * 0.13} fill="#ffffff" fillOpacity={0.55} transform={`rotate(-30 ${f(x - r * 0.35)} ${f(y - r * 0.42)})`} />
-    </g>
-  );
-}
 
 function centroid(pts: P[]): P {
   const s = pts.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });

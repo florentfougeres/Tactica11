@@ -9,7 +9,7 @@ import type {
   SetPieceState,
 } from "../types";
 import { DEFAULT_OPPONENT_COLOR } from "../types";
-import PitchMarkings from "./PitchMarkings";
+import PitchTurfLayer, { type TurfLook } from "./PitchTurf";
 import BallToken from "./BallToken";
 import SetPieceMarker from "./SetPieceMarker";
 import DrawingLayer from "./DrawingLayer";
@@ -19,6 +19,7 @@ interface Props {
   setPiece: SetPiece;
   playerById: (id: string | null) => Player | null;
   roleFor: (playerId: string) => string;
+  look: TurfLook; // follows the app theme
   showNumbers: boolean;
   state: SetPieceState;
   blend: number; // Début(0) ↔ Fin(1) scrub
@@ -48,6 +49,7 @@ export default function SetPiecePitch({
   setPiece,
   playerById,
   roleFor,
+  look,
   showNumbers,
   blend,
   scrubbing,
@@ -111,8 +113,8 @@ export default function SetPiecePitch({
       <div className="pitch-wrap">
         <div className="pitch pitch--half">
           <div className="pitch__field" ref={innerRef}>
-            <div className="pitch__grass" />
-            <PitchMarkings orient={ORIENT} half />
+            {/* No shared goal: this board draws its own, more visible one. */}
+            <PitchTurfLayer orient={ORIENT} look={look} half goals={false} />
 
             {/* The goal itself: drawn outside the field, in the grass margin
                 above the goal line (real 7.32 m width) — not inside the pitch.

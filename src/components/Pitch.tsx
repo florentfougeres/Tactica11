@@ -12,7 +12,7 @@ import type {
 } from "../types";
 import { DEFAULT_ZONE, posToPx } from "../types";
 import RotatePitchButton from "./RotatePitchButton";
-import PitchMarkings from "./PitchMarkings";
+import PitchTurfLayer, { type TurfLook } from "./PitchTurf";
 import PositionalGrid from "./PositionalGrid";
 import PhaseToggle from "./PhaseToggle";
 import PitchToken, { TOKEN_SIZE } from "./PitchToken";
@@ -31,6 +31,7 @@ interface Props {
   dropActive?: boolean;
   influenceMode: InfluenceMode;
   orient: Orient;
+  look: TurfLook; // follows the app theme
   onToggleOrient: () => void;
   onPhase: (phase: Phase) => void;
   onSelect: (slotId: string | null) => void;
@@ -65,6 +66,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
     dropActive,
     influenceMode,
     orient,
+    look,
     onToggleOrient,
     onPhase,
     onSelect,
@@ -199,8 +201,7 @@ const Pitch = forwardRef<HTMLDivElement, Props>(function Pitch(
           } ${orient === "landscape" ? "pitch--landscape" : ""}`}
         >
           <div className="pitch__field" ref={innerRef}>
-          <div className="pitch__grass" />
-          <PitchMarkings orient={orient} />
+          <PitchTurfLayer orient={orient} look={look} />
           {showGrid && <PositionalGrid orient={orient} />}
 
           {showTeam &&

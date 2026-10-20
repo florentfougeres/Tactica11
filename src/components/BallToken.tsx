@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
 import type { Orient, Pos } from "../types";
 import { posToPx, pxToPos } from "../types";
+import Ball from "./Ball";
 
 export const BALL_SIZE = 24;
 
@@ -32,6 +33,7 @@ export default function BallToken({
   onMove,
 }: Props) {
   const half = BALL_SIZE / 2;
+  const ballId = `ball${useId().replace(/:/g, "")}`;
   const center = posToPx(pos, size, orient);
   const targetX = center.x - half;
   const targetY = center.y - half;
@@ -88,26 +90,9 @@ export default function BallToken({
       aria-label="Ballon"
       role="img"
     >
-      <svg viewBox="0 0 24 24" width="100%" height="100%" aria-hidden="true">
-        <circle
-          cx="12"
-          cy="12"
-          r="10"
-          fill="#f4f4f0"
-          stroke="#1a1a17"
-          strokeWidth="1"
-        />
-        <polygon
-          points="12,8.8 15.04,11.01 13.88,14.59 10.12,14.59 8.96,11.01"
-          fill="#1a1a17"
-        />
-        <g stroke="#1a1a17" strokeWidth="1" strokeLinecap="round">
-          <line x1="12" y1="8.8" x2="12" y2="3.3" />
-          <line x1="15.04" y1="11.01" x2="20.56" y2="9.22" />
-          <line x1="13.88" y1="14.59" x2="17.29" y2="19.28" />
-          <line x1="10.12" y1="14.59" x2="6.71" y2="19.28" />
-          <line x1="8.96" y1="11.01" x2="3.44" y2="9.22" />
-        </g>
+      {/* Same ball as the Séquence stage; its own shadow spills under it. */}
+      <svg viewBox="0 0 24 24" width="100%" height="100%" overflow="visible" aria-hidden="true">
+        <Ball x={12} y={12} r={11} id={ballId} />
       </svg>
     </motion.div>
   );

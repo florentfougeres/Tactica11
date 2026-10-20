@@ -601,6 +601,7 @@ export default function App() {
         ) : view === "setpiece" ? (
           <SetPieceView
             stateSlot={spStateSlot}
+            look={theme}
             lineup={lineup}
             playerById={playerById}
             sp={setPieceActions}
@@ -658,6 +659,7 @@ export default function App() {
               dropActive={benchDragging}
               influenceMode={influenceMode}
               orient={orient}
+              look={theme}
               onToggleOrient={() =>
                 setManualOrient(orient === "portrait" ? "landscape" : "portrait")
               }

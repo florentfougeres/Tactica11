@@ -15,6 +15,7 @@ import BlendSlider from "./BlendSlider";
 import OpponentControls from "./OpponentControls";
 import SetPieceList, { type OnPitchPlayer } from "./SetPieceList";
 import SetPiecePitch from "./SetPiecePitch";
+import type { TurfLook } from "./PitchTurf";
 import SetPieceStateToggle from "./SetPieceStateToggle";
 import Switch from "./Switch";
 
@@ -24,6 +25,7 @@ interface Props {
   // Element above the pitch (where Compo shows Base / Attaque / Défense) the
   // Début / Intermédiaire / Fin toggle is portalled into.
   stateSlot?: HTMLElement | null;
+  look: TurfLook; // pitch follows the app theme
   lineup: Lineup;
   playerById: (id: string | null) => Player | null;
   sp: SetPieceActions;
@@ -55,6 +57,7 @@ const TYPE_LABEL: Record<SetPieceType, string> = {
 // for the main "Compo" view.
 export default function SetPieceView({
   stateSlot,
+  look,
   lineup,
   playerById,
   sp,
@@ -224,6 +227,7 @@ export default function SetPieceView({
           setPiece={current}
           playerById={playerById}
           roleFor={roleFor}
+          look={look}
           showNumbers={showNumbers}
           state={state}
           blend={blend}

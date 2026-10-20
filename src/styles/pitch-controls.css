@@ -169,25 +169,32 @@
   min-height: 0;
   border-radius: var(--radius);
   overflow: hidden;
-  /* Grass margin around the field of play. Proportional padding (% is relative
-     to width; top/bottom = 1.5% * 105/68 ≈ 2.32%) keeps the inner field at the
-     exact 68/105 ratio — markings undistorted, tokens aligned. */
-  padding: 2.32% 1.5%;
-  background: linear-gradient(165deg, #163d27, #0e2718);
+  background: #1b3a24;
   box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9),
     inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
-/* Landscape: flip the ratio; vertical padding becomes 1.5% * 68/105 ≈ 0.97%. */
 .pitch--landscape {
   --ar: calc(105 / 68);
-  padding: 0.97% 1.5%;
 }
-/* The field of play: everything (grass stripes, line markings, tokens) is
-   positioned relative to this box, so it all shares one coordinate space. */
+:root[data-theme="light"] .pitch {
+  background: #3f8b53;
+}
+/* Shared pitch drawing (grass, lines, goals) — see PitchTurf. Its insets,
+   set inline, spread it from the field over the grass margin around it. */
+.pitch-turf {
+  position: absolute;
+  pointer-events: none;
+}
+/* The field of play: everything (grass, line markings, tokens) is
+   positioned relative to this box, so it all shares one coordinate space.
+   Grass margin around it, the same as the Séquence pitch (PitchTurf's
+   apron): 5% of the field on each side, so the box is 1.1× the field in both
+   directions (still 68/105) and the margin is 0.05 / 1.1 = 4.545% of the box
+   on every side. Insets, not padding: % padding would be taken from the
+   parent's width, insets from this box's own width / height. */
 .pitch__field {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 4.545%;
 }
 .pitch--drop {
   box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9),
