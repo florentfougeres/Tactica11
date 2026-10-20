@@ -17,7 +17,7 @@ export default function SetPieceStateToggle({
 }) {
   return (
     <div
-      className="phase-bar phase-bar--sp"
+      className="phase-bar"
       role="tablist"
       aria-label="État de la phase arrêtée"
     >

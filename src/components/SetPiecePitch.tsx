@@ -25,6 +25,7 @@ interface Props {
   scrubbing: boolean; // user is dragging the scrub → follow it 1:1
   opponentMode: boolean;
   drawMode: boolean;
+  onDrawMode: (on: boolean) => void;
   drawTool: DrawTool;
   drawColor: string;
   drawColors: string[];
@@ -52,6 +53,7 @@ export default function SetPiecePitch({
   scrubbing,
   opponentMode,
   drawMode,
+  onDrawMode,
   drawTool,
   drawColor,
   drawColors,
@@ -216,19 +218,19 @@ export default function SetPiecePitch({
         </div>
       </div>
 
-      {drawMode && (
-        <DrawToolbar
-          tool={drawTool}
-          color={drawColor}
-          colors={drawColors}
-          canUndo={drawings.length > 0}
-          canClear={drawings.length > 0}
-          onTool={onDrawTool}
-          onColor={onDrawColor}
-          onUndo={onUndoDrawing}
-          onClear={onClearDrawings}
-        />
-      )}
+      <DrawToolbar
+        drawing={drawMode}
+        onDrawing={onDrawMode}
+        tool={drawTool}
+        color={drawColor}
+        colors={drawColors}
+        canUndo={drawings.length > 0}
+        canClear={drawings.length > 0}
+        onTool={onDrawTool}
+        onColor={onDrawColor}
+        onUndo={onUndoDrawing}
+        onClear={onClearDrawings}
+      />
     </div>
   );
 }

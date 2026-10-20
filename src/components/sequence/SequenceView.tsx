@@ -20,6 +20,7 @@ import { useStageView } from "../../hooks/useStageView";
 import { clampPct, useStagePointer, type Drag } from "./useStagePointer";
 import RotatePitchButton from "../RotatePitchButton";
 import SeqTopTools, { type SeqTool } from "./SeqTopTools";
+import type { ShareItem } from "../ShareMenu";
 
 interface Props {
   lineup: Lineup;
@@ -30,6 +31,7 @@ interface Props {
   seqId: string | null;
   onSeqId: (id: string | null) => void;
   toolbarSlot?: HTMLElement | null; // top-bar element the toolbar is portalled into
+  onShare?: (items: ShareItem[] | null) => void; // items of the top bar's "Partager" menu
   tabs?: React.ReactNode; // app view tabs, shown above the inspector (frees the row above the pitch)
 }
 
@@ -37,7 +39,7 @@ interface Props {
 const CARRY_KEY = "tactica11.seqCarryGraphics";
 
 
-export default function SequenceView({ lineup, players, look, playerById, actions, seqId, onSeqId, tabs, toolbarSlot }: Props) {
+export default function SequenceView({ lineup, players, look, playerById, actions, seqId, onSeqId, tabs, toolbarSlot, onShare }: Props) {
   const sequences = lineup.sequences ?? [];
   const seq: Sequence | null = sequences.find((q) => q.id === seqId) ?? sequences[0] ?? null;
   // A freshly created / duplicated sequence opens with its name field focused.
@@ -63,6 +65,7 @@ export default function SequenceView({ lineup, players, look, playerById, action
       onRenameDone={() => setRenameId(null)}
       tabs={tabs}
       toolbarSlot={toolbarSlot}
+      onShare={onShare}
     />
   );
 }
@@ -106,9 +109,11 @@ function SequenceEditor({
   onRenameDone,
   tabs,
   toolbarSlot,
+  onShare,
 }: {
   tabs?: React.ReactNode;
   toolbarSlot?: HTMLElement | null;
+  onShare?: (items: ShareItem[] | null) => void;
   seq: Sequence;
   lineup: Lineup;
   players: Player[];
@@ -381,6 +386,28 @@ function SequenceEditor({
     }
   };
 
+  // Export entries of the top bar's "Partager" menu. They call through a ref
+  // so the menu always runs the latest export (current time, step…).
+  const exportRef = useRef({ png: exportPng, video: () => {} });
+  useEffect(() => {
+    exportRef.current = {
+      png: exportPng,
+      video: () => {
+        pb.pause();
+        setExportOpen(true);
+      },
+    };
+  });
+  const videoOk = canExportVideo();
+  useEffect(() => {
+    if (!onShare) return;
+    onShare([
+      { label: "Image (instant affiché)", ext: ".png", onClick: () => exportRef.current.png() },
+      ...(videoOk ? [{ label: "Vidéo", ext: ".mp4", onClick: () => exportRef.current.video() }] : []),
+    ]);
+    return () => onShare(null);
+  }, [onShare, videoOk]);
+
   const frameSelection = () => {
     const ids = selActors.size ? [...selActors] : seq.actors.map((a) => a.id);
     const pts = ids.map((id) => step.positions[id]).filter(Boolean) as Pos[];
@@ -447,9 +474,6 @@ function SequenceEditor({
             onZoomFit={resetView}
             onZoomIn={() => zoomViewAt(1.25)}
             onPreview={() => { pb.pause(); setPreview(true); }}
-            onPng={exportPng}
-            pngTitle={`Exporter l'image de l'instant affiché (PNG, format ${seq.format})`}
-            onVideo={canExportVideo() ? () => { pb.pause(); setExportOpen(true); } : null}
           />
         )}
 

@@ -77,7 +77,8 @@ utilise la version web / PWA.
   sélecteur de couleur.
 - **Phase arrêtée** : onglet dédié pour corners, coups francs, touches et
   penaltys, avec état avant/après, transition intermédiaire scrubable et
-  calque de dessin (flèches, passes, main levée, zones).
+  barre d'outils sous le terrain (déplacer, course, passe, main levée, zone),
+  export PNG.
 - **Séquence** : raconte une action en plusieurs étapes animées.
   - Deux équipes, ballon et passes (le ballon suit son porteur), disques
     nommés d'après la compo (poste, numéro ou rien) et taille réglable.
@@ -103,8 +104,9 @@ utilise la version web / PWA.
 - **Orientation** portrait / paysage du terrain.
 - **Annuler / rétablir** (boutons + `⌘/Ctrl + Z`, `⇧` pour rétablir).
 - **Plusieurs compos** sauvegardées en local (`localStorage`).
-- **Partage & export** : lien partageable (URL compressée), export / import
-  `.json`, export du terrain en **image PNG**, import de joueurs depuis un
+- **Partage & export** : un bouton **Partager** au même endroit sur Compo,
+  Phase arrêtée et Séquence (image PNG, lien, Studio, vidéo selon l'onglet),
+  lien partageable (URL compressée), export / import `.json`, import de joueurs depuis un
   fichier **CSV** (détection automatique de l'en-tête et des colonnes,
   colonnes additionnelles importées comme attributs).
 - **PWA** installable, utilisable hors-ligne.

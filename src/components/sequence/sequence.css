@@ -849,3 +849,26 @@ select.seq-input {
   font-size: 15px;
   font-weight: 700;
 }
+
+/* Partager menu (ShareMenu), shared by Compo, Phase arrêtée and Séquence */
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  white-space: nowrap;
+}
+.share-btn .seq-tool__chev {
+  font-style: normal;
+  font-size: 10px;
+}
+.share-menu__item {
+  justify-content: space-between;
+  gap: 18px;
+  color: var(--text);
+}
+.share-menu__ext {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+}

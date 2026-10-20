@@ -3,6 +3,7 @@ import { FORMATIONS } from "../formations";
 import type { Phase } from "../types";
 import type { View } from "./ViewTabs";
 import { useDismiss } from "../hooks/useDismiss";
+import ShareMenu, { type ShareItem } from "./ShareMenu";
 
 interface Props {
   view: View;
@@ -40,6 +41,8 @@ interface Props {
   onToggleTheme: () => void;
   // Séquence renders its tools into this element (see SeqTopTools).
   onSeqSlot?: (el: HTMLDivElement | null) => void;
+  // "Partager" items of Phase arrêtée / Séquence (Compo builds its own).
+  share?: ShareItem[] | null;
 }
 
 export default function TopBar({
@@ -77,20 +80,18 @@ export default function TopBar({
   theme,
   onToggleTheme,
   onSeqSlot,
+  share,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const fmRef = useRef<HTMLDivElement>(null);
-  const exportRef = useRef<HTMLDivElement>(null);
   const compoRef = useRef<HTMLDivElement>(null);
   const projectRef = useRef<HTMLDivElement>(null);
   const [fmOpen, setFmOpen] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
   const [compoOpen, setCompoOpen] = useState(false);
   const [projectOpen, setProjectOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useDismiss(fmOpen, () => setFmOpen(false), [fmRef]);
-  useDismiss(exportOpen, () => setExportOpen(false), [exportRef]);
   useDismiss(compoOpen, () => setCompoOpen(false), [compoRef]);
   useDismiss(projectOpen, () => setProjectOpen(false), [projectRef]);
 
@@ -99,6 +100,23 @@ export default function TopBar({
     setCopied(true);
     setTimeout(() => setCopied(false), 1600);
   };
+
+  const shareItems: ShareItem[] | null =
+    view === "pitch"
+      ? [
+          { label: "Image (vue actuelle)", ext: ".png", onClick: onExportPng },
+          { label: copied ? "Lien copié ✓" : "Copier le lien (cette compo)", ext: "URL", onClick: copyLink, keepOpen: true },
+          // Studio is the poster-style share visual; it works from the base
+          // positions only.
+          {
+            label: "Créer un visuel (Studio)",
+            ext: phase !== "base" ? "Base" : "poster",
+            onClick: onStudio,
+            disabled: phase !== "base",
+            title: phase !== "base" ? "Disponible en phase Base" : undefined,
+          },
+        ]
+      : (share ?? null);
 
   return (
     <header className={`topbar topbar--${view} glass`}>
@@ -357,51 +375,7 @@ export default function TopBar({
           </>
         )}
 
-        {view === "pitch" && (
-          <div className="export" ref={exportRef}>
-            <button
-              className="btn btn--primary"
-              onClick={() => setExportOpen((o) => !o)}
-              aria-haspopup="menu"
-              aria-expanded={exportOpen}
-            >
-              Partager <span className="export__chevron" aria-hidden="true">▾</span>
-            </button>
-            {exportOpen && (
-              <div className="export-menu" role="menu">
-                <button
-                  role="menuitem"
-                  onClick={() => {
-                    setExportOpen(false);
-                    onExportPng();
-                  }}
-                >
-                  <span>Image (vue actuelle)</span>
-                  <span className="export-menu__ext">.png</span>
-                </button>
-                <button role="menuitem" onClick={copyLink}>
-                  <span>{copied ? "Lien copié ✓" : "Copier le lien (cette compo)"}</span>
-                  <span className="export-menu__ext">URL</span>
-                </button>
-                {/* Studio lives here rather than as a lone icon: it is the
-                    poster-style share visual, so it belongs with sharing. It
-                    works from the base positions only. */}
-                <button
-                  role="menuitem"
-                  disabled={phase !== "base"}
-                  title={phase !== "base" ? "Disponible en phase Base" : undefined}
-                  onClick={() => {
-                    setExportOpen(false);
-                    onStudio();
-                  }}
-                >
-                  <span>Créer un visuel (Studio)</span>
-                  <span className="export-menu__ext">{phase !== "base" ? "Base" : "poster"}</span>
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+        {shareItems && <ShareMenu items={shareItems} />}
         <button
           className="btn btn--icon"
           onClick={onToggleTheme}

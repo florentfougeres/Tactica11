@@ -12,12 +12,12 @@ import type {
 import {
   DEFAULT_DRAW_COLOR,
   DEFAULT_OPPONENT_COLOR,
-  OPPONENT_COLORS,
 } from "./types";
 import { loadLibrary } from "./storage";
 import Bench from "./components/Bench";
 import Pitch from "./components/Pitch";
 import TopBar from "./components/TopBar";
+import type { ShareItem } from "./components/ShareMenu";
 import CsvImportDialog from "./components/CsvImportDialog";
 import RosterTable from "./components/RosterTable";
 import ViewTabs, { type View } from "./components/ViewTabs";
@@ -28,7 +28,8 @@ import { presetsFor, presetRadii } from "./zonePresets";
 import { exportPitchPng } from "./exportImage";
 import { useUndoableLineup } from "./useUndoableLineup";
 import { useAutoplay } from "./hooks/useAutoplay";
-import AutoplayControl from "./components/AutoplayControl";
+import BlendSlider from "./components/BlendSlider";
+import OpponentControls from "./components/OpponentControls";
 import { useOnboarding } from "./hooks/useOnboarding";
 import { useTheme } from "./hooks/useTheme";
 import { usePresentation } from "./hooks/usePresentation";
@@ -349,6 +350,29 @@ export default function App() {
     }
   };
 
+  // Phase arrêtée: same capture as Compo, on the half-pitch of the set piece.
+  const SP_STATE_LABEL: Record<SetPieceState, string> = { start: "Début", mid: "Intermédiaire", end: "Fin" };
+  const handleExportSetPiecePng = async () => {
+    const current = setPieceActions.currentSetPiece;
+    const el = document.querySelector(".sp-pitch-col .pitch") as HTMLElement | null;
+    if (!current || !el) return;
+    try {
+      await exportPitchPng(el, `${lineup.name} ${current.name}`, SP_STATE_LABEL[spState]);
+    } catch {
+      alert("Échec de l'export en image.");
+    }
+  };
+  // Séquence hands its own items (image of the instant shown, video) up here.
+  const [seqShare, setSeqShare] = useState<ShareItem[] | null>(null);
+  const share: ShareItem[] | null =
+    view === "setpiece"
+      ? setPieceActions.currentSetPiece
+        ? [{ label: "Image (vue actuelle)", ext: ".png", onClick: handleExportSetPiecePng }]
+        : null
+      : view === "sequence"
+        ? seqShare
+        : null;
+
   // Influence controls now live in the pitch toolbar (passed as a node) so the
   // Effectif column is purely the roster.
   const selSlot = lineup.slots.find((s) => s.id === selectedSlot) ?? null;
@@ -363,31 +387,14 @@ export default function App() {
   const pitchControls = (
     <div className="pitch-ctl">
       {phase !== "base" && (
-        <div className="pitch-ctl__slider">
-          <span>Déf</span>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.02}
-            value={blend}
-            aria-label="Transition Défense → Attaque"
-            onPointerDown={() => {
-              blendAutoplay.stop();
-              setScrubbing(true);
-            }}
-            onPointerUp={() => setScrubbing(false)}
-            onChange={(e) => handleBlend(Number(e.target.value))}
-          />
-          <span>Att</span>
-          <AutoplayControl
-            playing={blendAutoplay.playing}
-            onToggle={blendAutoplay.toggle}
-            speed={blendAutoplay.speed}
-            onCycleSpeed={blendAutoplay.cycleSpeed}
-            label="la transition défense-attaque"
-          />
-        </div>
+        <BlendSlider
+          from="Déf"
+          to="Att"
+          value={blend}
+          onChange={handleBlend}
+          onScrub={setScrubbing}
+          autoplay={blendAutoplay}
+        />
       )}
 
       {phase !== "base" && (
@@ -448,31 +455,12 @@ export default function App() {
       )}
 
       {phase !== "base" && (
-        <>
-          <Switch label="Adversaires" checked={opponentMode} onChange={toggleOpponentMode} />
-          {opponentMode && (
-            <div
-              className="opp-colors-row"
-              role="group"
-              aria-label="Couleur des adversaires"
-            >
-              {OPPONENT_COLORS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  className={`opp-swatch ${
-                    c === (lineup.opponentColor ?? DEFAULT_OPPONENT_COLOR)
-                      ? "is-active"
-                      : ""
-                  }`}
-                  style={{ background: c }}
-                  onClick={() => setOpponentColor(c)}
-                  aria-label={`Couleur ${c}`}
-                />
-              ))}
-            </div>
-          )}
-        </>
+        <OpponentControls
+          on={opponentMode}
+          onToggle={toggleOpponentMode}
+          color={lineup.opponentColor}
+          onColor={setOpponentColor}
+        />
       )}
     </div>
   );
@@ -481,6 +469,7 @@ export default function App() {
   // so the pitch can use the row they'd otherwise take.
   // Top-bar element the Séquence toolbar is portalled into.
   const [seqSlot, setSeqSlot] = useState<HTMLDivElement | null>(null);
+  const [spStateSlot, setSpStateSlot] = useState<HTMLDivElement | null>(null);
   const seqTabsInside = view === "sequence" && (lineup.sequences?.length ?? 0) > 0;
 
   return (
@@ -539,6 +528,7 @@ export default function App() {
         onUndo={undo}
         onRedo={redo}
         onExportPng={handleExportPng}
+        share={share}
         onCopyLink={copyShareLink}
         onSaveProject={saveProject}
         onImportProject={openProjectFile}
@@ -552,6 +542,9 @@ export default function App() {
               <PhaseToggle phase={phase} onPhase={handlePhase} />
             </div>
           )}
+          {/* Phase arrêtée's Début / Intermédiaire / Fin goes in the same
+              place as Compo's phases (portalled from SetPieceView). */}
+          {view === "setpiece" && <div className="view-row__phase" ref={setSpStateSlot} />}
         </div>
       )}
 
@@ -581,9 +574,11 @@ export default function App() {
             actions={sequenceActions}
             seqId={seqId}
             onSeqId={setSeqId}
+            onShare={setSeqShare}
           />
         ) : view === "setpiece" ? (
           <SetPieceView
+            stateSlot={spStateSlot}
             lineup={lineup}
             playerById={playerById}
             sp={setPieceActions}

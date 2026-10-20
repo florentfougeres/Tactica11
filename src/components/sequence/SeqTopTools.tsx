@@ -56,14 +56,11 @@ interface TopToolsProps {
   onZoomFit: () => void;
   onZoomIn: () => void;
   onPreview: () => void;
-  onPng: () => void;
-  pngTitle: string;
-  onVideo: (() => void) | null;
 }
 
 // Séquence tools, portalled into the app's top bar. When they don't fit, the
 // arrow/shape groups collapse into dropdowns and view/export go into a "⋯"
-// menu (Aperçu stays visible); they expand again once there's room.
+// menu (Aperçu stays visible; export is the top bar's Partager menu); they expand again once there's room.
 export default function SeqTopTools(p: TopToolsProps) {
   // 0 = icons + labels, 1 = icons only, 2 = dropdown menus. Step down while
   // the tools overflow; step back up once the width the previous level
@@ -114,8 +111,10 @@ export default function SeqTopTools(p: TopToolsProps) {
     </>
   );
   const preview = (
-    <button type="button" className="seq-tool seq-tool--cta" onClick={p.onPreview} title="Aperçu plein écran, sans l'interface">
-      ▶ Aperçu
+    // Not the green call to action any more: that's "Partager", in the same
+    // place as on Compo and Phase arrêtée.
+    <button type="button" className="seq-tool" onClick={p.onPreview} title="Aperçu plein écran, sans l'interface">
+      ▶ <span>Aperçu</span>
     </button>
   );
 
@@ -136,17 +135,9 @@ export default function SeqTopTools(p: TopToolsProps) {
         </div>
         <div className="seq-toolbar__group">
           {preview}
-          <ToolMenu title="Vue et export" button={<span className="seq-tool__more">⋯</span>}>
+          <ToolMenu title="Vue" button={<span className="seq-tool__more">⋯</span>}>
             {gridBtn("seq-menu__item")}
             <div className="seq-menu__row" data-keep>{zoom}</div>
-            <button type="button" className="seq-menu__item" onClick={p.onPng} title={p.pngTitle}>
-              <span>Exporter en PNG</span>
-            </button>
-            {p.onVideo && (
-              <button type="button" className="seq-menu__item" onClick={p.onVideo} title="Exporter la séquence en vidéo MP4">
-                <span>Exporter en vidéo</span>
-              </button>
-            )}
           </ToolMenu>
         </div>
       </div>
@@ -165,10 +156,6 @@ export default function SeqTopTools(p: TopToolsProps) {
         </div>
         <div className="seq-toolbar__group">
           {preview}
-          <button type="button" className="seq-tool" onClick={p.onPng} title={p.pngTitle}>PNG</button>
-          {p.onVideo && (
-            <button type="button" className="seq-tool" onClick={p.onVideo} title="Exporter la séquence en vidéo MP4">Vidéo</button>
-          )}
         </div>
       </div>
     ),
@@ -184,8 +171,9 @@ function ToolMenu({ button, title, active, children }: { button: ReactNode; titl
   );
 }
 
-// Small inline icons for the toolbar.
-function ToolIcon({ tool }: { tool: SeqTool }) {
+// Small inline icons for the toolbar (also used by the Phase arrêtée drawing
+// bar, so the same tool looks the same everywhere).
+export function ToolIcon({ tool }: { tool: SeqTool }) {
   const s = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
   switch (tool) {
     case "select":

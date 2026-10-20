@@ -100,21 +100,6 @@
   z-index: 1;
 }
 
-/* Set-piece state toggle: sits in the narrow sidebar (not floating over the
-   pitch like the main phase toggle), and now has a third tab ("Intermédiaire")
-   — stretch to the column width with equal-width tabs instead of the
-   content-sized pill, or "Fin" overflows the container at this width. */
-.phase-bar--sp {
-  display: grid;
-  grid-auto-flow: unset;
-  grid-template-columns: repeat(3, 1fr);
-  width: 100%;
-}
-.phase-bar--sp .phase-bar__btn {
-  padding: 6px 4px;
-  font-size: 12px;
-}
-
 /* slot management popover */
 .slot-pop-anchor {
   position: absolute;

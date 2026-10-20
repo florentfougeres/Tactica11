@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import type {
   Drawing,
   DrawTool,
@@ -7,10 +8,11 @@ import type {
   SetPieceState,
   SetPieceType,
 } from "../types";
-import { DEFAULT_OPPONENT_COLOR, DRAW_COLORS, OPPONENT_COLORS } from "../types";
+import { DRAW_COLORS } from "../types";
 import type { useSetPieceActions } from "../hooks/useSetPieceActions";
 import { useAutoplay } from "../hooks/useAutoplay";
-import AutoplayControl from "./AutoplayControl";
+import BlendSlider from "./BlendSlider";
+import OpponentControls from "./OpponentControls";
 import SetPieceList, { type OnPitchPlayer } from "./SetPieceList";
 import SetPiecePitch from "./SetPiecePitch";
 import SetPieceStateToggle from "./SetPieceStateToggle";
@@ -19,6 +21,9 @@ import Switch from "./Switch";
 type SetPieceActions = ReturnType<typeof useSetPieceActions>;
 
 interface Props {
+  // Element above the pitch (where Compo shows Base / Attaque / Défense) the
+  // Début / Intermédiaire / Fin toggle is portalled into.
+  stateSlot?: HTMLElement | null;
   lineup: Lineup;
   playerById: (id: string | null) => Player | null;
   sp: SetPieceActions;
@@ -49,6 +54,7 @@ const TYPE_LABEL: Record<SetPieceType, string> = {
 // with the half-pitch board (right), mirroring how App.tsx pairs Bench+Pitch
 // for the main "Compo" view.
 export default function SetPieceView({
+  stateSlot,
   lineup,
   playerById,
   sp,
@@ -142,33 +148,14 @@ export default function SetPieceView({
 
   const footer = current && (
     <div className="pitch-ctl">
-      <div className="pitch-ctl__slider">
-        <span>Début</span>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.02}
-          value={blend}
-          aria-label="Transition Début → Fin"
-          onPointerDown={() => {
-            autoplay.stop();
-            onScrubbing(true);
-          }}
-          onPointerUp={() => onScrubbing(false)}
-          onChange={(e) => handleBlend(Number(e.target.value))}
-        />
-        <span>Fin</span>
-        <AutoplayControl
-          playing={autoplay.playing}
-          onToggle={autoplay.toggle}
-          speed={autoplay.speed}
-          onCycleSpeed={autoplay.cycleSpeed}
-          label="la séquence début-fin"
-        />
-      </div>
-
-      <SetPieceStateToggle state={state} onState={handleState} />
+      <BlendSlider
+        from="Début"
+        to="Fin"
+        value={blend}
+        onChange={handleBlend}
+        onScrub={onScrubbing}
+        autoplay={autoplay}
+      />
 
       {PREVIOUS_PHASE_LABEL[state] && (
         <button
@@ -201,45 +188,19 @@ export default function SetPieceView({
 
       <Switch label="Afficher les numéros" checked={showNumbers} onChange={onShowNumbers} />
 
-      <Switch label="Adversaires" checked={opponentMode} onChange={onOpponentMode} />
-      {opponentMode && (
-        <button
-          type="button"
-          className="pitch-ctl__btn"
-          onClick={() => sp.addOpponent(current.id)}
-        >
-          + Adversaire
-        </button>
-      )}
-      {opponentMode && (
-        <div
-          className="opp-colors-row"
-          role="group"
-          aria-label="Couleur des adversaires"
-        >
-          {OPPONENT_COLORS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              className={`opp-swatch ${
-                c === (current.opponentColor ?? DEFAULT_OPPONENT_COLOR)
-                  ? "is-active"
-                  : ""
-              }`}
-              style={{ background: c }}
-              onClick={() => sp.setOpponentColor(current.id, c)}
-              aria-label={`Couleur ${c}`}
-            />
-          ))}
-        </div>
-      )}
-
-      <Switch label="Dessin" checked={drawMode} onChange={onDrawMode} />
+      <OpponentControls
+        on={opponentMode}
+        onToggle={onOpponentMode}
+        color={current.opponentColor}
+        onColor={(c) => sp.setOpponentColor(current.id, c)}
+        onAdd={() => sp.addOpponent(current.id)}
+      />
     </div>
   );
 
   return (
     <>
+      {stateSlot && current && createPortal(<SetPieceStateToggle state={state} onState={handleState} />, stateSlot)}
       <SetPieceList
         setPieces={lineup.setPieces}
         currentSetPiece={current}
@@ -269,6 +230,7 @@ export default function SetPieceView({
           scrubbing={scrubbing}
           opponentMode={opponentMode}
           drawMode={drawMode}
+          onDrawMode={onDrawMode}
           drawTool={drawTool}
           drawColor={drawColor}
           drawColors={DRAW_COLORS}
