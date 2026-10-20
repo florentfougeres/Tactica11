@@ -345,8 +345,9 @@ export default function SequenceStage({
       if (!pts.length) return null;
       const onActor = "actorId" in ann.anchors[0];
       const x = pts[0].x;
-      const y = onActor ? pts[0].y - R * 2.9 : pts[0].y;
       const scale = ann.size ?? 1;
+      // Sit above the player's name pill (when names are shown), not on it.
+      const y = onActor ? pts[0].y - R - (seq.showNames ? 4.6 : 1.4) * u - 1.8 * u * scale : pts[0].y;
       return (
         <g key={ann.id} {...common}>
           <Pill
@@ -462,6 +463,11 @@ export default function SequenceStage({
         </radialGradient>
         <linearGradient id={pid("top")} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#000" stopOpacity={cinema ? 0.75 : 0.35} />
+          <stop offset="100%" stopColor="#000" stopOpacity={0} />
+        </linearGradient>
+        <linearGradient id={pid("left")} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#000" stopOpacity={cinema ? 0.55 : 0.25} />
+          <stop offset="80%" stopColor="#000" stopOpacity={cinema ? 0.35 : 0.12} />
           <stop offset="100%" stopColor="#000" stopOpacity={0} />
         </linearGradient>
         <linearGradient id={pid("bottom")} x1="0" y1="1" x2="0" y2="0">
@@ -597,8 +603,23 @@ export default function SequenceStage({
       </g>
 
       {/* ---------- screen-space overlays ---------- */}
-      <rect x={0} y={0} width={L.W} height={L.pitch.y + u * 4} fill={`url(#${pid("top")})`} pointerEvents="none" />
-      <rect x={0} y={L.pitch.y + L.pitch.h - u * 6} width={L.W} height={L.H - (L.pitch.y + L.pitch.h - u * 6)} fill={`url(#${pid("bottom")})`} pointerEvents="none" />
+      {L.header?.mode === "top" && (
+        <rect x={0} y={0} width={L.W} height={L.header.y + L.header.h + L.pad} fill={`url(#${pid("top")})`} pointerEvents="none" />
+      )}
+      {L.header?.mode === "side" && (
+        <rect x={0} y={0} width={L.header.x + L.header.w + L.pad * 0.5} height={L.H} fill={`url(#${pid("left")})`} pointerEvents="none" />
+      )}
+      {/* Overlaid captions (9:16) rely on their outline, no dark band over the pitch. */}
+      {L.caption && !L.caption.overlay && (
+        <rect
+          x={0}
+          y={L.caption.y - L.pad * 0.5}
+          width={L.W}
+          height={L.H - (L.caption.y - L.pad * 0.5)}
+          fill={`url(#${pid("bottom")})`}
+          pointerEvents="none"
+        />
+      )}
 
       <Header seq={seq} frame={frame} L={L} />
       <Caption seq={seq} frame={frame} L={L} />
@@ -750,24 +771,81 @@ function Pill({
 }
 
 function Header({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameLayout }) {
+  const box = L.header;
+  if (!box) return null;
   const cinema = seq.preset === "cinema";
   const T = seq.theme;
-  const pad = L.W * 0.055;
-  const base = Math.min(L.W, L.H) * 0.028; // font unit
+  const base = L.base;
   const title = seq.title.trim();
   const sub = seq.subtitle.trim();
+  const chapters = frame.chapters.length
+    ? frame.chapters
+    : [{ title: "", start: 0, end: frame.duration }];
+  const fillOf = (c: { start: number; end: number }) =>
+    Math.min(1, Math.max(0, (frame.time - c.start) / Math.max(1, c.end - c.start)));
 
+  if (box.mode === "side") {
+    // Left column: title, subtitle, then the chapters as a vertical list,
+    // each with its own progress bar (current one in the accent colour).
+    const titleFs = base * (cinema ? 1.25 : 1.6);
+    const titleLines = title ? wrap(title.toUpperCase().split(/\s+/), titleFs, box.w, true) : [];
+    const words = title.toUpperCase().split(/\s+/);
+    let y = box.y + titleFs;
+    const nodes: ReactNode[] = [];
+    titleLines.forEach((li, k) => {
+      nodes.push(
+        <text key={`t${k}`} x={box.x} y={y} fontFamily={FONT} fontWeight={900} fontSize={titleFs} fill="#ffffff" letterSpacing={cinema ? base * 0.06 : undefined} stroke={cinema ? undefined : "#0b0f14"} strokeWidth={cinema ? undefined : base * 0.16} paintOrder="stroke">
+          {li.map((i) => words[i]).join(" ")}
+        </text>,
+      );
+      y += titleFs * 1.15;
+    });
+    if (sub) {
+      y += base * 0.2;
+      nodes.push(
+        <text key="sub" x={box.x} y={y} fontFamily={FONT} fontWeight={800} fontSize={base * 0.95} fill={T.accent} stroke={cinema ? undefined : "#0b0f14"} strokeWidth={cinema ? undefined : base * 0.12} paintOrder="stroke" letterSpacing={base * 0.05}>
+          {sub.toUpperCase()}
+        </text>,
+      );
+      y += base * 1.2;
+    }
+    if (cinema) {
+      y += base * 0.9;
+      chapters.forEach((c, i) => {
+        const cur = i === frame.chapterIndex || (frame.chapterIndex < 0 && chapters.length === 1);
+        const fill = fillOf(c);
+        if (c.title) {
+          nodes.push(
+            <text key={`c${i}`} x={box.x} y={y} fontFamily={FONT} fontWeight={800} fontSize={base * 0.72} fill={cur ? T.accent : "#ffffff"} fillOpacity={cur ? 1 : 0.55} letterSpacing={base * 0.07}>
+              {c.title.toUpperCase()}
+            </text>,
+          );
+          y += base * 0.55;
+        }
+        nodes.push(
+          <g key={`b${i}`}>
+            <rect x={box.x} y={y} width={box.w} height={base * 0.22} rx={base * 0.11} fill="#ffffff" fillOpacity={0.16} />
+            {fill > 0 && <rect x={box.x} y={y} width={box.w * fill} height={base * 0.22} rx={base * 0.11} fill={T.accent} />}
+          </g>,
+        );
+        y += base * 1.35;
+      });
+    }
+    return <g pointerEvents="none">{nodes}</g>;
+  }
+
+  // ----- top band -----
+  const pad = box.x;
   if (!cinema) {
-    if (!title && !sub) return null;
     return (
       <g pointerEvents="none">
         {title && (
-          <text x={pad} y={pad + base * 1.6} fontFamily={FONT} fontWeight={900} fontSize={base * 1.9} fill="#ffffff" stroke="#0b0f14" strokeWidth={base * 0.18} paintOrder="stroke">
+          <text x={pad} y={box.y + base * 1.6} fontFamily={FONT} fontWeight={900} fontSize={base * 1.9} fill="#ffffff" stroke="#0b0f14" strokeWidth={base * 0.18} paintOrder="stroke">
             {title.toUpperCase()}
           </text>
         )}
         {sub && (
-          <text x={pad} y={pad + base * 3.3} fontFamily={FONT} fontWeight={700} fontSize={base * 1.05} fill={T.accent} stroke="#0b0f14" strokeWidth={base * 0.12} paintOrder="stroke">
+          <text x={pad} y={box.y + base * (title ? 3.1 : 1.2)} fontFamily={FONT} fontWeight={700} fontSize={base * 1.05} fill={T.accent} stroke="#0b0f14" strokeWidth={base * 0.12} paintOrder="stroke">
             {sub}
           </text>
         )}
@@ -777,26 +855,21 @@ function Header({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameL
 
   // Cinema: brand line, segmented progress bar (one segment per chapter, or
   // a single bar), current chapter label.
-  const barY = pad + base * 2.4;
-  const barW = L.W - 2 * pad;
+  const barY = box.y + base * 1.6;
   const gap = base * 0.35;
-  const chapters = frame.chapters.length
-    ? frame.chapters
-    : [{ title: "", start: 0, end: frame.duration }];
   const n = chapters.length;
-  const segW = (barW - gap * (n - 1)) / n;
+  const segW = (box.w - gap * (n - 1)) / n;
   const chapterTitle =
     frame.chapterIndex >= 0 ? frame.chapters[frame.chapterIndex].title : sub;
   return (
     <g pointerEvents="none">
       {title && (
-        <text x={pad} y={pad + base * 1.1} fontFamily={FONT} fontWeight={900} fontSize={base * 1.05} fill="#ffffff" letterSpacing={base * 0.08}>
-          <tspan>{title.toUpperCase()}</tspan>
+        <text x={pad} y={box.y + base * 0.9} fontFamily={FONT} fontWeight={900} fontSize={base * 1.05} fill="#ffffff" letterSpacing={base * 0.08}>
+          {title.toUpperCase()}
         </text>
       )}
       {chapters.map((c, i) => {
-        const len = Math.max(1, c.end - c.start);
-        const fill = Math.min(1, Math.max(0, (frame.time - c.start) / len));
+        const fill = fillOf(c);
         const x = pad + i * (segW + gap);
         return (
           <g key={i}>
@@ -807,8 +880,8 @@ function Header({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: FrameL
       })}
       {chapterTitle && (
         <g>
-          <rect x={pad} y={barY + base * 1.05} width={base * 0.5} height={base * 0.5} fill={T.accent} />
-          <text x={pad + base * 0.85} y={barY + base * 1.52} fontFamily={FONT} fontWeight={800} fontSize={base * 0.78} fill={T.accent} letterSpacing={base * 0.08}>
+          <rect x={pad} y={barY + base * 0.95} width={base * 0.5} height={base * 0.5} fill={T.accent} />
+          <text x={pad + base * 0.85} y={barY + base * 1.42} fontFamily={FONT} fontWeight={800} fontSize={base * 0.78} fill={T.accent} letterSpacing={base * 0.08}>
             {chapterTitle.toUpperCase()}
           </text>
         </g>
@@ -841,13 +914,13 @@ function Caption({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: Frame
   const T = seq.theme;
   const upper = !cinema;
   const words = cap.text.split(/\s+/).filter(Boolean).map((w) => (upper ? w.toUpperCase() : w));
-  const fs = Math.min(L.W, L.H) * (cinema ? 0.042 : 0.048);
-  const lines = wrap(words, fs, L.W * 0.86, upper);
+  const box = L.caption;
+  if (!box) return null;
+  const fs = L.captionFs;
+  const lines = wrap(words, fs, box.w, upper);
   const lineH = fs * 1.35;
-  // Vertical formats: keep the captions above the TikTok/Reels bottom UI,
-  // over the lower part of the pitch; elsewhere centre them in the bottom margin.
-  const bottom =
-    seq.format === "9:16" ? L.H * 0.765 : L.H - (L.H - (L.pitch.y + L.pitch.h)) * 0.5;
+  // Overlay: lines grow upward from the anchor; band: centred vertically.
+  const bottom = box.overlay ? box.y : box.y + box.h / 2 + ((lines.length - 1) * lineH) / 2;
   const y0 = bottom - (lines.length - 1) * lineH;
   // Karaoke: the highlight sweeps across the words over ~85% of the step.
   const current = cap.karaoke ? Math.floor(Math.min(0.999, cap.t / 0.85) * words.length) : -1;
@@ -859,7 +932,7 @@ function Caption({ seq, frame, L }: { seq: Sequence; frame: FrameState; L: Frame
       {lines.map((li, k) => (
         <text
           key={k}
-          x={L.W / 2}
+          x={box.x + box.w / 2}
           y={y0 + k * lineH}
           dy="0.32em"
           textAnchor="middle"
