@@ -13,6 +13,10 @@ export type SeqFormat = "9:16" | "16:9" | "1:1";
 
 export type Team = "home" | "away";
 
+// Part of the pitch the sequence shows: the whole pitch, or only one half —
+// the opponent's ("attack", y 0–50) or ours ("defense", y 50–100).
+export type PitchHalf = "attack" | "defense";
+
 // One disc on the board. Home actors created from the compo keep a `slotId`
 // so they show the real player's name / number; extra ones are free-text.
 export interface SeqActor {
@@ -33,6 +37,8 @@ export interface SeqActor {
 export type BallState = { pos: Pos } | { carrierId: string };
 
 // Camera framing of the pitch: centre in pitch percent + zoom (1 = whole pitch).
+// On a half-pitch sequence the camera is relative to the visible half: centre
+// (50,50) + zoom 1 frames that whole half (see layout.ts).
 export interface Camera {
   x: number;
   y: number;
@@ -119,6 +125,7 @@ export interface Sequence {
   name: string;
   format: SeqFormat;
   orient: "portrait" | "landscape"; // pitch orientation (vertical / horizontal)
+  half?: PitchHalf; // show only one half of the pitch (default: the whole pitch)
   discMode?: DiscMode; // what our discs show: position, shirt number or nothing
   title: string; // header line (brand / topic)
   subtitle: string;
@@ -132,6 +139,7 @@ export interface Sequence {
   idle?: 0 | 1 | 2 | 3; // idle micro-movement of the players: off / light / medium / strong
   homeDiscScale?: number; // disc size of our team, 1 = default
   awayDiscScale?: number; // disc size of the opponents, 1 = default
+  discRelief?: boolean; // glossy, raised discs (highlight + shading) instead of flat ones
   theme: SeqTheme;
   actors: SeqActor[];
   steps: SeqStep[];

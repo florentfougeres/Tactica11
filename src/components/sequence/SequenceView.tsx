@@ -8,7 +8,7 @@ import type {
 import { DEFAULT_CAMERA } from "../../sequence/types";
 import { frameAt, playheadAt, stepSpans, totalDuration } from "../../sequence/engine";
 import type { AnnFrame } from "../../sequence/engine";
-import { frameLayout } from "../../sequence/layout";
+import { frameLayout, visibleMetres } from "../../sequence/layout";
 import SequenceStage, { type ActorInfo, type SeqLook } from "../../sequence/SequenceStage";
 import { canExportVideo, exportStepPng } from "../../sequence/exportVideo";
 import SequenceTimeline from "./SequenceTimeline";
@@ -423,9 +423,14 @@ function SequenceEditor({
     const x1 = Math.max(...xs);
     const y0 = Math.min(...ys);
     const y1 = Math.max(...ys);
-    const span = Math.max((x1 - x0) * (L.orient === "portrait" ? 1 : 105 / 68), (y1 - y0) * (L.orient === "portrait" ? 105 / 68 : 1), 28);
-    const zoom = Math.min(3, Math.max(1, 100 / (span * 1.35)));
-    actions.patchStep(seq.id, stepIndex, { camera: { x: (x0 + x1) / 2, y: (y0 + y1) / 2, zoom } });
+    // Zoom so the group (in metres, with some air) fits the visible area;
+    // the camera is relative to that area's centre (see cameraTransform).
+    const m = visibleMetres(seq.half);
+    const fitZoom = Math.min(m.x / Math.max((x1 - x0) * 0.68, 19), m.y / Math.max((y1 - y0) * 1.05, 19)) / 1.35;
+    const zoom = Math.min(3, Math.max(1, fitZoom));
+    actions.patchStep(seq.id, stepIndex, {
+      camera: { x: (x0 + x1) / 2 - L.focus.x + 50, y: (y0 + y1) / 2 - L.focus.y + 50, zoom },
+    });
   };
 
   return (

@@ -389,7 +389,9 @@ export default function SequenceStage({
     const sel = overlay?.selectedActors?.has(a.id);
     const discFill = focus > 0.5 ? T.accent : fill;
     const discText = focus > 0.5 ? "#0b0f14" : textColor;
-    const fs = inf.disc.length > 2 ? R * 0.62 : R * 0.74;
+    const relief = !!seq.discRelief;
+    // A relief disc's face is a bit smaller than the disc: text scaled to it.
+    const fs = (inf.disc.length > 2 ? R * 0.62 : R * 0.74) * (relief ? 0.9 : 1);
     const showName = seq.showNames && inf.name;
     const nameFs = 2.15 * u * (seq.nameScale ?? 1);
     return (
@@ -400,24 +402,40 @@ export default function SequenceStage({
             <circle cx={c.x} cy={c.y} r={R * 1.38} fill="none" stroke={T.accent} strokeWidth={0.45 * u} strokeOpacity={focus} />
           </>
         )}
-        <circle cx={c.x} cy={c.y + R * 0.16} r={R} fill="#000" fillOpacity={0.35} />
-        <circle
-          cx={c.x}
-          cy={c.y}
-          r={R}
-          fill={discFill}
-          stroke={home ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.35)"}
-          strokeWidth={0.28 * u}
-        />
+        {relief ? (
+          <>
+            <circle cx={c.x} cy={c.y + R * 0.16} r={R} fill="#000" fillOpacity={0.35} />
+            <circle cx={c.x} cy={c.y} r={R} fill={discFill} stroke="rgba(0,0,0,0.45)" strokeWidth={0.2 * u} />
+          </>
+        ) : (
+          // Flat discs = the Compo tab's tokens (styles/token.css): soft drop
+          // shadow, thin white inner ring, and our team's diagonal sheen.
+          <>
+            <circle cx={c.x} cy={c.y + R * 0.3} r={R * 1.25} fill={`url(#${pid("disc-drop")})`} />
+            <circle cx={c.x} cy={c.y} r={R} fill={discFill} />
+            {home && <circle cx={c.x} cy={c.y} r={R} fill={`url(#${pid("disc-sheen")})`} />}
+            <circle cx={c.x} cy={c.y} r={R * 0.947} fill="none" stroke="#fff" strokeOpacity={home ? 0.5 : 0.45} strokeWidth={R * 0.105} />
+          </>
+        )}
+        {relief && (
+          // Puck seen from above, silhouette kept perfectly round: the outer
+          // ring is its edge (shaded, darker below), the face a slightly
+          // smaller disc nudged up, lit from the top.
+          <>
+            <circle cx={c.x} cy={c.y} r={R} fill={`url(#${pid("disc-edge")})`} />
+            <circle cx={c.x} cy={c.y - R * 0.05} r={R * 0.84} fill={discFill} />
+            <circle cx={c.x} cy={c.y - R * 0.05} r={R * 0.84} fill={`url(#${pid("disc-face")})`} stroke={`url(#${pid("disc-lip")})`} strokeWidth={R * 0.06} />
+          </>
+        )}
         {sel && <circle cx={c.x} cy={c.y} r={R + 0.75 * u} fill="none" stroke="#21d07a" strokeWidth={0.55 * u} />}
         {inf.disc && (
           <text
             x={c.x}
-            y={c.y}
+            y={relief ? c.y - R * 0.05 : c.y}
             dy="0.35em"
             textAnchor="middle"
             fontFamily={FONT}
-            fontWeight={700}
+            fontWeight={home ? 700 : 800}
             fontSize={fs}
             fill={discText}
             // On a two-colour disc the text straddles both halves: a halo
@@ -487,6 +505,43 @@ export default function SequenceStage({
             </linearGradient>
           ) : null,
         )}
+        {/* Flat discs (Compo look): blurred shadow, done with a gradient
+            rather than a filter so the video export stays fast. */}
+        {!seq.discRelief && (
+          <>
+            <radialGradient id={pid("disc-drop")}>
+              <stop offset="0.45" stopColor="#000" stopOpacity={0.5} />
+              <stop offset="0.75" stopColor="#000" stopOpacity={0.16} />
+              <stop offset="1" stopColor="#000" stopOpacity={0} />
+            </radialGradient>
+            {/* CSS linear-gradient(150deg, #f4f7fb, #c7d2e0), as a shade over the kit colour. */}
+            <linearGradient id={pid("disc-sheen")} x1="0.16" y1="-0.09" x2="0.84" y2="1.09">
+              <stop offset="0" stopColor="#ffffff" stopOpacity={0.12} />
+              <stop offset="1" stopColor="#1c2c44" stopOpacity={0.22} />
+            </linearGradient>
+          </>
+        )}
+        {/* Relief discs (puck): shaded edge ring, gently lit flat face, and
+            a lip bright on top / dark below — all laid over the disc's own
+            fill (plain or two-colour alike). */}
+        {seq.discRelief && (
+          <>
+            <linearGradient id={pid("disc-edge")} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#000" stopOpacity={0.08} />
+              <stop offset="1" stopColor="#000" stopOpacity={0.5} />
+            </linearGradient>
+            <linearGradient id={pid("disc-face")} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#fff" stopOpacity={0.18} />
+              <stop offset="0.55" stopColor="#fff" stopOpacity={0} />
+              <stop offset="1" stopColor="#000" stopOpacity={0.06} />
+            </linearGradient>
+            <linearGradient id={pid("disc-lip")} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#fff" stopOpacity={0.6} />
+              <stop offset="0.5" stopColor="#fff" stopOpacity={0.1} />
+              <stop offset="1" stopColor="#000" stopOpacity={0.15} />
+            </linearGradient>
+          </>
+        )}
         <radialGradient id={pid("bg")} cx="50%" cy="38%" r="75%">
           <stop offset="0%" stopColor={PAL.bg[0]} />
           <stop offset="65%" stopColor={PAL.bg[1]} />
@@ -509,12 +564,13 @@ export default function SequenceStage({
       <rect data-bg="1" x={0} y={0} width={L.W} height={L.H} fill={bg} />
 
       {/* ---------- camera: everything that lives on the pitch ---------- */}
-      {chrome && (
+      {/* The editor clips only a half pitch: the other half stays hidden there too. */}
+      {(chrome || seq.half) && (
         <clipPath id={pid("area")}>
-          <rect x={L.pitch.x - L.pitch.w * 0.05} y={L.pitch.y - L.pitch.h * 0.05} width={L.pitch.w * 1.1} height={L.pitch.h * 1.1} rx={u * 2} />
+          <rect x={L.view.x - L.view.w * 0.05} y={L.view.y - L.view.h * 0.05} width={L.view.w * 1.1} height={L.view.h * 1.1} rx={u * 2} />
         </clipPath>
       )}
-      <g clipPath={chrome ? `url(#${pid("area")})` : undefined}>
+      <g clipPath={chrome || seq.half ? `url(#${pid("area")})` : undefined}>
       <g ref={cameraRef} transform={cameraTransform(L, frame.camera)}>
         <PitchTurf orient={L.orient} look={look} w={pw} h={ph} clipId={pid("apron")} />
         {seq.showGrid && (
@@ -680,7 +736,7 @@ export default function SequenceStage({
       {frame.effect?.kind === "bigText" && frame.effect.strength > 0 && (
         <text
           x={L.W / 2}
-          y={L.pitch.y + L.pitch.h * 0.12}
+          y={L.view.y + L.view.h * (seq.half ? 0.2 : 0.12)}
           textAnchor="middle"
           dy="0.35em"
           fontFamily={FONT}

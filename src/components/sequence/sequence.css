@@ -995,3 +995,62 @@ select.seq-input {
   color: var(--danger);
   background: rgba(var(--overlay-rgb), 0.08);
 }
+
+/* ---------- colour settings (inspector/ColorRow): label + chip → popover ---------- */
+/* A group of colours (Mon équipe / Adversaire / Général): small dim heading,
+   its rows indented behind a rule so they read as belonging to it. */
+.seq-color-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.seq-color-group__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+}
+.seq-color-group > .seq-color-row {
+  margin-left: 4px;
+  padding-left: 10px;
+  border-left: 2px solid var(--panel-border);
+}
+.seq-color-row {
+  min-height: 30px;
+}
+.seq-color-chip {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: rgba(var(--overlay-rgb), 0.06);
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+.seq-color-chip:hover,
+.seq-color-chip[aria-expanded="true"] {
+  border-color: var(--accent);
+}
+.seq-color-chip__dot {
+  width: 32px;
+  height: 16px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(var(--overlay-rgb), 0.25);
+}
+.seq-color-pop {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px;
+  width: 250px;
+}
+.seq-color-pop__title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--text-dim);
+}

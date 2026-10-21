@@ -1,3 +1,4 @@
+import { useState, type ReactNode } from "react";
 import type { Lineup, Player } from "../../../types";
 import type { SequenceActions } from "../../../hooks/useSequenceActions";
 import type {
@@ -8,6 +9,17 @@ import type {
 import type { ActorInfo } from "../../../sequence/SequenceStage";
 
 export { default as Switch } from "../../Switch";
+
+// Collapsible group of an inspector tab (title row with a ▸ chevron).
+export function Section({ title, defaultOpen, children }: { title: string; defaultOpen: boolean; children: ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <details className="seq-collapse" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary className="seq-form__title">{title}</summary>
+      {children}
+    </details>
+  );
+}
 
 // Props shared by the inspector and each of its tabs.
 export interface Props {

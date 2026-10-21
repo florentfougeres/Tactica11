@@ -1,4 +1,3 @@
-import { useState, type ReactNode } from "react";
 import type {
   SeqStep,
   StepEffect,
@@ -6,20 +5,10 @@ import type {
 import FmSelect from "../../FmSelect";
 import PopMenu from "../../PopMenu";
 
-import { Switch, sec, type Props } from "./shared";
+import { Section, Switch, sec, type Props } from "./shared";
 import ColorSwatches from "../../ColorSwatches";
 import { SEQ_COLORS } from "../../../sequence/types";
 import StepLayers from "./StepLayers";
-
-function Section({ title, defaultOpen, children }: { title: string; defaultOpen: boolean; children: ReactNode }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <details className="seq-collapse" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
-      <summary className="seq-form__title">{title}</summary>
-      {children}
-    </details>
-  );
-}
 
 export default function StepTab(props: Props) {
   const {

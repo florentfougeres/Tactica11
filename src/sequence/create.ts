@@ -157,6 +157,7 @@ export function migrateSequence(q: Sequence): Sequence {
         : q.format === "16:9" || (q as { squareOrient?: string }).squareOrient === "landscape"
           ? "landscape"
           : "portrait",
+    half: q.half === "attack" || q.half === "defense" ? q.half : undefined,
     title: q.title ?? "",
     subtitle: q.subtitle ?? "",
     showNames: q.showNames ?? true,
