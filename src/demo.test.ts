@@ -25,6 +25,7 @@ describe("createDemoProject", () => {
       "Renversement",
       "Latéral intérieur",
       "Pressing haut",
+      "Sortie à 3 + milieu carré",
     ]);
     seqs.forEach((q) => {
       const actorIds = new Set(q.actors.map((a) => a.id));

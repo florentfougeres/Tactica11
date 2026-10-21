@@ -548,6 +548,11 @@ function SequenceEditor({
             pb.pause();
             pb.setTime(t);
           }}
+          // Released mid-transition: snap to the closer step so the pitch
+          // can be edited (drawing tools only work on a step).
+          onSeekEnd={() => {
+            if (!head.holding) goToStep(head.p < 0.5 ? head.from : stepIndex);
+          }}
           onSelectStep={goToStep}
           onAddStep={addStep}
           carry={carry}

@@ -3,7 +3,6 @@ import type { Player } from "../../../types";
 import type {
   AnnKind,
   SeqAnnotation,
-  Team,
 } from "../../../sequence/types";
 import { ANN_LABEL, ARROW_KINDS, SEQ_COLORS, isArrow } from "../../../sequence/types";
 import FmSelect from "../../FmSelect";
@@ -75,13 +74,6 @@ export default function SelectionTab(props: Props) {
             </label>
           </div>
           )}
-          <div className="seg">
-            {(["home", "away"] as Team[]).map((t) => (
-              <button key={t} type="button" className={`seg__btn ${single.team === t ? "is-active" : ""}`} onClick={() => actions.patchActor(seq.id, single.id, { team: t })}>
-                {t === "home" ? "Nous" : "Adversaire"}
-              </button>
-            ))}
-          </div>
           <Switch label="Traînée de mouvement" checked={!!single.trail} onChange={(v) => actions.patchActor(seq.id, single.id, { trail: v })} />
           {!!seq.idle && (
             <Switch label="Micro-mouvements" checked={single.idle !== false} onChange={(v) => actions.patchActor(seq.id, single.id, { idle: v })} />

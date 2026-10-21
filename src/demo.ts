@@ -1,7 +1,7 @@
 // Built-in demo project: the Real Madrid squad (effectif Transfermarkt,
 // octobre 2026), a 4-3-3 with tuned attack/defense phases and opponents, two
 // set pieces and a handful of animated sequences (sortie à 3, renversement,
-// latéral intérieur, pressing haut), plus a 4-2-3-1 plan B.
+// latéral intérieur, pressing haut, milieu carré), plus a 4-2-3-1 plan B.
 //
 // Written as code rather than a bundled .json so it always matches the
 // current data model. Kept free of storage.ts imports (storage seeds a fresh
@@ -14,6 +14,7 @@ import type {
   SeqActor,
   SeqAnnotation,
   SeqStep,
+  SeqTheme,
   Sequence,
   StepEffect,
 } from "./sequence/types";
@@ -141,11 +142,13 @@ interface ShapeSpec {
   at: Ref[];
   text?: string;
   color?: string;
+  curve?: Pos;
+  fill?: SeqAnnotation["fill"];
   steps?: number; // stays visible this many steps after its own (default 0)
 }
 
 interface StepSpec {
-  name: string;
+  name?: string;
   caption?: string;
   chapter?: string;
   moves?: Record<string, Pos>;
@@ -165,6 +168,9 @@ interface SeqSpec {
   home: Record<Home, Pos>;
   away: Record<string, Pos>; // label → spot
   steps: StepSpec[];
+  // Overrides of the default look (vertical 9:16, shirt numbers, house theme).
+  look?: Partial<Pick<Sequence, "format" | "orient" | "discMode" | "subtitle" | "idle">>;
+  theme?: Partial<SeqTheme>;
 }
 
 // Pull a movement arrow's ends off the discs so the head stays visible.
@@ -195,7 +201,7 @@ function buildSequence(lineup: Lineup, spec: SeqSpec): Sequence {
     start[id] = pos;
   });
 
-  const theme = { ...DEFAULT_THEME };
+  const theme = { ...DEFAULT_THEME, ...spec.theme };
   const steps: SeqStep[] = [];
   const annotations: SeqAnnotation[] = [];
   const lasting: [SeqAnnotation, number][] = [];
@@ -225,7 +231,7 @@ function buildSequence(lineup: Lineup, spec: SeqSpec): Sequence {
       ghosts: s.ghosts,
       effect: s.effect?.kind,
       effectText: s.effect?.text,
-      transitionMs: i === 0 ? 800 : (s.transitionMs ?? 1400),
+      transitionMs: s.transitionMs ?? (i === 0 ? 800 : 1400),
       holdMs: s.holdMs ?? 2200,
       easing: "easeInOut",
     };
@@ -253,10 +259,12 @@ function buildSequence(lineup: Lineup, spec: SeqSpec): Sequence {
         id: sid("ann"),
         kind: sh.kind,
         anchors: sh.at.map(anchor),
+        control: sh.curve,
         text: sh.text,
         color: sh.color ?? defaultAnnColor(sh.kind, theme),
         fromStep: step.id,
         toStep: step.id,
+        fill: sh.fill,
       };
       annotations.push(ann);
       // A shape that outlives its step gets its last step once that exists.
@@ -277,6 +285,7 @@ function buildSequence(lineup: Lineup, spec: SeqSpec): Sequence {
     subtitle: spec.name,
     showNames: true,
     idle: 1,
+    ...spec.look,
     theme,
     actors,
     steps,
@@ -629,6 +638,204 @@ const PRESSING_HAUT: SeqSpec = {
   ],
 };
 
+// Sortie à 3 with the right back stepping into midfield: a 4-man box in the
+// middle against a 4-2-3-1. Square landscape format, discs showing positions.
+const RED = "#ff4d4f";
+const WHITE = "#ffffff";
+const CARRE_MILIEU: SeqSpec = {
+  name: "Sortie à 3 + milieu carré",
+  look: {
+    format: "1:1",
+    orient: "landscape",
+    discMode: "role",
+    subtitle: "Sortie à 3 avec milieu carré",
+    idle: 3,
+  },
+  theme: { homeGk: "#b388ff", awayColor: "#3f8fe0", awayText: "#ffffff", awayGk: "#3ee06a" },
+  home: {
+    GK: { x: 50, y: 92 },
+    RB: { x: 92, y: 77 },
+    RCB: { x: 65, y: 83 },
+    LCB: { x: 32, y: 83 },
+    LB: { x: 7, y: 75 },
+    RCM: { x: 70, y: 55 },
+    CDM: { x: 51, y: 70 },
+    LCM: { x: 30, y: 55 },
+    RW: { x: 93, y: 41 },
+    ST: { x: 51, y: 37 },
+    LW: { x: 7, y: 42 },
+  },
+  away: awayAt([
+    { x: 50, y: 7 }, { x: 92, y: 34 }, { x: 69, y: 32 }, { x: 34, y: 32 }, { x: 9, y: 36 },
+    { x: 31, y: 50 }, { x: 50, y: 64 }, { x: 12, y: 68 }, { x: 51, y: 76 }, { x: 70, y: 50 }, { x: 90, y: 70 },
+  ]),
+  steps: [
+    {
+      name: "Situation initiale",
+      chapter: "Milieu carré",
+      caption: "Position de base : 4-3-3 contre 4-2-3-1.",
+      ball: "GK",
+      shapes: [
+        { kind: "playerLine", at: ["LB", "LCB", "RCB", "RB"], color: WHITE },
+        { kind: "playerLine", at: ["LCM", "CDM", "RCM"], color: WHITE },
+        { kind: "playerLine", at: ["LW", "ST", "RW"], color: WHITE },
+      ],
+      focus: ["GK"],
+      transitionMs: 0,
+      holdMs: 3000,
+    },
+    {
+      caption: "Pas de supériorité : marquage un pour un.",
+      ball: "GK",
+      shapes: [
+        { kind: "marking", at: ["LB", "o7"] },
+        { kind: "marking", at: ["RB", "o11"] },
+        { kind: "marking", at: ["o8", "CDM"] },
+        { kind: "marking", at: ["o6", "LCM"] },
+        { kind: "marking", at: ["o10", "RCM"] },
+        { kind: "marking", at: ["o2", "RW"] },
+        { kind: "marking", at: ["o5", "LW"] },
+      ],
+      focus: ["GK"],
+      transitionMs: 0,
+      holdMs: 3000,
+    },
+    {
+      caption: "Le latéral droit s'insère au milieu, la défense glisse sur une base à 3.",
+      moves: {
+        RB: { x: 66, y: 68 },
+        RCB: { x: 83, y: 83 },
+        LCB: { x: 50, y: 83 },
+        LB: { x: 17, y: 83 },
+        CDM: { x: 32, y: 67 },
+        o8: { x: 51, y: 61 },
+        o7: { x: 18, y: 78 },
+        o9: { x: 51, y: 79 },
+        o10: { x: 70, y: 49 },
+        o11: { x: 85, y: 78 },
+      },
+      ball: "GK",
+      ghosts: true,
+      transitionMs: 2000,
+      holdMs: 3000,
+    },
+    {
+      caption: "Le numéro 8 a maintenant deux joueurs à marquer : il ne sait pas qui prendre.",
+      ball: "GK",
+      shapes: [
+        { kind: "marking", at: ["o8", "CDM"] },
+        { kind: "marking", at: ["o8", "RB"] },
+      ],
+      focus: ["o8"],
+      transitionMs: 1200,
+      holdMs: 3000,
+    },
+    {
+      caption:
+        "4 contre 3 au milieu. L'ailier droit peut décrocher chercher le ballon, un milieu du carré se projette dans son dos.",
+      moves: {
+        RB: { x: 68, y: 69 },
+        RCM: { x: 69, y: 53 },
+        CDM: { x: 30, y: 69 },
+        LCM: { x: 30, y: 53 },
+      },
+      ball: "RCB",
+      shapes: [
+        { kind: "playerZone", at: ["CDM", "LCM", "RCM", "RB"], fill: "hatch" },
+        { kind: "pass", at: ["GK", { x: 79, y: 84 }] },
+        { kind: "deep", at: [{ x: 94, y: 43 }, { x: 90, y: 63 }], color: RED },
+        { kind: "deep", at: ["RCM", { x: 84, y: 24 }], color: RED },
+        { kind: "space", at: [{ x: 82, y: 6 }, { x: 98, y: 6 }, { x: 98, y: 29 }, { x: 82, y: 29 }] },
+      ],
+      focus: ["RCB"],
+      transitionMs: 1200,
+      holdMs: 3000,
+    },
+    {
+      caption:
+        "Un espace se libère au milieu : un milieu du bas du carré peut s'y projeter, ou l'avant-centre décrocher.",
+      moves: {
+        RCM: { x: 87, y: 28 },
+        RW: { x: 88, y: 63 },
+        o2: { x: 90, y: 56 },
+        o10: { x: 84, y: 33 },
+      },
+      ball: "RW",
+      shapes: [
+        { kind: "space", at: [{ x: 58, y: 60 }, { x: 79, y: 60 }, { x: 79, y: 40 }, { x: 58, y: 40 }] },
+        { kind: "press", at: ["RB", { x: 69, y: 51 }] },
+        { kind: "press", at: ["ST", { x: 68, y: 48 }] },
+      ],
+      focus: ["ST", "RB"],
+      transitionMs: 1200,
+      holdMs: 3000,
+    },
+    {
+      caption: "Le défenseur central est aspiré, un grand espace s'ouvre à l'opposé.",
+      moves: { ST: { x: 67, y: 49 }, o3: { x: 66, y: 42 }, o4: { x: 56, y: 34 } },
+      ball: "ST",
+      shapes: [
+        { kind: "pass", at: ["RW", "ST"] },
+        { kind: "space", at: [{ x: 20, y: 42 }, { x: 48, y: 42 }, { x: 48, y: 21 }, { x: 20, y: 21 }] },
+        { kind: "press", at: ["LW", { x: 35, y: 33 }] },
+      ],
+      focus: ["ST"],
+      transitionMs: 1200,
+      holdMs: 3000,
+    },
+    {
+      caption: "L'ailier gauche attaque l'espace entre les deux défenseurs, ou lance le milieu projeté.",
+      moves: { LW: { x: 28, y: 35 }, o4: { x: 44, y: 32 }, o5: { x: 21, y: 32 } },
+      ball: "ST",
+      shapes: [
+        { kind: "pass", at: ["ST", "LW"], curve: { x: 47, y: 54 } },
+        { kind: "dribble", at: ["LW", { x: 36, y: 20 }] },
+        { kind: "pass", at: ["ST", { x: 85, y: 26 }] },
+      ],
+      focus: ["RCM", "LW"],
+      transitionMs: 1200,
+      holdMs: 3000,
+    },
+    {
+      caption: "Face-à-face avec le gardien.",
+      moves: {
+        RB: { x: 67, y: 52 },
+        RCB: { x: 83, y: 74 },
+        LCB: { x: 51, y: 75 },
+        LB: { x: 19, y: 74 },
+        RCM: { x: 89, y: 21 },
+        CDM: { x: 30, y: 53 },
+        LCM: { x: 33, y: 42 },
+        RW: { x: 79, y: 48 },
+        ST: { x: 64, y: 30 },
+        LW: { x: 38, y: 12 },
+        o1: { x: 43, y: 7 },
+        o2: { x: 78, y: 43 },
+        o3: { x: 65, y: 26 },
+        o4: { x: 46, y: 15 },
+        o5: { x: 30, y: 13 },
+        o6: { x: 35, y: 38 },
+        o8: { x: 50, y: 50 },
+        o7: { x: 20, y: 69 },
+        o9: { x: 51, y: 71 },
+        o10: { x: 84, y: 19 },
+        o11: { x: 83, y: 70 },
+      },
+      ball: "LW",
+      focus: ["LW"],
+      transitionMs: 1200,
+      holdMs: 3000,
+    },
+    {
+      ball: { x: 53, y: -1 },
+      focus: ["LW"],
+      effect: { kind: "bigText", text: "BUT !" },
+      transitionMs: 1200,
+      holdMs: 3000,
+    },
+  ],
+};
+
 // --- Set pieces (half pitch: y 0 = goal line, 100 = halfway line) ---
 
 function setPiece(
@@ -760,7 +967,7 @@ export function createDemoProject(): Project {
     ],
   };
 
-  main.sequences = [SORTIE_A_3, RENVERSEMENT, LATERAL_INTERIEUR, PRESSING_HAUT].map(
+  main.sequences = [SORTIE_A_3, RENVERSEMENT, LATERAL_INTERIEUR, PRESSING_HAUT, CARRE_MILIEU].map(
     (spec) => buildSequence(main, spec),
   );
 

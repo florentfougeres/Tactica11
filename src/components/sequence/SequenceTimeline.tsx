@@ -19,6 +19,7 @@ interface Props {
   onCycleSpeed: () => void;
   onLoop: (v: boolean) => void;
   onSeek: (t: number) => void;
+  onSeekEnd: () => void; // scrub released
   onSelectStep: (i: number) => void;
   onAddStep: () => void;
   carry: boolean;
@@ -53,6 +54,7 @@ export default function SequenceTimeline({
   onCycleSpeed,
   onLoop,
   onSeek,
+  onSeekEnd,
   onSelectStep,
   onAddStep,
   carry,
@@ -214,6 +216,11 @@ export default function SequenceTimeline({
         step={10}
         value={time}
         onChange={(e) => onSeek(Number(e.target.value))}
+        onPointerUp={(e) => {
+          // Hand the keyboard back to the stage shortcuts.
+          e.currentTarget.blur();
+          onSeekEnd();
+        }}
         aria-label="Position dans la séquence"
       />
     </div>
