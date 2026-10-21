@@ -1,6 +1,6 @@
 [package]
 name = "tactica11"
-version = "0.22.0"
+version = "0.23.0"
 description = "Tactica11 — compos et analyses tactiques de football"
 authors = ["Florent Fougères"]
 edition = "2021"
