@@ -31,6 +31,7 @@ export interface FrameLayout {
   view: Box; // the visible part of it: the whole pitch, or one half
   focus: Pos; // pitch percent at the centre of `view`
   u: number; // 1% of the pitch's short side, in px — base unit for sizes
+  actorK: number; // players' discs and names, on top of `u` (a bit smaller on a horizontal pitch)
   pad: number;
   base: number; // header font unit
   captionFs: number;
@@ -125,6 +126,7 @@ export function frameLayout(seq: LayoutInput, chrome = true): FrameLayout {
     orient,
     ...g,
     u: Math.min(g.pitch.w, g.pitch.h) / 100,
+    actorK: actorK(orient),
     pad,
     base,
     captionFs,
@@ -160,6 +162,7 @@ function editorLayout(orient: Orient, half: PitchHalf | undefined): FrameLayout 
     orient,
     ...place(orient, half, W / 2, H / 2, w, h),
     u: short / 100,
+    actorK: actorK(orient),
     pad,
     base: 28,
     captionFs: 42,
@@ -167,6 +170,11 @@ function editorLayout(orient: Orient, half: PitchHalf | undefined): FrameLayout 
     caption: null,
   };
 }
+
+// On a horizontal pitch the players are scaled down to the Compo tab's
+// proportions: its 38px tokens span ~4.5% of a landscape pitch's short side
+// on a 1920×1080 screen, vs 6.4% for our ×1 discs.
+const actorK = (orient: Orient) => (orient === "landscape" ? 0.7 : 1);
 
 // Pitch percent → pitch-local px (before the camera).
 export const toLocal = (L: FrameLayout, p: Pos) =>

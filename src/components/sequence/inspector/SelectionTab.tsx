@@ -12,22 +12,13 @@ import { Switch, type Props } from "./shared";
 import ColorSwatches from "../../ColorSwatches";
 
 export default function SelectionTab(props: Props) {
-  const { seq, step, stepIndex, selActors, selAnn, info, actions, editable, onAddActor, onDeleteSelection, onSelectActors } = props;
+  const { seq, step, stepIndex, selActors, selAnn, info, actions, editable, onDeleteSelection, onSelectActors } = props;
   const ann = selAnn ? seq.annotations.find((a) => a.id === selAnn) : null;
 
   if (ann) return <AnnotationForm {...props} ann={ann} />;
 
   const ids = [...selActors];
-  const addRow = (
-    <div className="seq-btn-row">
-      <button type="button" className="pitch-ctl__btn" onClick={() => onAddActor("home")}>
-        + Joueur (nous)
-      </button>
-      <button type="button" className="pitch-ctl__btn" onClick={() => onAddActor("away")}>
-        + Adversaire
-      </button>
-    </div>
-  );
+  const addRow = <AddActors {...props} />;
 
   if (!ids.length)
     return (
@@ -58,10 +49,13 @@ export default function SelectionTab(props: Props) {
       </div>
       {single && (
         <>
-          {single.team === "home" && <PlayerPicker {...props} actorId={single.id} />}
+          <ActorPicker {...props} actorId={single.id} />
+          {/* Our players' name / number come from the roster (Effectif tab);
+              opponents are typed here. */}
+          {single.team === "away" && (
           <div className="seq-field-row">
             <label className="seq-field">
-              <span>Disque</span>
+              <span>Numéro</span>
               <input
                 className="seq-input"
                 value={single.label ?? ""}
@@ -80,6 +74,7 @@ export default function SelectionTab(props: Props) {
               />
             </label>
           </div>
+          )}
           <div className="seg">
             {(["home", "away"] as Team[]).map((t) => (
               <button key={t} type="button" className={`seg__btn ${single.team === t ? "is-active" : ""}`} onClick={() => actions.patchActor(seq.id, single.id, { team: t })}>
@@ -87,7 +82,6 @@ export default function SelectionTab(props: Props) {
               </button>
             ))}
           </div>
-          <Switch label="Gardien" checked={!!single.gk} onChange={(v) => actions.patchActor(seq.id, single.id, { gk: v })} />
           <Switch label="Traînée de mouvement" checked={!!single.trail} onChange={(v) => actions.patchActor(seq.id, single.id, { trail: v })} />
           {!!seq.idle && (
             <Switch label="Micro-mouvements" checked={single.idle !== false} onChange={(v) => actions.patchActor(seq.id, single.id, { idle: v })} />
@@ -340,38 +334,49 @@ function AnnotationForm({ seq, step, ann, actions, focusLabel, onSelectAnn, info
   );
 }
 
-function PlayerPicker({ seq, lineup, players, actions, actorId }: Props & { actorId: string }) {
-  const actor = seq.actors.find((a) => a.id === actorId);
-  if (!actor) return null;
-  const starterIds = new Set(lineup.slots.map((s) => s.starterId).filter(Boolean) as string[]);
-  const starters = players.filter((p) => starterIds.has(p.id));
-  const others = players.filter((p) => !starterIds.has(p.id));
-  const slot = actor.slotId ? lineup.slots.find((s) => s.id === actor.slotId) : null;
-  const label = (p: Player) => `${p.number != null ? `${p.number} · ` : ""}${p.name}`;
-  const options = [
-    { value: "", label: slot ? `Titulaire du poste (${slot.role})` : "Aucun (texte libre)" },
-    ...starters.map((p) => ({ value: p.id, label: label(p), group: "Titulaires de la compo" })),
-    ...others.map((p) => ({ value: p.id, label: label(p), group: "Reste de l'effectif" })),
-  ];
+// The selected disc, as a list of everyone on the board: picking one selects
+// that player instead (nothing on the board changes).
+function ActorPicker({ seq, info, onSelectActors, actorId }: Props & { actorId: string }) {
+  const name = (id: string) => {
+    const i = info[id];
+    const label = [i?.disc, i?.name].filter(Boolean).join(" · ");
+    return label || "Sans nom";
+  };
+  const options = seq.actors.map((a) => ({
+    value: a.id,
+    label: name(a.id),
+    group: a.team === "home" ? "Mon équipe" : "Adversaires",
+  }));
   return (
     <div className="seq-field">
-      <span>Joueur de l'effectif</span>
-      <FmSelect
-        value={actor.playerId ?? ""}
-        options={options}
-        onChange={(v) =>
-          actions.patchActor(seq.id, actor.id, {
-            playerId: v || undefined,
-            // Let the roster drive name / number once a player is picked.
-            name: undefined,
-            label: undefined,
-          })
-        }
-        ariaLabel="Joueur de l'effectif"
-      />
-      {players.length === 0 && (
-        <span className="seq-muted">Ajoute des joueurs dans l'onglet Effectif pour afficher leurs noms.</span>
-      )}
+      <span>Joueur sélectionné</span>
+      <FmSelect value={actorId} options={options} onChange={(v) => onSelectActors(new Set([v]))} ariaLabel="Joueur sélectionné" />
     </div>
+  );
+}
+
+// Add a disc: one of our roster players not on the board yet, or an opponent.
+function AddActors({ seq, lineup, players, onAddActor }: Props) {
+  const onBoard = new Set(
+    seq.actors.flatMap((a) => [a.playerId, a.slotId ? lineup.slots.find((s) => s.id === a.slotId)?.starterId : undefined]),
+  );
+  const free = players.filter((p) => !onBoard.has(p.id));
+  const label = (p: Player) => `${p.number != null ? `${p.number} · ` : ""}${p.name}`;
+  return (
+    <>
+      {free.length > 0 && (
+        <FmSelect
+          value=""
+          options={[{ value: "", label: "+ Joueur de l'effectif…" }, ...free.map((p) => ({ value: p.id, label: label(p) }))]}
+          onChange={(v) => v && onAddActor("home", v)}
+          ariaLabel="Ajouter un joueur de l'effectif"
+        />
+      )}
+      <div className="seq-btn-row">
+        <button type="button" className="pitch-ctl__btn" onClick={() => onAddActor("away")}>
+          + Adversaire
+        </button>
+      </div>
+    </>
   );
 }

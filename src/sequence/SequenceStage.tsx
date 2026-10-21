@@ -181,7 +181,7 @@ export default function SequenceStage({
   const R = 3.2 * u; // base disc radius (ball, hit areas)
   const actorById = new Map(seq.actors.map((a) => [a.id, a]));
   // Radius of one actor's disc (per-team size slider).
-  const rOf = (id: string) => R * discScale(seq, actorById.get(id));
+  const rOf = (id: string) => R * L.actorK * discScale(seq, actorById.get(id));
   const rAnchor = (an: { actorId: string } | { pos: Pos }) => ("actorId" in an ? rOf(an.actorId) : R);
   const pw = L.pitch.w;
   const ph = L.pitch.h;
@@ -393,7 +393,7 @@ export default function SequenceStage({
     // A relief disc's face is a bit smaller than the disc: text scaled to it.
     const fs = (inf.disc.length > 2 ? R * 0.62 : R * 0.74) * (relief ? 0.9 : 1);
     const showName = seq.showNames && inf.name;
-    const nameFs = 2.15 * u * (seq.nameScale ?? 1);
+    const nameFs = 2.15 * u * L.actorK * (seq.nameScale ?? 1);
     return (
       <g key={a.id} data-actor={a.id} opacity={opacity} style={overlay?.editable ? { cursor: "grab" } : undefined}>
         {focus > 0 && (

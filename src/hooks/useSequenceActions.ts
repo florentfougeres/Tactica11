@@ -158,11 +158,13 @@ export function useSequenceActions(lineup: Lineup, setLineup: SetLineup) {
     });
 
   // --- actors ---
-  const addActor = (id: string, team: Team, at: Pos): string => {
+  // A roster player (`playerId`) brings their own name / number; otherwise a
+  // free disc numbered after the team's others.
+  const addActor = (id: string, team: Team, at: Pos, playerId?: string, gk?: boolean): string => {
     const aid = sid("act");
     update(id, (q) => {
       const n = q.actors.filter((a) => a.team === team).length + 1;
-      const actor: SeqActor = { id: aid, team, label: String(n), name: "" };
+      const actor: SeqActor = playerId ? { id: aid, team, playerId, gk } : { id: aid, team, label: String(n), name: "" };
       return {
         ...q,
         actors: [...q.actors, actor],

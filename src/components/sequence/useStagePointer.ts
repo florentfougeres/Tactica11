@@ -75,7 +75,7 @@ export function useStagePointer(ctx: StagePointerCtx) {
     const pt = new DOMPoint(cx, cy).matrixTransform(m.inverse());
     return { x: pt.x, y: pt.y };
   };
-  const R = 3.2 * L.u;
+  const R = 3.2 * L.u * L.actorK; // players' disc radius
   const hitActor = (p: Pos): string | null => {
     const c = toLocal(L, p);
     let best: string | null = null;

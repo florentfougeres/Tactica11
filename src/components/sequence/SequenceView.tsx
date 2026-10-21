@@ -187,17 +187,16 @@ function SequenceEditor({
         m[a.id] = { disc: mode === "none" ? "" : (a.label ?? ""), name: a.name ?? "" };
         return;
       }
-      // A disc shows its bound roster player, else the slot's starter.
+      // A disc shows its bound roster player, else the slot's starter: name
+      // and number always come from the roster (edited in Effectif).
       const slot = a.slotId ? lineup.slots.find((s) => s.id === a.slotId) : null;
       const player = a.playerId ? playerById(a.playerId) : slot ? playerById(slot.starterId) : null;
-      const role = slot?.role ?? "";
+      const role = slot?.role ?? player?.position ?? "";
       const number = player?.number != null ? String(player.number) : "";
-      // Our discs: position, shirt number (empty when the player has none) or
-      // nothing; a hand-typed disc label still wins unless "Rien".
-      const auto = mode === "role" ? role : mode === "number" ? number : "";
+      // Our discs: position, shirt number (empty when the player has none) or nothing.
       m[a.id] = {
-        disc: mode === "none" ? "" : (a.label ?? auto),
-        name: a.name ?? player?.name ?? "",
+        disc: mode === "role" ? role : mode === "number" ? number : "",
+        name: player?.name ?? "",
       };
     });
     return m;
@@ -463,8 +462,8 @@ function SequenceEditor({
         onAddStep={addStep}
         onFrameSelection={frameSelection}
         onResetCamera={() => actions.patchStep(seq.id, stepIndex, { camera: { ...DEFAULT_CAMERA } })}
-        onAddActor={(team) => {
-          const aid = actions.addActor(seq.id, team, team === "home" ? { x: 50, y: 60 } : { x: 50, y: 40 });
+        onAddActor={(team, playerId) => {
+          const aid = actions.addActor(seq.id, team, team === "home" ? { x: 50, y: 60 } : { x: 50, y: 40 }, playerId, playerById(playerId ?? null)?.position === "G");
           setSelActors(new Set([aid]));
           setSelAnn(null);
         }}
