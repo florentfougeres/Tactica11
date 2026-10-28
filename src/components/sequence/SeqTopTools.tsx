@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import PopMenu from "../PopMenu";
 import type { AnnKind } from "../../sequence/types";
 import { ANN_LABEL, ARROW_KINDS } from "../../sequence/types";
+import Icon from "../Icon";
 
 export type SeqTool = "select" | AnnKind | "camera";
 
@@ -117,7 +118,7 @@ export default function SeqTopTools(p: TopToolsProps) {
     // Not the green call to action any more: that's "Partager", in the same
     // place as on Compo and Phase arrêtée.
     <button type="button" className="seq-tool" onClick={p.onPreview} title="Aperçu plein écran, sans l'interface">
-      ▶ <span>Aperçu</span>
+      <Icon name="play" /> <span>Aperçu</span>
     </button>
   );
 

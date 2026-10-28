@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import type { View } from "./ViewTabs";
 import { useDismiss } from "../hooks/useDismiss";
 import ShareMenu, { type ShareItem } from "./ShareMenu";
+import Icon from "./Icon";
 
 interface Props {
   view: View;
@@ -105,7 +106,9 @@ export default function TopBar({
   return (
     <header className={`topbar topbar--${view} glass`}>
       <div className="brand">
-        <span className="brand__mark">⬡</span>
+        <svg className="brand__mark" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <path d="M8 1.5 13.6 4.75v6.5L8 14.5l-5.6-3.25v-6.5Z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+        </svg>
         <span className="brand__name">
           Tactica<span className="brand__accent">11</span>
         </span>
@@ -128,7 +131,7 @@ export default function TopBar({
             aria-expanded={projectOpen}
             aria-label="Mes projets"
           >
-            ▾
+            <Icon name="chevron-down" size={14} />
           </button>
           {projectOpen && (
             <div className="compo-menu" role="menu">
@@ -226,7 +229,7 @@ export default function TopBar({
               aria-expanded={compoOpen}
               aria-label="Mes compos"
             >
-              ▾
+              <Icon name="chevron-down" size={14} />
             </button>
             {compoOpen && (
               <div className="compo-menu" role="menu">

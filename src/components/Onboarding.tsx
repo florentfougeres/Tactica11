@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Icon from "./Icon";
 
 interface Props {
   onClose: () => void;
@@ -88,7 +89,7 @@ export default function Onboarding({ onClose }: Props) {
         onPointerDown={(e) => e.stopPropagation()}
       >
         <button className="modal__close" onClick={onClose} aria-label="Fermer">
-          ✕
+          <Icon name="close" />
         </button>
 
         <div className="onboard__hero" aria-hidden="true">

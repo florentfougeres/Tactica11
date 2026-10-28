@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { FOOT_LABEL, type AttributeDef, type Player } from "../../types";
 import { NumberBadge, StatusBadge } from "./RosterBits";
+import Icon from "../Icon";
 import { positionInfo, type Sort, type SortKey, displayName } from "./rosterModel";
 
 interface Props {
@@ -28,7 +29,7 @@ export default function RosterTable({
         {label}
         {sort.key === key && (
           <span className="roster-table__arrow" aria-hidden="true">
-            {sort.dir === "asc" ? "▲" : "▼"}
+            <Icon name={sort.dir === "asc" ? "chevron-up" : "chevron-down"} size={12} />
           </span>
         )}
       </button>

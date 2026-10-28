@@ -4,6 +4,7 @@
 import type { SeqAnnotation } from "../../../sequence/types";
 import { ANN_LABEL, isArrow } from "../../../sequence/types";
 import { type Props } from "./shared";
+import Icon from "../../Icon";
 
 export default function StepLayers({ seq, step, stepIndex, selAnn, info, editable, actions, onSelectAnn }: Props) {
   const at = (id: string) => seq.steps.findIndex((s) => s.id === id);
@@ -59,7 +60,7 @@ export default function StepLayers({ seq, step, stepIndex, selAnn, info, editabl
                 title={r ? "Retirer de cette étape (les autres la gardent)" : "Supprimer"}
                 aria-label={`Retirer ${ANN_LABEL[a.kind]} de cette étape`}
               >
-                ×
+                <Icon name="close" size={14} />
               </button>
             )}
           </li>

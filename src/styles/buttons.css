@@ -5,21 +5,27 @@
   border-radius: var(--radius-sm);
   padding: 11px;
   font-weight: 600;
-  transition: all 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 .btn:hover {
   background: rgba(var(--overlay-rgb), 0.1);
 }
 .btn--primary {
-  background: linear-gradient(150deg, var(--accent), var(--accent-2));
+  background: var(--primary);
   border-color: transparent;
-  color: #06130c;
+  color: var(--on-primary);
 }
 .btn--primary:hover {
-  background: linear-gradient(150deg, var(--accent), var(--accent-2));
-  filter: brightness(1.08);
+  background: var(--primary-hover);
 }
 .btn--ghost {
   background: none;
   color: var(--text-dim);
+}
+
+/* drawn icons (components/Icon.tsx) sit on the text's optical centre */
+.icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  vertical-align: -3px;
 }

@@ -20,6 +20,7 @@ import {
   type SortKey,
   displayName,
 } from "./rosterModel";
+import Icon from "../Icon";
 
 interface Props {
   players: Player[];
@@ -137,7 +138,7 @@ export default function RosterView({
         <h2>Effectif</h2>
         <span className="chip">{players.length}</span>
         <label className="roster-search">
-          <span aria-hidden="true">⌕</span>
+          <Icon name="search" size={14} />
           <input
             type="search"
             value={query}

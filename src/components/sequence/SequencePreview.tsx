@@ -6,6 +6,7 @@ import SequenceStage, { type ActorInfo, type SeqLook } from "../../sequence/Sequ
 import { useSequencePlayback } from "../../hooks/useSequencePlayback";
 import type { SeqFormat } from "../../sequence/types";
 import FormatPicker from "./FormatPicker";
+import Icon from "../Icon";
 
 // Fullscreen preview: exactly what the audience will see — the stage alone,
 // no handles or panels — played from the start.
@@ -58,7 +59,7 @@ export default function SequencePreview({
   return (
     <div className="seq-preview" ref={wrapRef} role="dialog" aria-label="Aperçu de la séquence">
       <button type="button" className="present-exit" onClick={onClose} title="Quitter l'aperçu (Échap)">
-        ✕ Quitter
+        <Icon name="close" /> Quitter
       </button>
       <div className="seq-preview__stage" style={{ width: L.W * scale, height: L.H * scale }} onClick={pb.toggle}>
         <SequenceStage seq={seq} frame={frame} layout={L} info={info} look={look} overlay={{ safeZones }} idPrefix="pv" className="seq-preview__svg" />
@@ -68,7 +69,7 @@ export default function SequencePreview({
           ⟲
         </button>
         <button type="button" className="seq-tbtn seq-tbtn--play" onClick={pb.toggle} aria-label={pb.playing ? "Pause" : "Lecture"}>
-          {pb.playing ? "❚❚" : "▶"}
+          <Icon name={pb.playing ? "pause" : "play"} />
         </button>
         <input
           type="range"
@@ -90,7 +91,7 @@ export default function SequencePreview({
           </label>
         )}
         <button type="button" className="seq-tbtn" onClick={onClose}>
-          ✕ Fermer
+          <Icon name="close" /> Fermer
         </button>
       </div>
     </div>

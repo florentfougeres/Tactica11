@@ -14,9 +14,25 @@
   }
   .view-row__phase {
     margin-left: auto;
+    padding: 6px 12px 6px 0;
   }
   .topbar__label {
     display: none;
+  }
+  /* long project / compo names end in an ellipsis instead of a cut glyph */
+  .topbar__field input,
+  .fmselect__value {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .phase-bar__btn {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .view-row__formation .fmselect__btn {
+    min-width: 0;
   }
 
   /* Narrow top bar: the logo alone, the names keep the room. */

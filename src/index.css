@@ -1,38 +1,72 @@
 :root {
-  /* palette */
-  --bg-0: #0a0e14;
-  --bg-1: #0e141d;
-  --panel: rgba(22, 29, 40, 0.72);
-  --panel-border: rgba(255, 255, 255, 0.08);
-  --text: #eaf0f7;
-  --text-dim: #8b98aa;
-  --accent: #21d07a;
-  --accent-2: #16a766;
-  --danger: #ff5d6c;
+  /* palette — "console graphite": flat surfaces, 1px seams, colour only
+     carries state. The pitch and tokens keep their own fixed colours. */
+  --bg-0: #16191d;
+  --bg-1: #1c1f24;
+  --panel: #1c1f24;
+  --panel-border: #2e333a;
+  --text: #e6e9ed;
+  --text-dim: #959ca6;
+
+  /* selection / active state. --accent is text-safe on the panel;
+     --accent-fill backs solid fills that carry --on-accent text. */
+  --accent: #79a9f9;
+  --accent-2: #2f6fe4;
+  --accent-fill: #2f6fe4;
+  --accent-rgb: 76, 141, 246;
+  --on-accent: #ffffff;
+
+  /* primary action (Partager, Ajouter, Exporter…) */
+  --primary: #238636;
+  --primary-hover: #2a9a3f;
+  --on-primary: #ffffff;
+
+  --warn: #d29922;
+  --danger: #e5534b;
 
   /* chrome-only overlay tints (app UI, not the pitch/tokens — those stay
      fixed regardless of theme). --overlay-rgb lightens on dark, darkens on
      light; --menu-bg-rgb backs floating dropdowns/popovers/sticky headers. */
   --overlay-rgb: 255, 255, 255;
-  --menu-bg-rgb: 13, 18, 26;
+  --menu-bg-rgb: 28, 31, 36;
 
-  --radius: 16px;
-  --radius-sm: 10px;
+  --radius: 6px;
+  --radius-sm: 4px;
+  /* raised segment in a segmented control (Base/Attaque/Défense…) */
+  --seg-on: #2b3037;
+  --shadow-pop: 0 8px 24px -6px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.3);
 
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-ui: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+
+  font-family: var(--font-ui);
+  font-feature-settings: "cv11", "ss01";
   color-scheme: dark;
 }
 
 :root[data-theme="light"] {
-  --bg-0: #eef1f6;
+  --bg-0: #f2f3f5;
   --bg-1: #ffffff;
-  --panel: rgba(255, 255, 255, 0.72);
-  --panel-border: rgba(15, 23, 32, 0.1);
-  --text: #10151c;
-  --text-dim: #5b6675;
+  --panel: #ffffff;
+  --panel-border: #dadde1;
+  --text: #16191d;
+  --text-dim: #5d646e;
+
+  --accent: #2563d9;
+  --accent-2: #2563d9;
+  --accent-fill: #2563d9;
+  --accent-rgb: 37, 99, 217;
+
+  --primary: #1f7f35;
+  --primary-hover: #238f3c;
+
+  --warn: #9a6700;
+  --danger: #cf222e;
 
   --overlay-rgb: 10, 14, 20;
   --menu-bg-rgb: 255, 255, 255;
+  --seg-on: #ffffff;
+  --shadow-pop: 0 8px 24px -8px rgba(15, 23, 32, 0.18), 0 1px 2px rgba(15, 23, 32, 0.08);
 
   color-scheme: light;
 }
@@ -49,11 +83,10 @@ body,
 }
 
 body {
-  background:
-    radial-gradient(1200px 600px at 15% -10%, rgba(33, 208, 122, 0.12), transparent 60%),
-    radial-gradient(900px 500px at 110% 10%, rgba(72, 138, 255, 0.1), transparent 55%),
-    linear-gradient(180deg, var(--bg-1), var(--bg-0));
+  background: var(--bg-0);
   color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
   touch-action: none;
@@ -87,4 +120,24 @@ button {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* figures: numbers, counts, coordinates, durations */
+.num,
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: rgba(var(--accent-rgb), 0.35);
+  color: var(--text);
+}
+input,
+textarea {
+  caret-color: var(--accent);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--overlay-rgb), 0.18) transparent;
 }

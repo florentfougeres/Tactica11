@@ -9,7 +9,7 @@
   display: flex;
   gap: 2px;
   padding: 3px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--panel-border);
 }
@@ -18,10 +18,10 @@
   border: none;
   background: none;
   color: var(--text-dim);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   padding: 6px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   white-space: nowrap;
   transition: color 0.15s, background 0.15s;
 }
@@ -29,8 +29,9 @@
   color: var(--text);
 }
 .seg__btn.is-active {
-  background: linear-gradient(150deg, var(--accent), var(--accent-2));
-  color: #06130c;
+  background: var(--seg-on);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--panel-border);
 }
 .seg__btn:disabled {
   opacity: 0.5;
@@ -50,7 +51,7 @@
 }
 .seq-empty h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: 15px;
 }
 .seq-empty p {
   margin: 0;
@@ -88,7 +89,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 0 18px 12px;
+  padding: 12px 18px 12px;
 }
 .seq-panel__tabs {
   margin: 0 18px 12px;
@@ -118,8 +119,8 @@
 .seq-badge {
   margin-left: auto;
   padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
   background: rgba(255, 180, 60, 0.15);
   color: #ffb43c;
   letter-spacing: 0.4px;
@@ -128,7 +129,7 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-dim);
   min-width: 0;
@@ -189,7 +190,7 @@ select.seq-input {
 }
 .seq-muted {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.45;
   color: var(--text-dim);
   font-weight: 500;
@@ -202,16 +203,16 @@ select.seq-input {
 .seq-kind {
   border: 1px solid var(--panel-border);
   background: rgba(var(--overlay-rgb), 0.04);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   padding: 5px 10px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-dim);
 }
 .seq-kind.is-active {
   border-color: var(--accent);
   color: var(--text);
-  background: rgba(33, 208, 122, 0.15);
+  background: rgba(var(--accent-rgb), 0.15);
 }
 
 /* ----- main column ----- */
@@ -241,7 +242,7 @@ select.seq-input {
   border-right: none;
 }
 .seq-toolbar__label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -257,9 +258,9 @@ select.seq-input {
   gap: 5px;
   border: 1px solid transparent;
   background: none;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 6px 8px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-dim);
   white-space: nowrap;
@@ -270,8 +271,8 @@ select.seq-input {
   color: var(--text);
 }
 .seq-tool.is-active {
-  background: rgba(33, 208, 122, 0.16);
-  border-color: rgba(33, 208, 122, 0.5);
+  background: rgba(var(--accent-rgb), 0.16);
+  border-color: rgba(var(--accent-rgb), 0.5);
   color: var(--text);
 }
 .seq-tool--pct {
@@ -279,13 +280,12 @@ select.seq-input {
   justify-content: center;
 }
 .seq-tool--cta {
-  background: linear-gradient(150deg, var(--accent), var(--accent-2));
-  color: #06130c;
+  background: var(--primary);
+  color: var(--on-primary);
 }
 .seq-tool--cta:hover {
-  color: #06130c;
-  filter: brightness(1.08);
-  background: linear-gradient(150deg, var(--accent), var(--accent-2));
+  color: var(--on-primary);
+  background: var(--primary-hover);
 }
 /* Labels collapse to icons when the top bar runs out of room. */
 .seq-toolbar--icons .seq-tool > span:not(.seq-tool__more) {
@@ -293,7 +293,7 @@ select.seq-input {
 }
 
 .seq-hint {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-dim);
   padding: 0 4px;
   min-height: 16px;
@@ -313,7 +313,7 @@ select.seq-input {
   top: 0;
   left: 0;
   transform-origin: 0 0;
-  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 0 0 1px var(--panel-border);
 }
 .seq-stage {
   display: block;
@@ -348,8 +348,8 @@ select.seq-input {
   height: 30px;
   border: 1px solid var(--panel-border);
   background: rgba(var(--overlay-rgb), 0.05);
-  border-radius: 8px;
-  font-size: 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
   font-weight: 700;
   color: var(--text);
   padding: 0 8px;
@@ -364,13 +364,12 @@ select.seq-input {
 }
 .seq-tbtn--play {
   min-width: 40px;
-  background: linear-gradient(150deg, var(--accent), var(--accent-2));
-  color: #06130c;
+  background: var(--primary);
+  color: var(--on-primary);
   border-color: transparent;
 }
 .seq-tbtn--play:hover {
-  background: linear-gradient(150deg, var(--accent), var(--accent-2));
-  filter: brightness(1.08);
+  background: var(--primary-hover);
 }
 .seq-tbtn--speed {
   min-width: 44px;
@@ -382,12 +381,12 @@ select.seq-input {
   white-space: nowrap;
   margin-left: 8px;
   font-variant-numeric: tabular-nums;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 .seq-timeline__state {
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-dim);
   margin-left: 8px;
 }
@@ -399,7 +398,7 @@ select.seq-input {
 .seq-block {
   position: relative;
   min-width: 46px;
-  border-radius: 7px;
+  border-radius: var(--radius);
   background: rgba(var(--overlay-rgb), 0.07);
   border: 1px solid var(--panel-border);
   overflow: hidden;
@@ -411,10 +410,10 @@ select.seq-input {
 }
 .seq-block.is-current {
   border-color: var(--accent);
-  background: rgba(33, 208, 122, 0.14);
+  background: rgba(var(--accent-rgb), 0.14);
 }
 .seq-block.is-over {
-  box-shadow: inset 3px 0 0 var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 .seq-block__tr {
   position: absolute;
@@ -445,7 +444,7 @@ select.seq-input {
   position: relative;
   display: block;
   padding: 0 8px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   color: #f4c531;
@@ -459,8 +458,8 @@ select.seq-input {
   bottom: 0;
   width: 2px;
   margin-left: -1px;
-  background: #fff;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  background: var(--text);
+  box-shadow: 0 0 0 1px rgba(var(--menu-bg-rgb), 0.9);
   pointer-events: none;
 }
 .seq-block__resize {
@@ -472,7 +471,7 @@ select.seq-input {
   cursor: ew-resize;
 }
 .seq-block__resize:hover {
-  background: rgba(33, 208, 122, 0.5);
+  background: rgba(var(--accent-rgb), 0.5);
 }
 .seq-timeline__scrub {
   width: 100%;
@@ -528,17 +527,17 @@ select.seq-input {
 }
 .seq-export h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 15px;
 }
 .seq-progress {
   position: relative;
   height: 26px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: rgba(0, 0, 0, 0.35);
   overflow: hidden;
   display: grid;
   place-items: center;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 .seq-progress__bar {
@@ -546,7 +545,7 @@ select.seq-input {
   left: 0;
   top: 0;
   bottom: 0;
-  background: linear-gradient(90deg, var(--accent-2), var(--accent));
+  background: var(--accent-fill);
   transition: width 0.15s;
 }
 .seq-progress span {
@@ -606,11 +605,11 @@ select.seq-input {
   align-items: center;
   gap: 5px;
   padding: 3px 4px 3px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(33, 208, 122, 0.55);
-  background: rgba(33, 208, 122, 0.12);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(var(--accent-rgb), 0.55);
+  background: rgba(var(--accent-rgb), 0.12);
   color: var(--text);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 .seq-chip b {
@@ -635,7 +634,7 @@ select.seq-input {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-dim);
   margin-left: auto;
   cursor: pointer;
@@ -662,9 +661,9 @@ select.seq-input {
 
 .seq-export__thumb {
   align-self: center;
-  border-radius: 8px;
+  border-radius: var(--radius);
   overflow: hidden;
-  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-pop);
   border: 1px solid var(--panel-border);
 }
 .seq-preview__bar {
@@ -712,11 +711,11 @@ select.seq-input {
 }
 .seq-tool__chev {
   font-style: normal;
-  font-size: 10px;
+  font-size: 11px;
   opacity: 0.7;
 }
 .seq-tool__more {
-  font-size: 16px;
+  font-size: 15px;
   line-height: 18px;
 }
 .seq-menu {
@@ -730,7 +729,7 @@ select.seq-input {
   background: rgba(var(--menu-bg-rgb), 0.97);
   border: 1px solid rgba(var(--overlay-rgb), 0.14);
   border-radius: var(--radius-sm);
-  box-shadow: 0 18px 44px -16px rgba(0, 0, 0, 0.9);
+  box-shadow: var(--shadow-pop);
   animation: fmenu-in 0.12s ease-out;
 }
 .seq-menu__item {
@@ -739,7 +738,7 @@ select.seq-input {
   gap: 9px;
   border: 1px solid transparent;
   background: none;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 7px 10px;
   font-size: 13px;
   font-weight: 600;
@@ -752,8 +751,8 @@ select.seq-input {
   color: var(--text);
 }
 .seq-menu__item.is-active {
-  background: rgba(33, 208, 122, 0.16);
-  border-color: rgba(33, 208, 122, 0.5);
+  background: rgba(var(--accent-rgb), 0.16);
+  border-color: rgba(var(--accent-rgb), 0.5);
   color: var(--text);
 }
 .seq-menu__item:disabled {
@@ -789,8 +788,16 @@ select.seq-input {
 .seq-side {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
   min-height: 0;
+}
+/* the app tabs, moved above the inspector: same strip as .view-row */
+.seq-side > .view-tabs {
+  flex: 0 0 auto;
+  padding: 0 16px;
+  background: var(--panel);
+  border-right: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--panel-border);
 }
 .seq-side > .seq-panel {
   flex: 1 1 auto;
@@ -814,8 +821,16 @@ select.seq-input {
   display: none;
 }
 .seq-collapse > summary::before {
-  content: "▸";
+  /* the Icon "chevron-right" path, as a mask so it takes currentColor */
+  content: "";
   display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  vertical-align: -1px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6.5 4.5 10 8l-3.5 3.5' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6.5 4.5 10 8l-3.5 3.5' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
   transition: transform 0.15s;
 }
 .seq-collapse[open] > summary {
@@ -858,10 +873,10 @@ select.seq-input {
   display: inline-grid;
   place-items: center;
   border: 1px solid var(--panel-border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: rgba(var(--overlay-rgb), 0.05);
   color: var(--text);
-  font-size: 18px;
+  font-size: 15px;
   line-height: 1;
   cursor: pointer;
 }
@@ -891,7 +906,7 @@ select.seq-input {
 }
 .share-btn .seq-tool__chev {
   font-style: normal;
-  font-size: 10px;
+  font-size: 11px;
 }
 .share-menu__item {
   justify-content: space-between;
@@ -899,7 +914,7 @@ select.seq-input {
   color: var(--text);
 }
 .share-menu__ext {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-dim);
 }
@@ -934,14 +949,14 @@ select.seq-input {
 .seq-layer {
   display: flex;
   align-items: center;
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 .seq-layer:hover {
   background: rgba(var(--overlay-rgb), 0.06);
 }
 .seq-layer.is-active {
-  background: rgba(33, 208, 122, 0.14);
-  box-shadow: inset 0 0 0 1px rgba(33, 208, 122, 0.55);
+  background: rgba(var(--accent-rgb), 0.14);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.55);
 }
 .seq-layer__pick {
   flex: 1;
@@ -973,7 +988,7 @@ select.seq-input {
 .seq-layer__range {
   margin-left: auto;
   padding: 1px 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   font-size: 11px;
   color: var(--text-dim);
   background: rgba(var(--overlay-rgb), 0.08);
@@ -987,7 +1002,7 @@ select.seq-input {
   border-radius: 6px;
   background: none;
   color: var(--text-dim);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1;
   cursor: pointer;
 }
@@ -1005,7 +1020,7 @@ select.seq-input {
   gap: 2px;
 }
 .seq-color-group__title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-dim);
   margin-bottom: 2px;
@@ -1026,7 +1041,7 @@ select.seq-input {
   height: 26px;
   padding: 0;
   border: 1px solid var(--panel-border);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: rgba(var(--overlay-rgb), 0.06);
   cursor: pointer;
   transition: border-color 0.12s;
@@ -1038,7 +1053,7 @@ select.seq-input {
 .seq-color-chip__dot {
   width: 32px;
   height: 16px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   box-shadow: inset 0 0 0 1px rgba(var(--overlay-rgb), 0.25);
 }
 .seq-color-pop {

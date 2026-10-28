@@ -13,6 +13,7 @@ import {
 import FmSelect, { type FmOption } from "../FmSelect";
 import { NumberBadge } from "./RosterBits";
 import { positionInfo, displayName } from "./rosterModel";
+import Icon from "../Icon";
 
 interface Props {
   player: Player;
@@ -102,7 +103,7 @@ export default function PlayerSheet({
           <span>{pos?.label ?? "Poste à définir"}</span>
         </div>
         <button type="button" className="modal__close" onClick={onClose} aria-label="Fermer la fiche">
-          ×
+          <Icon name="close" />
         </button>
       </header>
 

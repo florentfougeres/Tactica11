@@ -1,7 +1,8 @@
 import { forwardRef, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import type { Player } from "../types";
+import { STATUS_LABEL, type Player } from "../types";
+import Icon from "./Icon";
 
 interface Props {
   players: Player[]; // bench players (not on pitch)
@@ -148,7 +149,7 @@ function BenchItem({
       layout
       className={`bench__item ${ghost ? "bench__item--dragging" : ""} ${
         canDrag ? "" : "bench__item--locked"
-      }`}
+      } ${player.status === "injured" || player.status === "suspended" ? "bench__item--out" : ""}`}
       onPointerDown={handlePointerDown}
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
@@ -204,12 +205,19 @@ function BenchItem({
           {player.name}
         </button>
       )}
+      <span className="bench__pos">{player.position ?? ""}</span>
+      {/* Fixed status cell: unavailable players are marked, never hidden. */}
+      <span
+        className={`bench__status bench__status--${player.status ?? "available"}`}
+        title={STATUS_LABEL[player.status ?? "available"]}
+        aria-label={STATUS_LABEL[player.status ?? "available"]}
+      />
       <button
         className="bench__remove"
         onClick={() => onRemove(player.id)}
         aria-label="Retirer"
       >
-        ×
+        <Icon name="close" size={14} />
       </button>
 
       {ghost &&

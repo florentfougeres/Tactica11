@@ -9,6 +9,7 @@ import FmSelect from "../../FmSelect";
 
 import { Switch, type Props } from "./shared";
 import ColorSwatches from "../../ColorSwatches";
+import Icon from "../../Icon";
 
 export default function SelectionTab(props: Props) {
   const { seq, step, stepIndex, selActors, selAnn, info, actions, editable, onDeleteSelection, onSelectActors } = props;
@@ -176,7 +177,7 @@ function AnnotationForm({ seq, step, ann, actions, focusLabel, onSelectAnn, info
                     aria-label={`Retirer ${label(aid)}`}
                     onClick={() => patch({ anchors: ann.anchors.filter((_, k) => k !== i) })}
                   >
-                    ×
+                    <Icon name="close" size={14} />
                   </button>
                 )}
               </span>

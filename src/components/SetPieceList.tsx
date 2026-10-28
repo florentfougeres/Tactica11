@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import type { SetPiece, SetPieceType } from "../types";
+import Icon from "./Icon";
 
 const TYPE_LABEL: Record<SetPieceType, string> = {
   corner: "Corner",
@@ -107,7 +108,7 @@ export default function SetPieceList({
                   <span className="sp-roster__name">{p.name}</span>
                   {p.role && <span className="sp-roster__role">{p.role}</span>}
                   <span className="sp-roster__mark" aria-hidden="true">
-                    {placed ? "✓" : "+"}
+                    <Icon name={placed ? "check" : "plus"} size={14} />
                   </span>
                 </button>
               );
@@ -194,7 +195,7 @@ function SetPieceRow({
           title="Dupliquer"
           aria-label="Dupliquer"
         >
-          ⧉
+          <Icon name="duplicate" size={14} />
         </button>
         <button
           type="button"
@@ -206,7 +207,7 @@ function SetPieceRow({
           title="Supprimer"
           aria-label="Supprimer"
         >
-          ×
+          <Icon name="close" size={14} />
         </button>
       </div>
     </div>

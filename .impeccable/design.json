@@ -1,0 +1,598 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-28T10:02:40+00:00",
+  "title": "Design System: Tactica11",
+  "extensions": {
+    "colorMeta": {
+      "graphite-ground": {
+        "role": "neutral",
+        "displayName": "Sol graphite",
+        "canonical": "#16191d",
+        "tonalRamp": [
+          "#232629",
+          "#3a3f46",
+          "#4f5863",
+          "#647182",
+          "#8792a1",
+          "#abb1ba",
+          "#cdd1d5",
+          "#f1f2f3"
+        ]
+      },
+      "graphite-panel": {
+        "role": "neutral",
+        "displayName": "Panneau graphite",
+        "canonical": "#1c1f24",
+        "tonalRamp": [
+          "#232629",
+          "#3a3e45",
+          "#505762",
+          "#656f80",
+          "#8891a0",
+          "#abb1ba",
+          "#ced0d5",
+          "#f2f2f3"
+        ]
+      },
+      "graphite-seam": {
+        "role": "neutral",
+        "displayName": "Couture",
+        "canonical": "#2e333a",
+        "tonalRamp": [
+          "#242629",
+          "#3b3f45",
+          "#515862",
+          "#66717f",
+          "#89929f",
+          "#acb1b9",
+          "#ced1d4",
+          "#f2f2f3"
+        ]
+      },
+      "segment-raised": {
+        "role": "neutral",
+        "displayName": "Segment levé",
+        "canonical": "#2b3037",
+        "tonalRamp": [
+          "#242629",
+          "#3a3f45",
+          "#505862",
+          "#667180",
+          "#8892a0",
+          "#abb1ba",
+          "#ced1d5",
+          "#f2f2f3"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Encre",
+        "canonical": "#e6e9ed",
+        "tonalRamp": [
+          "#23262a",
+          "#383f47",
+          "#4d5865",
+          "#617084",
+          "#8492a4",
+          "#a9b1bc",
+          "#ccd0d6",
+          "#f1f2f3"
+        ]
+      },
+      "ink-dim": {
+        "role": "neutral",
+        "displayName": "Encre atténuée",
+        "canonical": "#959ca6",
+        "tonalRamp": [
+          "#242628",
+          "#3c3f44",
+          "#535860",
+          "#69717c",
+          "#8b929c",
+          "#adb2b8",
+          "#cfd1d4",
+          "#f2f2f3"
+        ]
+      },
+      "selection-blue": {
+        "role": "primary",
+        "displayName": "Bleu sélection (texte)",
+        "canonical": "#79a9f9",
+        "tonalRamp": [
+          "#12213b",
+          "#173669",
+          "#16499c",
+          "#105ad5",
+          "#3b7eec",
+          "#7da5e8",
+          "#b7cbeb",
+          "#edf1f8"
+        ],
+        "note": "Les teintes translucides de sélection utilisent --accent-rgb (76, 141, 246) en sombre, (37, 99, 217) en clair."
+      },
+      "selection-blue-fill": {
+        "role": "primary",
+        "displayName": "Bleu sélection (aplat)",
+        "canonical": "#2f6fe4",
+        "tonalRamp": [
+          "#152137",
+          "#1d3662",
+          "#214992",
+          "#205ac6",
+          "#497ede",
+          "#86a5df",
+          "#bbcbe7",
+          "#eef1f7"
+        ]
+      },
+      "on-accent": {
+        "role": "neutral",
+        "displayName": "Texte sur bleu",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#262626",
+          "#404040",
+          "#595959",
+          "#737373",
+          "#949494",
+          "#b2b2b2",
+          "#d1d1d1",
+          "#f2f2f2"
+        ]
+      },
+      "confirm-green": {
+        "role": "secondary",
+        "displayName": "Vert confirmé",
+        "canonical": "#238636",
+        "tonalRamp": [
+          "#19331e",
+          "#265a30",
+          "#2e843f",
+          "#34b24c",
+          "#5bcd71",
+          "#90d59e",
+          "#c1e2c7",
+          "#eff6f0"
+        ]
+      },
+      "confirm-green-hover": {
+        "role": "secondary",
+        "displayName": "Vert confirmé, survol",
+        "canonical": "#2a9a3f",
+        "tonalRamp": [
+          "#1a331e",
+          "#265930",
+          "#2f833f",
+          "#35b04c",
+          "#5dcb71",
+          "#91d49e",
+          "#c1e1c7",
+          "#eff6f0"
+        ]
+      },
+      "on-primary": {
+        "role": "neutral",
+        "displayName": "Texte sur vert",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#262626",
+          "#404040",
+          "#595959",
+          "#737373",
+          "#949494",
+          "#b2b2b2",
+          "#d1d1d1",
+          "#f2f2f2"
+        ]
+      },
+      "doubt-amber": {
+        "role": "tertiary",
+        "displayName": "Ambre incertain",
+        "canonical": "#d29922",
+        "tonalRamp": [
+          "#362c16",
+          "#604b20",
+          "#8e6c24",
+          "#c18e25",
+          "#daad4e",
+          "#dcc189",
+          "#e5d8bd",
+          "#f6f4ee"
+        ]
+      },
+      "danger-red": {
+        "role": "tertiary",
+        "displayName": "Rouge destructif",
+        "canonical": "#e5534b",
+        "tonalRamp": [
+          "#371716",
+          "#61221e",
+          "#902823",
+          "#c32a22",
+          "#dc534c",
+          "#de8c87",
+          "#e6bebc",
+          "#f7eeee"
+        ]
+      },
+      "light-paper-ground": {
+        "role": "neutral",
+        "displayName": "Sol papier (clair)",
+        "canonical": "#f2f3f5",
+        "tonalRamp": [
+          "#232529",
+          "#3a3e46",
+          "#505663",
+          "#656e81",
+          "#8790a1",
+          "#abb0ba",
+          "#cdd0d5",
+          "#f1f2f3"
+        ]
+      },
+      "light-panel": {
+        "role": "neutral",
+        "displayName": "Panneau (clair)",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#262626",
+          "#404040",
+          "#595959",
+          "#737373",
+          "#949494",
+          "#b2b2b2",
+          "#d1d1d1",
+          "#f2f2f2"
+        ]
+      },
+      "light-seam": {
+        "role": "neutral",
+        "displayName": "Couture (clair)",
+        "canonical": "#dadde1",
+        "tonalRamp": [
+          "#242629",
+          "#3b3f44",
+          "#525861",
+          "#67717e",
+          "#8a929e",
+          "#acb2b9",
+          "#ced1d4",
+          "#f2f2f3"
+        ]
+      },
+      "light-ink": {
+        "role": "neutral",
+        "displayName": "Encre (clair)",
+        "canonical": "#16191d",
+        "tonalRamp": [
+          "#232629",
+          "#3a3f46",
+          "#4f5863",
+          "#647182",
+          "#8792a1",
+          "#abb1ba",
+          "#cdd1d5",
+          "#f1f2f3"
+        ]
+      },
+      "light-ink-dim": {
+        "role": "neutral",
+        "displayName": "Encre atténuée (clair)",
+        "canonical": "#5d646e",
+        "tonalRamp": [
+          "#242628",
+          "#3c3f43",
+          "#53585f",
+          "#6a717c",
+          "#8c929c",
+          "#aeb2b7",
+          "#cfd1d3",
+          "#f2f2f3"
+        ]
+      },
+      "light-selection-blue": {
+        "role": "primary",
+        "displayName": "Bleu sélection (clair)",
+        "canonical": "#2563d9",
+        "tonalRamp": [
+          "#172136",
+          "#20365f",
+          "#25498d",
+          "#265bbf",
+          "#4f7fd9",
+          "#89a6dc",
+          "#bdcbe5",
+          "#eef1f6"
+        ]
+      },
+      "light-confirm-green": {
+        "role": "secondary",
+        "displayName": "Vert confirmé (clair)",
+        "canonical": "#1f7f35",
+        "tonalRamp": [
+          "#19341f",
+          "#255b31",
+          "#2d8641",
+          "#31b44f",
+          "#59cf74",
+          "#8fd69f",
+          "#c0e2c8",
+          "#eff6f0"
+        ]
+      },
+      "light-confirm-green-hover": {
+        "role": "secondary",
+        "displayName": "Vert confirmé, survol (clair)",
+        "canonical": "#238f3c",
+        "tonalRamp": [
+          "#19341f",
+          "#255b31",
+          "#2d8641",
+          "#31b450",
+          "#59cf74",
+          "#8fd6a0",
+          "#c0e2c8",
+          "#eff6f0"
+        ]
+      },
+      "light-doubt-amber": {
+        "role": "tertiary",
+        "displayName": "Ambre incertain (clair)",
+        "canonical": "#9a6700",
+        "tonalRamp": [
+          "#3c2e10",
+          "#6c4f13",
+          "#a27210",
+          "#df9707",
+          "#f5b533",
+          "#edc678",
+          "#eddbb5",
+          "#f8f4ec"
+        ]
+      },
+      "light-danger-red": {
+        "role": "tertiary",
+        "displayName": "Rouge destructif (clair)",
+        "canonical": "#cf222e",
+        "tonalRamp": [
+          "#361619",
+          "#602024",
+          "#8e252c",
+          "#c02530",
+          "#d94e58",
+          "#dc898f",
+          "#e5bdc0",
+          "#f6eeef"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "title": {
+        "displayName": "Title",
+        "purpose": "Marque, titres de modales, indications majeures (15px)."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Noms, listes, contenu des champs (13px)."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Boutons, onglets, segments, éléments de menu (13px, 600)."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "En-têtes de panneaux, colonnes et groupes ; 11px, capitales, encre atténuée."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Chiffres uniquement : numéros, compteurs, durées, coordonnées ; mono tabulaire."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-pop",
+        "value": "0 8px 24px -6px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.3)",
+        "purpose": "Seule ombre du chrome (thème sombre) : modales, popovers, menus, barre de dessin, outils de présentation."
+      },
+      {
+        "name": "shadow-pop-light",
+        "value": "0 8px 24px -8px rgba(15, 23, 32, 0.18), 0 1px 2px rgba(15, 23, 32, 0.08)",
+        "purpose": "Même rôle, thème clair."
+      },
+      {
+        "name": "inset-seam",
+        "value": "inset 0 0 0 1px var(--panel-border)",
+        "purpose": "Segment levé d'un contrôle segmenté."
+      },
+      {
+        "name": "focus-ring",
+        "value": "outline: 2px solid var(--accent); outline-offset: 2px",
+        "purpose": "Focus clavier de tous les contrôles."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-transition",
+        "value": "0.15s (0.12s sur les outils Séquence)",
+        "purpose": "Fond, bordure et couleur des contrôles au survol et à l'activation."
+      },
+      {
+        "name": "menu-in",
+        "value": "0.12s ease-out",
+        "purpose": "Apparition des menus et popovers (fondu, léger zoom de 0.94 pour le popover d'emplacement)."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce -> durées 0.01ms",
+        "purpose": "Toutes les transitions d'interface sont coupées ; Framer Motion suit reducedMotion=\"user\"."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-topbar",
+        "value": "1180px"
+      },
+      {
+        "name": "sequence-narrow",
+        "value": "1100px"
+      },
+      {
+        "name": "ipad-portrait",
+        "value": "900px"
+      },
+      {
+        "name": "coarse-pointer",
+        "value": "(pointer: coarse)"
+      }
+    ],
+    "scope": "Chrome de l'app uniquement. Terrain, pastilles joueurs, marqueurs et rendus d'export (src/studio/*, src/sequence/SequenceStage.tsx) gardent leurs couleurs fixes.",
+    "typeScaleExceptions": [
+      {
+        "value": "10px",
+        "where": "marqueur de phase arrêtée sur le terrain"
+      },
+      {
+        "value": "8px",
+        "where": "flèche de tri du tableau Effectif"
+      },
+      {
+        "value": "38px",
+        "where": "illustration de l'accueil (onboarding)"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Bouton",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Bouton par défaut des panneaux et modales : voile neutre, couture de 1px.",
+      "html": "<button class=\"ds-btn\">Dupliquer</button>",
+      "css": ".ds-btn{font-family:\"Inter Variable\", Inter, system-ui, sans-serif;font-size:13px;font-weight:600;padding:11px;color:var(--text,#e6e9ed);background:rgba(var(--overlay-rgb,255,255,255),0.05);border:1px solid var(--panel-border,#2e333a);border-radius:var(--radius-sm,4px);cursor:pointer;transition:background .15s,border-color .15s,color .15s}.ds-btn:hover{background:rgba(var(--overlay-rgb,255,255,255),0.1)}.ds-btn:focus-visible{outline:2px solid var(--accent,#79a9f9);outline-offset:2px}"
+    },
+    {
+      "name": "Bouton primaire (Partager)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "L'unique action principale d'un contexte, toujours verte, à droite de la barre.",
+      "html": "<button class=\"ds-btn-primary\">Partager <svg class=\"ds-icon\" viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4.5 6.5 8 10l3.5-3.5\"/></svg></button>",
+      "css": ".ds-btn-primary{font-family:\"Inter Variable\", Inter, system-ui, sans-serif;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;color:var(--on-primary,#fff);background:var(--primary,#238636);border:1px solid transparent;border-radius:var(--radius-sm,4px);cursor:pointer;transition:background .15s}.ds-btn-primary:hover{background:var(--primary-hover,#2a9a3f)}.ds-btn-primary:focus-visible{outline:2px solid var(--accent,#79a9f9);outline-offset:2px}"
+    },
+    {
+      "name": "Bouton destructif",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Contour seul, isolé de ses voisins, rouge uniquement à l'intention.",
+      "html": "<button class=\"ds-btn-danger\" aria-label=\"Supprimer\"><svg class=\"ds-icon\" viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4.5 4.5l7 7M11.5 4.5l-7 7\"/></svg></button>",
+      "css": ".ds-btn-danger{font-family:\"Inter Variable\", Inter, system-ui, sans-serif;font-size:13px;display:inline-grid;place-items:center;width:32px;height:32px;color:var(--text-dim,#959ca6);background:transparent;border:1px solid rgba(var(--overlay-rgb,255,255,255),0.16);border-radius:var(--radius-sm,4px);cursor:pointer;transition:border-color .15s,color .15s}.ds-btn-danger:hover,.ds-btn-danger:focus-visible{border-color:var(--danger,#e5534b);color:var(--danger,#e5534b);outline:none}"
+    },
+    {
+      "name": "Champ texte",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Champ de la barre du haut ; la bordure passe au bleu en saisie.",
+      "html": "<input class=\"ds-input\" value=\"Démo · Real Madrid\" aria-label=\"Projet\">",
+      "css": ".ds-input{font-family:\"Inter Variable\", Inter, system-ui, sans-serif;font-size:13px;height:32px;padding:0 10px;color:var(--text,#e6e9ed);caret-color:var(--accent,#79a9f9);background:rgba(var(--overlay-rgb,255,255,255),0.05);border:1px solid var(--panel-border,#2e333a);border-radius:var(--radius-sm,4px);outline:none;transition:border-color .15s,background .15s}.ds-input:focus{border-color:var(--accent,#79a9f9)}"
+    },
+    {
+      "name": "Onglets",
+      "kind": "nav",
+      "refersTo": "tab",
+      "description": "Rangée d'onglets de 44px ; l'actif porte un soulignement bleu de 2px.",
+      "html": "<nav class=\"ds-tabs\"><button class=\"ds-tab is-active\">Compo</button><button class=\"ds-tab\">Effectif</button><button class=\"ds-tab\">Phase arrêtée</button><button class=\"ds-tab\">Séquence</button></nav>",
+      "css": ".ds-tabs{display:flex;gap:18px;padding:0 16px;background:var(--panel,#1c1f24);border-bottom:1px solid var(--panel-border,#2e333a)}.ds-tab{font-family:\"Inter Variable\", Inter, system-ui, sans-serif;font-size:13px;position:relative;min-height:44px;padding:0 1px;font-weight:600;color:var(--text-dim,#959ca6);background:none;border:none;cursor:pointer;transition:color .15s}.ds-tab:hover,.ds-tab.is-active{color:var(--text,#e6e9ed)}.ds-tab.is-active::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--accent,#79a9f9)}.ds-tab:focus-visible{outline:2px solid var(--accent,#79a9f9);outline-offset:2px}"
+    },
+    {
+      "name": "Contrôle segmenté",
+      "kind": "chip",
+      "refersTo": "segment",
+      "description": "Base / Attaque / Défense ; le segment actif est levé d'un cran avec filet intérieur.",
+      "html": "<div class=\"ds-seg\"><button class=\"ds-seg__btn is-active\">Base</button><button class=\"ds-seg__btn\">Attaque</button><button class=\"ds-seg__btn\">Défense</button></div>",
+      "css": ".ds-seg{display:inline-flex;padding:3px;gap:2px;border:1px solid var(--panel-border,#2e333a);border-radius:var(--radius-sm,4px);background:var(--bg-0,#16191d)}.ds-seg__btn{font-family:\"Inter Variable\", Inter, system-ui, sans-serif;font-size:13px;padding:6px 16px;font-weight:600;color:var(--text-dim,#959ca6);background:none;border:none;border-radius:var(--radius-sm,4px);cursor:pointer;transition:color .18s,background .18s}.ds-seg__btn:hover{color:var(--text,#e6e9ed)}.ds-seg__btn.is-active{color:var(--text,#e6e9ed);background:var(--seg-on,#2b3037);box-shadow:inset 0 0 0 1px var(--panel-border,#2e333a)}.ds-seg__btn:focus-visible{outline:2px solid var(--accent,#79a9f9);outline-offset:2px}"
+    },
+    {
+      "name": "Panneau avec en-tête",
+      "kind": "card",
+      "refersTo": "panel-header",
+      "description": "Panneau plat : en-tête 11px capitales, compteur mono, couture de 1px.",
+      "html": "<section class=\"ds-panel\"><header class=\"ds-panel__head\"><h2>Disponibles</h2><span class=\"ds-count\">5</span></header><div class=\"ds-panel__body\">Contenu du panneau</div></section>",
+      "css": ".ds-panel{font-family:\"Inter Variable\", Inter, system-ui, sans-serif;font-size:13px;width:260px;color:var(--text,#e6e9ed);background:var(--panel,#1c1f24);border:1px solid var(--panel-border,#2e333a);border-radius:var(--radius,6px)}.ds-panel__head{display:flex;align-items:center;gap:10px;min-height:41px;padding:12px 16px 10px;border-bottom:1px solid var(--panel-border,#2e333a)}.ds-panel__head h2{margin:0;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim,#959ca6)}.ds-count{margin-left:auto;font-family:'JetBrains Mono Variable',ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:11px;font-weight:500;color:var(--text-dim,#959ca6)}.ds-panel__body{padding:12px 16px 16px}"
+    },
+    {
+      "name": "Ligne d'effectif",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "Signature : numéro mono, nom, poste et marque d'état dans des cellules fixes ; indisponible barré, jamais retiré.",
+      "html": "<ul class=\"ds-roster\"><li class=\"ds-row\"><span class=\"ds-row__num\">2</span><span class=\"ds-row__name\">Asencio</span><span class=\"ds-row__pos\">DC</span><span class=\"ds-row__st\"></span></li><li class=\"ds-row\"><span class=\"ds-row__num\">17</span><span class=\"ds-row__name\">Cucurella</span><span class=\"ds-row__pos\">DG</span><span class=\"ds-row__st ds-row__st--doubt\"></span></li><li class=\"ds-row ds-row--out\"><span class=\"ds-row__num\">29</span><span class=\"ds-row__name\">Cestero</span><span class=\"ds-row__pos\">MC</span><span class=\"ds-row__st ds-row__st--out\"></span></li></ul>",
+      "css": ".ds-roster{font-family:\"Inter Variable\", Inter, system-ui, sans-serif;font-size:13px;list-style:none;margin:0;padding:0;width:260px;background:var(--panel,#1c1f24);color:var(--text,#e6e9ed)}.ds-row{display:flex;align-items:center;gap:10px;height:40px;padding:0 16px;border-bottom:1px solid var(--panel-border,#2e333a);transition:background .15s}.ds-row:hover{background:rgba(var(--overlay-rgb,255,255,255),0.05)}.ds-row__num{flex:0 0 22px;font-family:'JetBrains Mono Variable',ui-monospace,monospace;font-variant-numeric:tabular-nums}.ds-row__name{flex:1;font-weight:500}.ds-row__pos{flex:0 0 30px;text-align:right;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--text-dim,#959ca6)}.ds-row__st{flex:0 0 10px;height:10px;border-radius:2px}.ds-row__st--doubt{background:var(--warn,#d29922)}.ds-row__st--out{background:var(--danger,#e5534b)}.ds-row--out .ds-row__name{color:var(--text-dim,#959ca6);text-decoration:line-through;text-decoration-color:var(--danger,#e5534b)}"
+    },
+    {
+      "name": "Menu déroulant",
+      "kind": "custom",
+      "refersTo": "menu",
+      "description": "Surface flottante : panneau à 97 %, coins de 4px, ombre flottante.",
+      "html": "<div class=\"ds-menu\" role=\"menu\"><div class=\"ds-menu__group\">Partager</div><button class=\"ds-menu__item\">Copier le lien <span>URL</span></button><button class=\"ds-menu__item\">Exporter le projet <span>JSON</span></button></div>",
+      "css": ".ds-menu{font-family:\"Inter Variable\", Inter, system-ui, sans-serif;font-size:13px;display:flex;flex-direction:column;gap:2px;min-width:220px;padding:6px;color:var(--text,#e6e9ed);background:rgba(var(--menu-bg-rgb,28,31,36),0.97);border:1px solid rgba(var(--overlay-rgb,255,255,255),0.14);border-radius:var(--radius-sm,4px);box-shadow:var(--shadow-pop,0 8px 24px -6px rgba(0,0,0,.55),0 1px 2px rgba(0,0,0,.3))}.ds-menu__group{padding:8px 11px 4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim,#959ca6)}.ds-menu__item{font-family:\"Inter Variable\", Inter, system-ui, sans-serif;font-size:13px;display:flex;justify-content:space-between;gap:18px;padding:8px 11px;text-align:left;color:inherit;background:none;border:none;border-radius:var(--radius-sm,4px);cursor:pointer}.ds-menu__item span{font-family:'JetBrains Mono Variable',ui-monospace,monospace;font-size:11px;color:var(--text-dim,#959ca6)}.ds-menu__item:hover{background:rgba(var(--overlay-rgb,255,255,255),0.07)}.ds-menu__item:focus-visible{outline:2px solid var(--accent,#79a9f9);outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "La console graphite",
+    "overview": "Tactica11 se lit comme un poste de travail, pas comme une vitrine. Les zones (barre du haut, rangée d'onglets, effectif à gauche, terrain au centre, propriétés de la sélection) sont posées bord à bord et séparées par des coutures de 1px ; aucune ne flotte, aucune ne brille. L'utilisateur doit savoir où se trouve chaque chose avant de remarquer un style.\n\nLa couleur de l'interface ne décore jamais : elle signifie un état. Bleu pour la sélection, vert pour l'action principale ou confirmée, ambre pour l'incertain, rouge pour le destructif ou le blessé. Toute la couleur tactique (maillots, flèches, zones) vit sur le terrain, qui est la seule surface colorée de l'écran ; c'est ce contraste qui la rend lisible instantanément. Le système refuse explicitement le défaut de la catégorie : verre sombre lumineux, accent néon, boutons pilule.\n\nLa densité est celle d'un outil : lignes serrées, trois tailles de texte, chiffres en mono tabulaire dans des cellules fixes. Sombre d'abord, avec un jumeau clair sur gris papier froid qui suit exactement la même structure. Le tactile iPad est un mode de premier rang : les cibles restent confortables au doigt (bascules et pastilles agrandies en pointeur grossier).\n\n**Périmètre.** Ce système couvre le chrome de l'app. Le terrain (gazon, lignes, pastilles joueurs, marqueurs de phases arrêtées, flèches) et les rendus d'export (poster Studio dans `src/studio/`, vidéo et PNG de Séquence via `src/sequence/SequenceStage.tsx`) gardent leurs propres couleurs fixes, indépendantes du thème, et ne relèvent pas de ces tokens.",
+    "keyCharacteristics": [
+      "Panneaux plats bord à bord, séparés par des coutures de 1px, une seule marche d'élévation.",
+      "La couleur du chrome porte uniquement un état ; le terrain est la seule surface colorée.",
+      "Trois tailles de texte (11 / 13 / 15px), Inter pour l'interface, JetBrains Mono pour les chiffres seulement.",
+      "Rayons de 4px (contrôles, menus) et 6px (panneaux flottants, modales) ; pas de pilules, de dégradés, de verre ni de halos dans le chrome.",
+      "Icônes dessinées sur une grille de 16px, trait 1,6, couleur courante."
+    ],
+    "rules": [
+      {
+        "name": "The State-Only Colour Rule",
+        "body": "Dans le chrome, une couleur saturée signifie un état (sélection, confirmé, incertain, destructif) ou rien. Aucune couleur n'est choisie pour l'ambiance.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Coloured Surface Rule",
+        "body": "Le terrain est la seule surface colorée de l'écran. Les couleurs d'équipe, de flèches et de zones restent sur le terrain et dans les exports ; elles ne remontent pas dans les panneaux, sauf dans le sélecteur de couleur lui-même.",
+        "section": "colors"
+      },
+      {
+        "name": "The Single Green Rule",
+        "body": "Un seul bouton vert par contexte : l'action principale. Partager occupe la même place à droite de la barre sur chaque onglet.",
+        "section": "colors"
+      },
+      {
+        "name": "The Three Sizes Rule",
+        "body": "Le chrome n'utilise que 11, 13 et 15px. Trois exceptions sont admises parce qu'elles ne sont pas du texte de chrome : le marqueur de phase arrêtée sur le terrain (10px), la flèche de tri du tableau Effectif (8px) et l'illustration de l'accueil (38px).",
+        "section": "typography"
+      },
+      {
+        "name": "The Figures-Only Mono Rule",
+        "body": "La mono ne sert qu'aux chiffres. Un mot en mono est une erreur.",
+        "section": "typography"
+      },
+      {
+        "name": "The Floating-Only Shadow Rule",
+        "body": "Une ombre signifie « posé au-dessus du travail ». Un panneau pavé n'en porte jamais.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** séparer les zones par une couture de 1px et une seule marche tonale (sol puis panneau).",
+      "**Do** réserver le bleu à la sélection et au focus, le vert à l'unique action principale, l'ambre à l'incertain, le rouge au destructif et au blessé.",
+      "**Do** composer en 11 / 13 / 15px, Inter pour les mots, JetBrains Mono tabulaire pour les chiffres.",
+      "**Do** utiliser 4px pour les contrôles et menus, 6px pour les panneaux autonomes et modales, 0 pour les panneaux pavés.",
+      "**Do** garder les actions destructives en contour seul, à 12px de leurs voisines, rouges seulement à l'intention.",
+      "**Do** placer marques d'état et postes dans des cellules fixes, et barrer un joueur indisponible plutôt que de le retirer.",
+      "**Do** dessiner les icônes avec le jeu de 16px plutôt qu'avec des caractères Unicode."
+    ],
+    "donts": [
+      "**Don't** utiliser de verre, de flou d'arrière-plan, de dégradé ou de halo dans le chrome.",
+      "**Don't** donner une forme de pilule à un bouton, un onglet ou un segment.",
+      "**Don't** faire remonter les couleurs d'équipe, de flèches ou de zones du terrain dans les panneaux.",
+      "**Don't** poser d'ombre sur un panneau pavé ; l'ombre est réservée à ce qui flotte.",
+      "**Don't** mettre deux boutons verts dans le même contexte.",
+      "**Don't** appliquer ces tokens au terrain, aux pastilles joueurs ni aux rendus d'export (Studio, vidéo et PNG de Séquence), qui gardent leurs couleurs fixes."
+    ]
+  }
+}

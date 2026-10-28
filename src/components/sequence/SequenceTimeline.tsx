@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import type { SeqStep } from "../../sequence/types";
 import type { StepSpan } from "../../sequence/engine";
+import Icon from "../Icon";
 
 interface Props {
   steps: SeqStep[];
@@ -93,10 +94,10 @@ export default function SequenceTimeline({
     <div className="seq-timeline glass">
       <div className="seq-timeline__controls">
         <button type="button" className="seq-tbtn" onClick={onStart} title="Retour au début (Début)" aria-label="Retour au début">
-          ⏮
+          <Icon name="skip-start" />
         </button>
         <button type="button" className="seq-tbtn" onClick={onPrev} title="Étape précédente (←)" aria-label="Étape précédente">
-          ◀
+          <Icon name="step-back" />
         </button>
         <button
           type="button"
@@ -105,10 +106,10 @@ export default function SequenceTimeline({
           title={playing ? "Pause (Espace)" : "Lecture (Espace)"}
           aria-label={playing ? "Pause" : "Lecture"}
         >
-          {playing ? "❚❚" : "▶"}
+          <Icon name={playing ? "pause" : "play"} />
         </button>
         <button type="button" className="seq-tbtn" onClick={onNext} title="Étape suivante (→)" aria-label="Étape suivante">
-          ▶▏
+          <Icon name="step-forward" />
         </button>
         <button type="button" className="seq-tbtn seq-tbtn--speed" onClick={onCycleSpeed} title="Vitesse de lecture">
           {speed}×

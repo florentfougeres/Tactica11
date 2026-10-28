@@ -4,9 +4,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
+  min-height: 52px;
+  padding: 8px 16px;
+  border-radius: 0;
+  border-width: 0 0 1px 0;
   /* sit above the layout so the dropdowns (export, formation) aren't painted
-     under it — the .glass backdrop-filter makes this a stacking context */
+     under it */
   position: relative;
   z-index: 20;
 }
@@ -14,18 +17,17 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: 0.2px;
+  font-weight: 650;
+  font-size: 15px;
+  letter-spacing: -0.01em;
   flex: 0 0 auto;
 }
 .brand__mark {
-  color: var(--accent);
-  font-size: 20px;
-  filter: drop-shadow(0 0 10px rgba(33, 208, 122, 0.6));
+  display: block;
+  color: var(--text);
 }
 .brand__accent {
-  color: var(--accent);
+  color: var(--text-dim);
 }
 .topbar__field {
   display: flex;
@@ -39,8 +41,9 @@
 }
 .topbar__label {
   font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.08em;
   color: var(--text-dim);
   flex: 0 0 auto;
 }
@@ -50,13 +53,13 @@
   background: rgba(var(--overlay-rgb), 0.05);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
-  padding: 8px 11px;
+  height: 32px;
+  padding: 0 10px;
   outline: none;
   transition: border-color 0.15s, background 0.15s;
 }
 .topbar__field input:focus {
   border-color: var(--accent);
-  background: rgba(33, 208, 122, 0.08);
 }
 
 /* compo name + library dropdown */
@@ -100,7 +103,7 @@
   background: rgba(var(--menu-bg-rgb), 0.97);
   border: 1px solid rgba(var(--overlay-rgb), 0.14);
   border-radius: var(--radius-sm);
-  box-shadow: 0 18px 44px -16px rgba(0, 0, 0, 0.9);
+  box-shadow: var(--shadow-pop);
   animation: menu-in 0.12s ease-out;
 }
 .compo-menu__list {
@@ -115,7 +118,7 @@
   padding: 8px 11px;
   border: none;
   background: none;
-  border-radius: 7px;
+  border-radius: var(--radius);
   color: var(--text);
   font-weight: 600;
   font-size: 13px;
@@ -125,11 +128,11 @@
   transition: background 0.12s, color 0.12s;
 }
 .compo-menu button:hover {
-  background: rgba(33, 208, 122, 0.14);
-  color: var(--accent);
+  background: rgba(var(--overlay-rgb), 0.07);
+  color: var(--text);
 }
 .compo-menu__list button.is-active {
-  background: rgba(33, 208, 122, 0.18);
+  background: rgba(var(--accent-rgb), 0.18);
   color: var(--accent);
 }
 .compo-menu__sep {
@@ -138,7 +141,7 @@
   background: var(--panel-border);
 }
 .compo-menu__danger:hover {
-  background: rgba(255, 93, 108, 0.16) !important;
+  background: rgba(229, 83, 75, 0.16) !important;
   color: var(--danger) !important;
 }
 
@@ -149,13 +152,13 @@
   flex: 0 0 auto;
 }
 .btn--icon {
-  width: 36px;
+  width: 32px;
   padding: 0 !important;
-  height: 36px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1;
 }
 .btn--icon svg {
@@ -166,7 +169,9 @@
   cursor: default;
 }
 .topbar__actions .btn {
-  padding: 8px 14px;
+  padding: 0 12px;
+  height: 32px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -190,7 +195,8 @@
   background: rgba(var(--overlay-rgb), 0.05);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
-  padding: 8px 12px;
+  height: 32px;
+  padding: 0 10px;
   font: inherit;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -199,7 +205,7 @@
   transition: border-color 0.15s, background 0.15s;
 }
 .fmselect__btn:hover {
-  border-color: rgba(33, 208, 122, 0.5);
+  border-color: rgba(var(--accent-rgb), 0.5);
 }
 .fmselect__chevron {
   font-size: 11px;
@@ -220,7 +226,7 @@
   background: rgba(var(--menu-bg-rgb), 0.97);
   border: 1px solid rgba(var(--overlay-rgb), 0.14);
   border-radius: var(--radius-sm);
-  box-shadow: 0 18px 44px -16px rgba(0, 0, 0, 0.9);
+  box-shadow: var(--shadow-pop);
   animation: fmenu-in 0.12s ease-out;
 }
 @keyframes fmenu-in {
@@ -236,20 +242,20 @@
   padding: 8px 11px;
   border: none;
   background: none;
-  border-radius: 7px;
+  border-radius: var(--radius);
   color: var(--text);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   transition: background 0.12s, color 0.12s;
 }
 .fmselect__menu button:hover {
-  background: rgba(33, 208, 122, 0.14);
-  color: var(--accent);
+  background: rgba(var(--overlay-rgb), 0.07);
+  color: var(--text);
 }
 .fmselect__menu button.is-active {
-  background: rgba(33, 208, 122, 0.18);
+  background: rgba(var(--accent-rgb), 0.18);
   color: var(--accent);
 }
 /* FmSelect (generic dropdown reusing the formation picker's look) */
@@ -284,7 +290,7 @@
 }
 .fmselect__group {
   padding: 8px 11px 4px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -293,7 +299,7 @@
 
 /* Studio (Compo): visible entry to the lineup poster, next to Partager. */
 .studio-btn {
-  height: 36px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   gap: 6px;

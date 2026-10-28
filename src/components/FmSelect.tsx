@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDismiss } from "../hooks/useDismiss";
+import Icon from "./Icon";
 
 export interface FmOption<V extends string> {
   value: V;
@@ -71,7 +72,7 @@ export default function FmSelect<V extends string>({
       >
         <span className="fmselect__value">{current?.label ?? ""}</span>
         <span className="fmselect__chevron" aria-hidden="true">
-          ▾
+          <Icon name="chevron-down" size={14} />
         </span>
       </button>
       {open &&

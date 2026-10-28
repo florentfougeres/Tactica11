@@ -19,7 +19,7 @@
   display: grid;
   place-items: center;
   font-weight: 800;
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(15, 20, 28, 0.92);
   /* background colour set inline per the chosen team colour */
   box-shadow: 0 5px 14px -5px rgba(0, 0, 0, 0.7),
@@ -44,28 +44,25 @@
 .phase-bar {
   display: inline-grid;
   grid-auto-flow: column;
-  gap: 3px;
-  padding: 4px;
-  border-radius: 999px;
-  background: rgba(var(--menu-bg-rgb), 0.72);
-  border: 1px solid rgba(var(--overlay-rgb), 0.14);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 8px 24px -10px rgba(0, 0, 0, 0.8);
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius);
+  background: rgba(var(--overlay-rgb), 0.06);
+  border: 1px solid var(--panel-border);
 }
 .phase-bar__btn {
   position: relative;
   border: none;
   background: none;
   padding: 6px 16px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   font-weight: 600;
   font-size: 13px;
   color: var(--text-dim);
   transition: color 0.18s;
 }
 .phase-bar__btn.is-active {
-  color: #06130c;
+  color: var(--text);
 }
 .phase-bar__btn:not(.is-active):hover {
   color: var(--text);
@@ -73,8 +70,9 @@
 .phase-bar__pill {
   position: absolute;
   inset: 0;
-  border-radius: 999px;
-  background: linear-gradient(150deg, var(--accent), var(--accent-2));
+  border-radius: var(--radius-sm);
+  background: var(--seg-on);
+  box-shadow: inset 0 0 0 1px var(--panel-border);
   z-index: 0;
 }
 .phase-bar__label {
@@ -108,10 +106,10 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: rgba(var(--menu-bg-rgb), 0.97);
   border: 1px solid rgba(var(--overlay-rgb), 0.16);
-  box-shadow: 0 18px 44px -16px rgba(0, 0, 0, 0.95);
+  box-shadow: var(--shadow-pop);
 }
 .slot-pop__row {
   display: flex;
@@ -119,18 +117,18 @@
   gap: 7px;
 }
 .slot-pop__tag {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--text-dim);
   background: rgba(var(--overlay-rgb), 0.07);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   padding: 2px 5px;
 }
 .slot-pop__tag--starter {
   color: var(--accent);
-  background: rgba(33, 208, 122, 0.16);
+  background: rgba(var(--accent-rgb), 0.16);
 }
 .slot-pop__name {
   flex: 1;
@@ -149,14 +147,14 @@
   color: var(--text);
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--panel-border);
-  border-radius: 7px;
+  border-radius: var(--radius);
   padding: 4px 6px;
   outline: none;
   transition: border-color 0.15s, background 0.15s;
 }
 .slot-pop__name-input:focus {
   border-color: var(--accent);
-  background: rgba(33, 208, 122, 0.1);
+  background: rgba(var(--accent-rgb), 0.1);
 }
 .slot-pop__name-input::placeholder {
   color: var(--text-dim);
@@ -166,7 +164,7 @@
   flex: 0 0 auto;
   width: 24px;
   height: 24px;
-  border-radius: 7px;
+  border-radius: var(--radius);
   border: 1px solid var(--panel-border);
   background: rgba(var(--overlay-rgb), 0.05);
   font-size: 13px;
@@ -174,8 +172,8 @@
   transition: all 0.15s;
 }
 .slot-pop__btn:hover {
-  background: rgba(255, 93, 108, 0.16);
-  border-color: rgba(255, 93, 108, 0.5);
+  background: rgba(229, 83, 75, 0.16);
+  border-color: rgba(229, 83, 75, 0.5);
 }
 .slot-pop__num {
   flex: 0 0 auto;
@@ -183,7 +181,7 @@
   text-align: center;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--panel-border);
-  border-radius: 7px;
+  border-radius: var(--radius);
   padding: 4px 4px;
   font-size: 13px;
   font-weight: 700;
@@ -193,7 +191,7 @@
 }
 .slot-pop__num:focus {
   border-color: var(--accent);
-  background: rgba(33, 208, 122, 0.1);
+  background: rgba(var(--accent-rgb), 0.1);
 }
 .role-pop__input {
   width: 70px;

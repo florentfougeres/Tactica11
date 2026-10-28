@@ -1,0 +1,35 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-28T09:39:37.857Z",
+        "reason": "agent decided: disposable decision-round sketch of an unchosen card, never shipped"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-28T09:39:37.870Z",
+        "reason": "agent decided: disposable decision-round sketch of an unchosen card, never shipped"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-28T10:03:40.326Z",
+        "reason": "agent decided: disposable decision-round sketch of an unchosen card, never shipped"
+      }
+    ]
+  }
+}

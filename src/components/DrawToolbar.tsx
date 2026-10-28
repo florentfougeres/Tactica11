@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { DrawTool } from "../types";
 import { ToolIcon } from "./sequence/SeqTopTools";
+import Icon from "./Icon";
 
 interface Props {
   drawing: boolean; // false: the "Déplacer" tool, tokens can be dragged
@@ -117,7 +118,7 @@ export default function DrawToolbar({
         title="Tout effacer"
         aria-label="Tout effacer"
       >
-        ✕
+        <Icon name="close" />
       </button>
     </div>
   );

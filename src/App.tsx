@@ -50,6 +50,7 @@ import StudioView from "./components/StudioView";
 import SequenceView from "./components/sequence/SequenceView";
 import { useSequenceActions } from "./hooks/useSequenceActions";
 import Switch from "./components/Switch";
+import Icon from "./components/Icon";
 
 // French phase labels, used to suffix exported PNG filenames.
 const PHASE_LABEL: Record<Phase, string> = {
@@ -418,7 +419,7 @@ export default function App() {
             onClick={mirrorPhase}
             title="Inverser gauche / droite pour cette phase"
           >
-            ⇄ Miroir G/D
+            <Icon name="swap" /> Miroir G/D
           </button>
           <button
             type="button"
@@ -491,7 +492,7 @@ export default function App() {
     <div className={`app ${presenting ? "app--present" : ""}`}>
       {presenting && (
         <button className="present-exit" onClick={exitPresent}>
-          ✕ Quitter
+          <Icon name="close" /> Quitter
         </button>
       )}
       {presenting && (
@@ -504,7 +505,7 @@ export default function App() {
             aria-expanded={presentToolsOpen}
             title={presentToolsOpen ? "Fermer les outils" : "Ouvrir les outils"}
           >
-            {presentToolsOpen ? "✕" : "⚙"}
+            <Icon name={presentToolsOpen ? "close" : "settings"} />
           </button>
           {presentToolsOpen && (
             <div className="present-tools__panel glass">{pitchControls}</div>
