@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { isDark, luminance } from "../colors";
 import ColorSwatches from "./ColorSwatches";
+import Icon from "./Icon";
 
 // The second colour's palette: the team palette, plus white and black when
 // it has nothing close (most two-colour kits pair with one of them).
@@ -75,7 +76,7 @@ export default function TeamColorField({
               title="Revenir à une couleur unie"
               aria-label="Retirer la deuxième couleur"
             >
-              ×
+              <Icon name="close" size={12} />
             </button>
           </span>
         ) : (

@@ -86,12 +86,12 @@
   gap: 6px;
   height: 28px;
   padding: 0 10px 0 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--panel-border);
   background: rgba(var(--overlay-rgb), 0.05);
   color: var(--text-dim);
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
@@ -101,7 +101,7 @@
 }
 .kit__slot.is-active {
   border-color: var(--accent);
-  background: rgba(33, 208, 122, 0.14);
+  background: rgba(var(--accent-rgb), 0.14);
   color: var(--text);
 }
 .kit__slot--add {

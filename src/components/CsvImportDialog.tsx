@@ -8,6 +8,7 @@ import {
   type ImportedPlayer,
 } from "../csv";
 import FmSelect from "./FmSelect";
+import Icon from "./Icon";
 
 interface Props {
   onClose: () => void;
@@ -101,7 +102,7 @@ export default function CsvImportDialog({ onClose, onImport }: Props) {
         <header className="modal__header">
           <h2>Importer des joueurs (CSV)</h2>
           <button className="modal__close" onClick={onClose} aria-label="Fermer">
-            ×
+            <Icon name="close" />
           </button>
         </header>
 

@@ -13,10 +13,9 @@
   place-items: center;
   font-size: 38px;
   line-height: 1;
-  border-radius: 22px;
-  background: rgba(33, 208, 122, 0.12);
-  border: 1px solid rgba(33, 208, 122, 0.28);
-  box-shadow: 0 8px 30px rgba(33, 208, 122, 0.18);
+  border-radius: var(--radius);
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.28);
 }
 .onboard__body {
   min-height: 132px;
@@ -28,13 +27,13 @@
 }
 .onboard__title {
   margin: 0;
-  font-size: 19px;
+  font-size: 15px;
   font-weight: 650;
   color: var(--text);
 }
 .onboard__text {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.55;
   color: var(--text-dim);
 }
@@ -72,7 +71,7 @@
   justify-content: center;
 }
 .onboard__count {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
 }

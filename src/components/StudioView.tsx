@@ -6,6 +6,7 @@ import ColorSwatches from "./ColorSwatches";
 import TeamColorField from "./TeamColorField";
 import Switch from "./Switch";
 import RotatePitchButton from "./RotatePitchButton";
+import Icon from "./Icon";
 
 interface Props {
   lineup: Lineup;
@@ -81,7 +82,7 @@ export default function StudioView({ lineup, phase, project, playerById, setting
         <div className="studio-panel__head">
           <h2 className="studio-panel__title">Studio</h2>
           <button type="button" className="studio-exit" onClick={onClose} title="Fermer le Studio (Échap)">
-            ✕ Fermer
+            <Icon name="close" /> Fermer
           </button>
         </div>
 
@@ -127,7 +128,7 @@ export default function StudioView({ lineup, phase, project, playerById, setting
         </section>
 
         <button type="button" className="pitch-ctl__btn" onClick={() => patch(DEFAULT_STUDIO_SETTINGS)}>
-          ↺ Réinitialiser
+          <Icon name="reset" /> Réinitialiser
         </button>
       </div>
 

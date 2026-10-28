@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import type { Orient, Player, Pos } from "../types";
 import { OPPONENT_TEXT, discBackground, textHalo } from "../colors";
 import { useShortLabel, useTokenMotion } from "../hooks/useTokenMotion";
+import Icon from "./Icon";
 
 export const MARKER_SIZE = 42;
 
@@ -119,7 +120,7 @@ export default function SetPieceMarker(props: Props) {
           aria-label="Retirer ce marqueur"
           title="Retirer"
         >
-          ×
+          <Icon name="close" size={14} />
         </button>
       )}
     </motion.div>

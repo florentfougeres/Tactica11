@@ -27,7 +27,7 @@ export default function PositionalGrid({
   orient = "portrait",
   frame,
   line = "rgba(255,255,255,0.16)",
-  tint = "rgba(33,208,122,0.11)",
+  tint = "rgba(76,141,246,0.11)",
 }: {
   orient?: Orient;
   // Embedded mode (sequence stage): nested <svg> at this box in a parent SVG.

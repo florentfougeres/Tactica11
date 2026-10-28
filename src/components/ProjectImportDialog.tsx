@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Lineup, Project } from "../types";
 import type { LineupPick, ProjectImportOptions } from "../storage";
+import Icon from "./Icon";
 
 interface Props {
   source: Project; // the project read from the .json file
@@ -108,7 +109,7 @@ export default function ProjectImportDialog({
         <header className="modal__header">
           <h2>Ouvrir « {source.name || "Sans nom"} »</h2>
           <button className="modal__close" onClick={onClose} aria-label="Fermer">
-            ×
+            <Icon name="close" />
           </button>
         </header>
 

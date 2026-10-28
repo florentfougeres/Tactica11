@@ -19,6 +19,7 @@ import PitchToken, { TOKEN_SIZE } from "./PitchToken";
 import OpponentToken from "./OpponentToken";
 import HeatmapOverlay from "./HeatmapOverlay";
 import InfluenceHandles from "./InfluenceHandles";
+import Icon from "./Icon";
 interface Props {
   slots: Slot[];
   phase: Phase;
@@ -570,7 +571,7 @@ function EmptySlotPopover({
             title="Créer le joueur"
             aria-label="Créer le joueur"
           >
-            ✓
+            <Icon name="check" />
           </button>
         </div>
       </div>

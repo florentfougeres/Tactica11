@@ -9,6 +9,7 @@ import { Section, Switch, sec, type Props } from "./shared";
 import ColorSwatches from "../../ColorSwatches";
 import { SEQ_COLORS } from "../../../sequence/types";
 import StepLayers from "./StepLayers";
+import Icon from "../../Icon";
 
 export default function StepTab(props: Props) {
   const {
@@ -169,7 +170,7 @@ export default function StepTab(props: Props) {
         </div>
         <div className="seq-btn-row">
           <button type="button" className="pitch-ctl__btn" onClick={() => actions.mirrorStep(seq.id, stepIndex)} title="Inverser gauche / droite">
-            ⇄ Inverser gauche / droite
+            <Icon name="swap" /> Inverser gauche / droite
           </button>
         </div>
         <Switch label="Propager aux étapes suivantes" checked={propagate} onChange={onPropagate} />

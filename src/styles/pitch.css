@@ -8,6 +8,7 @@
   gap: 12px;
   min-height: 0;
   min-width: 0;
+  padding: 16px;
 }
 .pitch-bar {
   position: relative;
@@ -19,26 +20,24 @@
 }
 .pitch-rotate {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 24px;
+  right: 24px;
   z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--panel-border);
   background: rgba(var(--menu-bg-rgb), 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   color: var(--text);
-  font-size: 17px;
+  font-size: 15px;
   line-height: 1;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
 .pitch-rotate:hover {
-  border-color: rgba(33, 208, 122, 0.5);
-  background: rgba(33, 208, 122, 0.08);
+  border-color: rgba(var(--accent-rgb), 0.5);
+  background: rgba(var(--accent-rgb), 0.08);
 }

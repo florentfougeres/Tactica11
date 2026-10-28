@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { AttrType, AttributeDef, Player } from "../../types";
 import FmSelect from "../FmSelect";
+import Icon from "../Icon";
 
 interface Props {
   attributeDefs: AttributeDef[];
@@ -42,7 +43,7 @@ export default function ColumnsDialog({ attributeDefs, players, onAdd, onRename,
         <header className="modal__header">
           <h2>Infos joueurs</h2>
           <button className="modal__close" onClick={onClose} aria-label="Fermer">
-            ×
+            <Icon name="close" />
           </button>
         </header>
         <div className="modal__body">
@@ -62,7 +63,7 @@ export default function ColumnsDialog({ attributeDefs, players, onAdd, onRename,
                   />
                   <span className="columns-list__type">{d.type === "number" ? "Nombre" : "Texte"}</span>
                   <button type="button" className="columns-list__remove" onClick={() => remove(d)} aria-label={`Supprimer ${d.name}`}>
-                    ×
+                    <Icon name="close" size={14} />
                   </button>
                 </li>
               ))}

@@ -1,3 +1,4 @@
+import Icon from "./Icon";
 // Play/pause + speed cycle for a walkthrough slider (see useAutoplay). Kept
 // tiny and dumb — all the animation logic lives in the hook.
 interface Props {
@@ -24,7 +25,7 @@ export default function AutoplayControl({
         aria-label={playing ? `Mettre en pause ${label}` : `Lire ${label}`}
         title={playing ? "Pause" : "Lecture automatique"}
       >
-        {playing ? "⏸" : "▶"}
+        <Icon name={playing ? "pause" : "play"} />
       </button>
       <button
         type="button"

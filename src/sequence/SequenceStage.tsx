@@ -362,7 +362,7 @@ export default function SequenceStage({
             bg={color}
             fg={isDark(color) ? "#ffffff" : "#0b0f14"}
             upper
-            outline={sel ? "#21d07a" : undefined}
+            outline={sel ? "#4c8df6" : undefined}
             hit
           />
         </g>
@@ -427,7 +427,7 @@ export default function SequenceStage({
             <circle cx={c.x} cy={c.y - R * 0.05} r={R * 0.84} fill={`url(#${pid("disc-face")})`} stroke={`url(#${pid("disc-lip")})`} strokeWidth={R * 0.06} />
           </>
         )}
-        {sel && <circle cx={c.x} cy={c.y} r={R + 0.75 * u} fill="none" stroke="#21d07a" strokeWidth={0.55 * u} />}
+        {sel && <circle cx={c.x} cy={c.y} r={R + 0.75 * u} fill="none" stroke="#4c8df6" strokeWidth={0.55 * u} />}
         {inf.disc && (
           <text
             x={c.x}
@@ -660,11 +660,11 @@ export default function SequenceStage({
               n += 1;
               hs.push(
                 <g key={`r${i}`} pointerEvents="none">
-                  <circle cx={c.x} cy={c.y} r={R + 1.1 * u} fill="none" stroke="#21d07a" strokeWidth={0.55 * u} strokeDasharray={`${f(u * 1.1)} ${f(u * 0.7)}`} />
+                  <circle cx={c.x} cy={c.y} r={R + 1.1 * u} fill="none" stroke="#4c8df6" strokeWidth={0.55 * u} strokeDasharray={`${f(u * 1.1)} ${f(u * 0.7)}`} />
                   {numbered && (
                     <>
-                      <circle cx={c.x + R * 0.95} cy={c.y - R * 0.95} r={1.3 * u} fill="#21d07a" />
-                      <text x={c.x + R * 0.95} y={c.y - R * 0.95} dy="0.35em" textAnchor="middle" fontFamily={FONT} fontWeight={800} fontSize={1.5 * u} fill="#06130c">
+                      <circle cx={c.x + R * 0.95} cy={c.y - R * 0.95} r={1.3 * u} fill="#4c8df6" />
+                      <text x={c.x + R * 0.95} y={c.y - R * 0.95} dy="0.35em" textAnchor="middle" fontFamily={FONT} fontWeight={800} fontSize={1.5 * u} fill="#ffffff">
                         {n}
                       </text>
                     </>
@@ -674,7 +674,7 @@ export default function SequenceStage({
             }
             if ("pos" in an) {
               const c = loc(an.pos);
-              hs.push(<circle key={`h${i}`} data-handle={`a${i}`} cx={c.x} cy={c.y} r={1.25 * u} fill="#ffffff" stroke="#21d07a" strokeWidth={0.4 * u} style={{ cursor: "move" }} />);
+              hs.push(<circle key={`h${i}`} data-handle={`a${i}`} cx={c.x} cy={c.y} r={1.25 * u} fill="#ffffff" stroke="#4c8df6" strokeWidth={0.4 * u} style={{ cursor: "move" }} />);
             }
           });
           if (isArrow(ann.kind) && ann.anchors.length === 2) {
@@ -683,7 +683,7 @@ export default function SequenceStage({
             if (a && b) {
               const cp = ann.control ?? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
               const c = loc(cp);
-              hs.push(<rect key="ctl" data-handle="ctl" x={c.x - 1.1 * u} y={c.y - 1.1 * u} width={2.2 * u} height={2.2 * u} transform={`rotate(45 ${f(c.x)} ${f(c.y)})`} fill="#21d07a" stroke="#ffffff" strokeWidth={0.3 * u} style={{ cursor: "move" }} />);
+              hs.push(<rect key="ctl" data-handle="ctl" x={c.x - 1.1 * u} y={c.y - 1.1 * u} width={2.2 * u} height={2.2 * u} transform={`rotate(45 ${f(c.x)} ${f(c.y)})`} fill="#4c8df6" stroke="#ffffff" strokeWidth={0.3 * u} style={{ cursor: "move" }} />);
             }
           }
           return <g>{hs}</g>;
@@ -698,8 +698,8 @@ export default function SequenceStage({
               y={Math.min(a.y, b.y)}
               width={Math.abs(a.x - b.x)}
               height={Math.abs(a.y - b.y)}
-              fill="rgba(33,208,122,0.12)"
-              stroke="#21d07a"
+              fill="rgba(76,141,246,0.12)"
+              stroke="#4c8df6"
               strokeWidth={0.3 * u}
               strokeDasharray={`${f(u)} ${f(u * 0.7)}`}
             />
@@ -765,7 +765,7 @@ export default function SequenceStage({
 // Selection glow, drawn *under* the shape so its own colour stays visible.
 const SEL_GLOW = {
   fill: "none",
-  stroke: "#21d07a",
+  stroke: "#4c8df6",
   strokeOpacity: 0.6,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,

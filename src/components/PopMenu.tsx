@@ -4,6 +4,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useDismiss } from "../hooks/useDismiss";
+import Icon from "./Icon";
 
 interface Props {
   button: ReactNode;
@@ -46,7 +47,7 @@ export default function PopMenu({ button, title, className, active, chevron = tr
         aria-expanded={open}
       >
         {button}
-        {chevron && <i className="seq-tool__chev" aria-hidden="true">▾</i>}
+        {chevron && <i className="seq-tool__chev" aria-hidden="true"><Icon name="chevron-down" size={12} /></i>}
       </button>
       {open &&
         pos &&

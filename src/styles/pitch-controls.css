@@ -41,12 +41,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 13px;
   flex-shrink: 0;
 }
 .autoplay-ctl__play.is-playing {
-  border-color: rgba(33, 208, 122, 0.5);
-  background: rgba(33, 208, 122, 0.12);
+  border-color: rgba(var(--accent-rgb), 0.5);
+  background: rgba(var(--accent-rgb), 0.12);
   color: var(--accent);
 }
 .autoplay-ctl__speed {
@@ -88,7 +88,7 @@
   background: rgba(var(--overlay-rgb), 0.05);
   border-radius: var(--radius-sm);
   padding: 9px 8px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text);
   cursor: pointer;
@@ -111,20 +111,20 @@
   border: 1px solid var(--panel-border);
   background: rgba(var(--overlay-rgb), 0.05);
   color: var(--text);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   padding: 6px 11px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   white-space: nowrap;
   transition: all 0.15s;
 }
 .zone-presets__role:hover {
-  border-color: rgba(33, 208, 122, 0.5);
-  background: rgba(33, 208, 122, 0.08);
+  border-color: rgba(var(--accent-rgb), 0.5);
+  background: rgba(var(--accent-rgb), 0.08);
 }
 .zone-presets__role.is-active {
   border-color: var(--accent);
-  background: rgba(33, 208, 122, 0.18);
+  background: rgba(var(--accent-rgb), 0.18);
   color: var(--accent);
 }
 
@@ -165,8 +165,7 @@
   border-radius: var(--radius);
   overflow: hidden;
   background: #1b3a24;
-  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 .pitch--landscape {
   --ar: calc(105 / 68);
@@ -192,8 +191,7 @@
   inset: 4.545%;
 }
 .pitch--drop {
-  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9),
-    inset 0 0 0 2px rgba(33, 208, 122, 0.7);
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
 .pitch__drop-hint {
   position: absolute;
@@ -204,11 +202,11 @@
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.3px;
-  color: #06130c;
-  background: linear-gradient(150deg, var(--accent), var(--accent-2));
+  color: var(--on-accent);
+  background: var(--accent-fill);
   padding: 8px 16px;
-  border-radius: 999px;
-  box-shadow: 0 10px 30px -8px rgba(33, 208, 122, 0.7);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-pop);
   pointer-events: none;
 }
 /* Let a dragged token leave the pitch (e.g. toward the bench) without being
@@ -226,8 +224,7 @@
       rgba(255, 255, 255, 0.05) 0 9.09%,
       rgba(0, 0, 0, 0.06) 9.09% 18.18%
     ),
-    radial-gradient(120% 80% at 50% 0%, rgba(33, 208, 122, 0.18), transparent 55%),
-    linear-gradient(165deg, #18432a, #0f2a1a);
+    linear-gradient(#163f27, #163f27);
 }
 .pitch-svg {
   position: absolute;
@@ -253,7 +250,7 @@
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  filter: drop-shadow(0 0 6px rgba(33, 208, 122, 0.25));
+  filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.25));
   animation: heatmap-in 0.25s ease-out;
 }
 /* team coverage: many stacked layers → drop the per-layer glow/animation */
